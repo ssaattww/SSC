@@ -93,4 +93,9 @@
     - `doc/design/detail/07-NonFunctional.md`
     - `doc/design/detail/08-ImplementationChecklist.md`
     - `reports/2026-04-03-pre-implementation-decisions-finalization.md`
+- T-012: Composite Key 説明の明確化
+  - Status: 完了（順序固定の意味を具体例で明示）
+  - Output:
+    - `doc/design/detail/03-ContainerRules.md`（7.3）
+    - `reports/2026-04-03-composite-key-clarification.md`
 
