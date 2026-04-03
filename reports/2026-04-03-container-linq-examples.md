@@ -1,7 +1,7 @@
 # コンテナ対応・SelectMany 例示追記レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 追記した例示
 
@@ -18,3 +18,4 @@
 ## 目的
 
 - 実装担当が順序・欠損・展開単位の誤解なく実装できる状態にする
+

@@ -1,7 +1,7 @@
 # SelectMany 型付き例 追記レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 追記内容
 
@@ -15,3 +15,4 @@
 
 - `SelectMany` 実行時に何が `IEnumerable<ParallelXxx>` になるかを曖昧なく示す
 - `[modelIndex]` 参照が展開後も維持されることを型レベルで明示する
+

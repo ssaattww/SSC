@@ -1,7 +1,7 @@
 # SelectMany model スロット明確化レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 追記内容
 
@@ -14,3 +14,4 @@
 
 - `SelectMany` を実行しても `IEnumerable<Item>` にはならず、
   `IEnumerable<ParallelItem>` のままであることを誤解なく伝える
+

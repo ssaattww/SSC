@@ -460,6 +460,200 @@ data0.Scores = { "A" -> 80, "B" -> 70 }
 data1.Scores = { "A" -> 90, "C" -> 60 }
 ```
 
+---
+
+## 19. 公開 API 詳細（確定）
+
+### 19.1 エントリポイント
+
+```csharp
+public static class ParallelCompareApi
+{
+    public static CompareResult<T> Compare<T>(
+        IReadOnlyList<T> models,
+        CompareConfiguration? configuration = null);
+}
+```
+
+- `models.Count == 0` は入力エラー
+- `models` 内 `null` は許容しない（入力エラー）
+- 成功時は `CompareResult<T>.Root` にルート並列ノードを返す
+
+### 19.2 並列ノード公開面
+
+```csharp
+public enum ValueState
+{
+    Missing,
+    PresentNull,
+    PresentValue
+}
+
+public interface Parallel<T>
+{
+    T? this[int modelIndex] { get; }
+    int Count { get; }
+    bool AllPresent { get; }
+    bool AnyPresent { get; }
+    ValueState GetState(int modelIndex);
+}
+```
+
+- `this[int modelIndex]` は範囲外で `ArgumentOutOfRangeException`
+- `GetState` は `this[...]` と同じ index 境界を共有する
+
+### 19.3 Result モデル
+
+```csharp
+public sealed class CompareResult<T>
+{
+    public Parallel<T>? Root { get; init; }
+    public IReadOnlyList<CompareIssue> Issues { get; init; } = Array.Empty<CompareIssue>();
+    public bool HasError { get; init; }
+}
+
+public sealed class CompareIssue
+{
+    public CompareIssueLevel Level { get; init; }
+    public CompareIssueCode Code { get; init; }
+    public string Path { get; init; } = "";
+    public int? ModelIndex { get; init; }
+    public string? KeyText { get; init; }
+    public string Message { get; init; } = "";
+}
+
+public enum CompareIssueLevel { Error, Warning }
+```
+
+- `strict=false` では Error を `Issues` に蓄積して継続可能範囲で処理
+- `strict=true` では Error 発生時点で例外送出
+
+---
+
+## 20. CompareConfiguration（確定）
+
+```csharp
+public sealed class CompareConfiguration
+{
+    public bool StrictMode { get; init; } = false;
+    public StringComparison StringKeyComparison { get; init; } = StringComparison.Ordinal;
+    public NullKeyPolicy NullKeyPolicy { get; init; } = NullKeyPolicy.Error;
+    public MissingCompareKeyListPolicy MissingCompareKeyListPolicy { get; init; } =
+        MissingCompareKeyListPolicy.SkipAndRecordError;
+    public DuplicateKeyPolicy DuplicateKeyPolicy { get; init; } =
+        DuplicateKeyPolicy.RecordError;
+}
+
+public enum NullKeyPolicy
+{
+    Error
+}
+
+public enum MissingCompareKeyListPolicy
+{
+    SkipAndRecordError
+}
+
+public enum DuplicateKeyPolicy
+{
+    RecordError
+}
+```
+
+本プロジェクトの既定挙動:
+
+- CompareKey 無し List: `SkipAndRecordError`
+- 重複キー: `RecordError`
+- 文字列キー比較: `Ordinal`
+
+---
+
+## 21. IssueCode 一覧（確定）
+
+```csharp
+public enum CompareIssueCode
+{
+    InputModelListEmpty,
+    InputModelNullElement,
+    UnsupportedContainerType,
+    CompareKeyNotFoundOnSequenceElement,
+    CompareKeyValueIsNull,
+    DuplicateCompareKeyDetected,
+    ModelIndexOutOfRange,
+    ReflectionMetadataBuildFailed
+}
+```
+
+最小必須フィールド:
+
+- `Path`: 例 `Dataset.Groups.Items`
+- `ModelIndex`: 関連モデルが特定できる場合に設定
+- `KeyText`: 重複・不正キー時に設定
+
+---
+
+## 22. Compare 実行手順（確定）
+
+### 22.1 フェーズ分割
+
+1. 入力検証
+2. メタデータ解決（Reflection + キャッシュ）
+3. ノード生成（再帰）
+4. コンテナ正規化（Dictionary/List/IEnumerable）
+5. Result 生成
+
+### 22.2 フェーズごとの入出力
+
+- 入力検証:
+  - 入力: `IReadOnlyList<T> models`
+  - 出力: 正常なら次フェーズへ、異常は Issue 生成
+- メタデータ解決:
+  - 入力: `Type rootType`
+  - 出力: `TypeMetadata`
+- ノード生成:
+  - 入力: `TypeMetadata`, `models`
+  - 出力: `Parallel<T>` ルート
+
+### 22.3 コンテナ処理順序
+
+1. `IDictionary<TKey,TValue>` / `IReadOnlyDictionary<TKey,TValue>`
+2. `IList<T>` / `IReadOnlyList<T>` / `T[]`
+3. `IEnumerable<T>`（1回マテリアライズ後に 1 or 2 に委譲）
+4. 非対応は `UnsupportedContainerType`
+
+---
+
+## 23. 非機能詳細（確定）
+
+### 23.1 Reflection キャッシュ
+
+- キー: `Type`
+- 値: `TypeMetadata`
+- 構造: `ConcurrentDictionary<Type, TypeMetadata>`
+- 生成後は不変（読み取り専用）
+
+### 23.2 列挙安全性
+
+- `IEnumerable<T>` は Compare 開始時に `List<T>` へ 1 回変換
+- 比較中の再列挙は禁止
+
+### 23.3 順序再現性
+
+- keyUnion は決定論的順序で固定
+- 文字列キーは `StringComparison.Ordinal`
+- 実行ごとに同一入力なら同一列挙順を保証
+
+---
+
+## 24. 実装前チェックリスト（確定）
+
+1. `CompareResult<T>` と `CompareIssue` のクラス定義を実装したか
+2. `GetState(modelIndex)` を全 `Parallel<T>` 実装に追加したか
+3. CompareKey 無し List を `Skip + Error` で処理しているか
+4. 重複キーを `RecordError` しているか
+5. `IEnumerable<T>` の 1 回マテリアライズを保証しているか
+6. `SelectMany` 後も `ParallelXxx` が維持されるテストを書いたか
+
 ```text
 keyUnion = ["A", "B", "C"]
 

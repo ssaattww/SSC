@@ -1,7 +1,7 @@
 # 外部仕様回答反映レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 回答反映
 
@@ -25,3 +25,4 @@
 5. 性能上限
 - 決定: 事前固定しない
 - 方針: 体感性能を重視して改善
+

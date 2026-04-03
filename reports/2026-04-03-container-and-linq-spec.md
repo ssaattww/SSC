@@ -1,7 +1,7 @@
 # コンテナ対応と LINQ 仕様確定レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 決定事項
 
@@ -26,3 +26,4 @@
 ## 補足
 
 - `IAsyncEnumerable<T>` と one-shot 列挙体は非対応として明示エラー化
+

@@ -1,7 +1,7 @@
 # 詳細設計粒度決定レポート
 
 - Date: 2026-04-03
-- Scope: `doc/BasicDesign.md`, `doc/DetailDesignDraft.md`
+- Scope: `doc/design/basic/BasicDesign.md`, `doc/draft/DetailDesignDraft.md`
 
 ## 結論
 
@@ -12,7 +12,7 @@
 
 ## 反映内容
 
-`doc/DetailDesignDraft.md` に以下を追記した。
+`doc/draft/DetailDesignDraft.md` に以下を追記した。
 
 1. 粒度レベル定義（L1-L4）と採用レベル（L3）
 2. L3 の完了条件（I/O、不変条件、異常系、API、性能、テスト観点）
@@ -27,3 +27,4 @@
 3. keyUnion 順序（昇順固定 / 入力順優先）
 4. 欠損と値 `null` の API 上の区別要否
 5. 想定最大規模（比較対象数 N、List 件数）
+

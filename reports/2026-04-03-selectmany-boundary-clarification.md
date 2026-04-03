@@ -1,7 +1,7 @@
 # SelectMany 例の構成明確化レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 対応内容
 
@@ -21,3 +21,4 @@
 
 - 「どこまでがユーザーのデータ型か」を即座に判別できるようにする
 - 実装と利用時の責務分離を設計書上で固定する
+

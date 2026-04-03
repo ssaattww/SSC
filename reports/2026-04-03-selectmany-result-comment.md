@@ -1,7 +1,7 @@
 # SelectMany 結果コメント追記レポート
 
 - Date: 2026-04-03
-- Target: `doc/DetailDesignDraft.md`
+- Target: `doc/draft/DetailDesignDraft.md`
 
 ## 追記内容
 
@@ -13,3 +13,4 @@
 ## 目的
 
 - `SelectMany` の実行後に何が並ぶかを、コードだけで追跡できるようにする
+
