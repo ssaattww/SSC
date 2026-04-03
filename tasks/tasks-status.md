@@ -68,4 +68,17 @@
     - `doc/design/detail/07-NonFunctional.md`
     - `doc/design/detail/08-ImplementationChecklist.md`
     - `reports/2026-04-03-design-document-structure-refactor.md`
+- T-010: 非Draft詳細設計の内容拡充
+  - Status: 完了（骨子レベルから実装準備レベルへ詳細化）
+  - Output:
+    - `doc/design/detail/00-Overview.md`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/04-SelectManySemantics.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `doc/design/detail/07-NonFunctional.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/2026-04-03-final-design-content-enrichment.md`
 

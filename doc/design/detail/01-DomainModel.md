@@ -1,6 +1,6 @@
 # Domain Model
 
-## Input Model Example
+## 1. Input Model (Example)
 
 ```csharp
 public sealed class Dataset
@@ -23,7 +23,7 @@ public sealed class Item
 }
 ```
 
-## Lifted Model Concept
+## 2. Lifted Model Concept
 
 ```text
 Parallel<Dataset>
@@ -31,10 +31,55 @@ Parallel<Dataset>
       └ Items : IEnumerable<ParallelItem>
 ```
 
-## Presence State
+変換規則:
 
-各 model slot は次の 3 状態を持つ。
+- `T -> Parallel<T>`
+- `List<T> -> IEnumerable<Parallel<T>>`（CompareKey 正規化済み）
+- `Dictionary<TKey, TValue> -> IEnumerable<Parallel<TValue>>`（keyUnion 正規化済み）
 
-- `Missing`: 対応要素なし
-- `PresentNull`: 要素あり・値 null
-- `PresentValue`: 要素あり・値あり
+## 3. Internal Representation (Concept)
+
+```csharp
+internal sealed class ParallelNode<T> : Parallel<T>
+{
+    T?[] Values;
+    Dictionary<string, IParallelNode> Children;
+}
+```
+
+- `Values[modelIndex]` が model slot
+- `Children` は構築中内部表現
+- 公開面では型付きプロパティへ変換される
+
+## 4. Presence State
+
+```csharp
+public enum ValueState
+{
+    Missing,
+    PresentNull,
+    PresentValue
+}
+```
+
+`this[int]` だけでは `Missing` と `PresentNull` を区別できないため、
+`GetState(modelIndex)` を併用する。
+
+## 5. Invariants
+
+- 1 つの `Parallel<T>` は「論理要素 1 件」を表す
+- すべての `Parallel<T>.Count` は `models.Count` と一致する
+- Compare 完了後、順序キー自体は保持しない（位置意味のみ保持）
+
+## 6. Example (Group)
+
+```text
+data0.Groups = [GroupId=1, GroupId=2]
+data1.Groups = [GroupId=1, GroupId=3]
+
+keyUnion = [1,2,3]
+
+Groups[0] = [Group(1), Group(1)]
+Groups[1] = [Group(2), null]
+Groups[2] = [null, Group(3)]
+```

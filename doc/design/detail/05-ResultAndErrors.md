@@ -1,6 +1,6 @@
 # Result And Errors
 
-## Result Shape
+## 1. Result Model
 
 ```csharp
 public sealed class CompareResult<T>
@@ -11,7 +11,7 @@ public sealed class CompareResult<T>
 }
 ```
 
-## Issue Shape
+## 2. Issue Model
 
 ```csharp
 public sealed class CompareIssue
@@ -23,20 +23,38 @@ public sealed class CompareIssue
     public string? KeyText { get; init; }
     public string Message { get; init; } = "";
 }
+
+public enum CompareIssueLevel { Error, Warning }
 ```
 
-## Issue Codes
+## 3. Issue Codes And Triggers
 
-- `InputModelListEmpty`
-- `InputModelNullElement`
-- `UnsupportedContainerType`
-- `CompareKeyNotFoundOnSequenceElement`
-- `CompareKeyValueIsNull`
-- `DuplicateCompareKeyDetected`
-- `ModelIndexOutOfRange`
-- `ReflectionMetadataBuildFailed`
+- `InputModelListEmpty`: models が空
+- `InputModelNullElement`: models 内に null
+- `UnsupportedContainerType`: 未対応コンテナ
+- `CompareKeyNotFoundOnSequenceElement`: List 要素に CompareKey 無し
+- `CompareKeyValueIsNull`: CompareKey 値が null
+- `DuplicateCompareKeyDetected`: 重複キー
+- `ModelIndexOutOfRange`: indexer 範囲外
+- `ReflectionMetadataBuildFailed`: 反射メタデータ構築失敗
 
-## Strict Mode
+## 4. Strict Mode Matrix
 
-- `StrictMode=false`: `Issues` へ蓄積して返却
-- `StrictMode=true`: Error 発生時点で例外
+- Strict=false:
+  - Error を Issues に蓄積
+  - 継続可能な範囲で比較継続
+- Strict=true:
+  - Error 時点で例外
+  - `Root` は未完成状態として扱う
+
+## 5. Required Issue Fields
+
+- `Path`: 例 `Dataset.Groups.Items`
+- `ModelIndex`: 特定可能時に設定
+- `KeyText`: キー問題時に設定
+- `Message`: 人間が読める説明
+
+## 6. Recommended Error Response
+
+- 利用者向けログ: `Code + Path + Message`
+- 開発者向けログ: `ModelIndex + KeyText` も出力

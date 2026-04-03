@@ -1,27 +1,60 @@
 # Container Mapping Rules
 
-## Supported Containers
+## 1. Supported Containers
 
-1. `IDictionary<TKey,TValue>` / `IReadOnlyDictionary<TKey,TValue>`
-2. `IList<T>` / `IReadOnlyList<T>` / `T[]`
-3. `IEnumerable<T>`（実行時に上記へ解決可能な場合）
+1. Keyed: `IDictionary<TKey,TValue>`, `IReadOnlyDictionary<TKey,TValue>`
+2. Sequence: `IList<T>`, `IReadOnlyList<T>`, `T[]`
+3. Sequence-like: `IEnumerable<T>`（実行時解決可能な場合）
 
-## Dictionary Rules
+## 2. Dictionary Rules
 
 - `TKey` を比較キーとして使用（`CompareKey` 不要）
-- keyUnion を作り `Parallel<TValue>` へ正規化
+- 全 model から keyUnion を作成
+- key ごとに `Parallel<TValue>` を作成
+- key 重複は Dictionary 自体の制約で原理的に発生しない
 
-## Sequence Rules
+例:
+
+```text
+data0 = {A:80, B:70}
+data1 = {A:90, C:60}
+
+union = [A,B,C]
+E0=[80,90], E1=[70,null], E2=[null,60]
+```
+
+## 3. List/Array Rules
 
 - 要素型に `CompareKey` が必須
-- CompareKey 無しは `Skip + Error`（strict で例外）
-- 重複キーは `Error`（strict で例外）
+- `CompareKey` 無し: `Skip + CompareKeyNotFoundOnSequenceElement`
+- 重複キー: `DuplicateCompareKeyDetected`
+- strict モードでは上記を例外化
 
-## IEnumerable Rules
+例:
 
-- Compare 開始時に 1 回だけマテリアライズ
-- 対応不能な one-shot 列挙は `UnsupportedContainerType`
+```text
+data0: (1,10), (2,20)
+data1: (1,11), (3,30)
 
-## Unsupported
+union=[1,2,3]
+E0=[(1,10),(1,11)]
+E1=[(2,20),null]
+E2=[null,(3,30)]
+```
+
+## 4. IEnumerable Rules
+
+- Compare 開始時に `List<T>` へ 1 回マテリアライズ
+- 再列挙しない
+- 実行時型が未対応コンテナの場合 `UnsupportedContainerType`
+
+## 5. Unsupported Containers
 
 - `IAsyncEnumerable<T>`
+- one-shot 列挙体（再実行不能）
+
+## 6. Key Order Rule
+
+- keyUnion は決定論的順序
+- 文字列キーは `StringComparison.Ordinal`
+- 既定比較器で比較不能なキーは Error

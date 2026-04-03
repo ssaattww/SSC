@@ -1,6 +1,6 @@
 # Public API
 
-## Entry Point
+## 1. Entry Point
 
 ```csharp
 public static class ParallelCompareApi
@@ -11,7 +11,13 @@ public static class ParallelCompareApi
 }
 ```
 
-## Parallel Node API
+## 2. Input Contract
+
+- `models.Count == 0` は `InputModelListEmpty`
+- `models` 要素 `null` は `InputModelNullElement`
+- `configuration == null` は既定値を適用
+
+## 3. Parallel Node API
 
 ```csharp
 public interface Parallel<T>
@@ -24,8 +30,6 @@ public interface Parallel<T>
 }
 ```
 
-## Typed Traversal API Example
-
 ```csharp
 public interface ParallelDataset : Parallel<Dataset>
 {
@@ -36,4 +40,34 @@ public interface ParallelGroup : Parallel<Group>
 {
     IEnumerable<ParallelItem> Items { get; }
 }
+
+public interface ParallelItem : Parallel<Item>
+{
+}
 ```
+
+## 4. Behavior Contract
+
+- indexer の範囲外アクセスは `ModelIndexOutOfRange`
+- `AllPresent == Values.All(v => v != null かつ Missing でない)`
+- `AnyPresent == Values.Any(v => Missing でない)`
+
+## 5. Configuration Entry
+
+```csharp
+public sealed class CompareConfiguration
+{
+    public bool StrictMode { get; init; } = false;
+    public StringComparison StringKeyComparison { get; init; } = StringComparison.Ordinal;
+    public NullKeyPolicy NullKeyPolicy { get; init; } = NullKeyPolicy.Error;
+    public MissingCompareKeyListPolicy MissingCompareKeyListPolicy { get; init; } =
+        MissingCompareKeyListPolicy.SkipAndRecordError;
+    public DuplicateKeyPolicy DuplicateKeyPolicy { get; init; } =
+        DuplicateKeyPolicy.RecordError;
+}
+```
+
+## 6. Result Entry
+
+`Compare` は常に `CompareResult<T>` を返し、成功時は `Root` が設定される。
+strict 時は Error 発生で例外送出を許可する。

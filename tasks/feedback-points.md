@@ -49,3 +49,6 @@
 - ユーザー指摘: Draftではない設計書は書類を分け、各設計を粒度でファイル分割すること。
 - 対応:
   - `doc/draft` と `doc/design` を分離し、`doc/design/detail` を機能粒度で分割
+- ユーザー指摘: 非Draft設計が薄く、Draftの方が充実して見える。
+- 対応:
+  - `doc/design/detail` の全ファイルを実装準備レベルまで内容拡充

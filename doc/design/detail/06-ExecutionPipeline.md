@@ -1,30 +1,71 @@
 # Execution Pipeline
 
-## Phases
+## 1. Phase Overview
 
-1. Input validation
-2. Metadata resolution
-3. Recursive node build
-4. Container normalization
-5. Result assembly
+1. Input Validation
+2. Metadata Resolution
+3. Node Construction
+4. Container Normalization
+5. Result Assembly
 
-## Input Validation
+## 2. Input Validation
 
-- `models.Count > 0`
-- `models` 要素 null 禁止
+入力: `IReadOnlyList<T> models`
 
-## Metadata Resolution
+検証:
 
-- `Type -> TypeMetadata` を反射で生成
-- キャッシュ済みなら再利用
+- 空配列禁止
+- null 要素禁止
+- configuration の既定値補完
 
-## Recursive Build
+出力:
 
-- Scalar: model slot 配列を直接生成
-- Object: プロパティごとに子ノードを生成
-- Container: `03-ContainerRules.md` を適用
+- 正常: phase2 へ
+- 異常: Issue 記録（strict なら例外）
 
-## Output
+## 3. Metadata Resolution
 
-- ルート: `CompareResult<T>.Root`
-- 問題: `CompareResult<T>.Issues`
+入力: `Type rootType`
+
+処理:
+
+- public プロパティ列挙
+- container 種別判定
+- CompareKey 抽出ルール構築
+
+出力: `TypeMetadata`
+
+## 4. Node Construction
+
+入力: `TypeMetadata`, `models`
+
+処理:
+
+- Scalar: slot 配列作成
+- Object: 子ノードを再帰構築
+- Container: phase4 へ委譲
+
+出力: `Parallel<T>`
+
+## 5. Container Normalization
+
+優先順:
+
+1. Dictionary
+2. List/Array
+3. IEnumerable（1回 materialize 後に再判定）
+
+出力: `IEnumerable<Parallel<TElement>>`
+
+## 6. Result Assembly
+
+- Root 設定
+- Issues 集約
+- `HasError = Issues.Any(Level==Error)`
+
+## 7. Pseudo Flow
+
+```text
+Validate -> ResolveMetadata -> BuildNodeRecursively
+       -> NormalizeContainers -> BuildResult
+```

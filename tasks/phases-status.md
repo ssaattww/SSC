@@ -24,6 +24,7 @@
   - SelectMany 展開結果の具体データをコードコメントで明示
   - SelectMany の各要素が model スロットを持つ点をコメントで明示
   - `Result`/`CompareConfiguration`/IssueCode を詳細設計へ反映
+  - 非Draft詳細設計を章ごとに内容拡充（契約・例・実行手順を明文化）
 
 ## Phase 3: 実装
 
