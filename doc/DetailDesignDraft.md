@@ -577,3 +577,136 @@ var m1 = first[1];
 ```
 
 `SelectMany` 後でも要素は `Parallel<Group>` のままであり、`[model]` 参照は維持される。
+
+### 18.6 `SelectMany` の完全型例（省略なし）
+
+```csharp
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+// 設計書上の最小定義（利用者が見る公開面）
+public interface Parallel<T> : IEnumerable<Parallel<T>>
+{
+    T? this[int modelIndex] { get; }
+    int Count { get; }
+}
+
+public interface ParallelDataset : Parallel<Dataset>
+{
+    IEnumerable<ParallelGroup> Groups { get; }
+}
+
+public interface ParallelGroup : Parallel<Group>
+{
+    IEnumerable<ParallelItem> Items { get; }
+}
+
+public interface ParallelItem : Parallel<Item>
+{
+}
+
+public sealed class Dataset
+{
+    public IReadOnlyList<Group> Groups { get; init; } = new List<Group>();
+}
+
+public sealed class Group
+{
+    public int GroupId { get; init; }
+    public IReadOnlyList<Item> Items { get; init; } = new List<Item>();
+}
+
+public sealed class Item
+{
+    public int ItemId { get; init; }
+    public double MetricA { get; init; }
+}
+
+public static class Api
+{
+    // 実体はエンジン実装側。ここではシグネチャのみ示す。
+    public static ParallelDataset Compare(IReadOnlyList<Dataset> models) =>
+        throw new NotImplementedException();
+}
+
+public static class Example
+{
+    public static void Run()
+    {
+        Dataset data0 = new Dataset
+        {
+            Groups = new List<Group>
+            {
+                new Group
+                {
+                    GroupId = 1,
+                    Items = new List<Item>
+                    {
+                        new Item { ItemId = 100, MetricA = 10.0 },
+                        new Item { ItemId = 200, MetricA = 20.0 }
+                    }
+                },
+                new Group
+                {
+                    GroupId = 2,
+                    Items = new List<Item>
+                    {
+                        new Item { ItemId = 300, MetricA = 30.0 }
+                    }
+                }
+            }
+        };
+
+        Dataset data1 = new Dataset
+        {
+            Groups = new List<Group>
+            {
+                new Group
+                {
+                    GroupId = 1,
+                    Items = new List<Item>
+                    {
+                        new Item { ItemId = 100, MetricA = 11.0 },
+                        new Item { ItemId = 400, MetricA = 40.0 }
+                    }
+                },
+                new Group
+                {
+                    GroupId = 3,
+                    Items = new List<Item>
+                    {
+                        new Item { ItemId = 500, MetricA = 50.0 }
+                    }
+                }
+            }
+        };
+
+        IReadOnlyList<Dataset> models = new List<Dataset> { data0, data1 };
+        ParallelDataset root = Api.Compare(models);
+
+        // 1段目 SelectMany: Dataset -> Group
+        IEnumerable<ParallelGroup> groups =
+            root.SelectMany((ParallelDataset d) => d.Groups);
+
+        // 2段目 SelectMany: Group -> Item
+        IEnumerable<ParallelItem> items =
+            groups.SelectMany((ParallelGroup g) => g.Items);
+
+        ParallelGroup firstGroup = groups.First();
+        Group? model0Group = firstGroup[0];
+        Group? model1Group = firstGroup[1];
+
+        ParallelItem firstItem = items.First();
+        Item? model0Item = firstItem[0];
+        Item? model1Item = firstItem[1];
+
+        // 型は常に Parallel<T> を維持し、[modelIndex] で各モデル値を参照する。
+        Console.WriteLine(model0Group?.GroupId);
+        Console.WriteLine(model1Group?.GroupId);
+        Console.WriteLine(model0Item?.MetricA);
+        Console.WriteLine(model1Item?.MetricA);
+    }
+}
+```

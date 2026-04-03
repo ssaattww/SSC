@@ -17,6 +17,7 @@
   - `doc/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
   - コンテナ対応（Dictionary / IEnumerable）と SelectMany 仕様を確定
   - コンテナ対応・SelectMany の具体例を設計書に追記
+  - SelectMany の完全型例（省略なし）を追記
   - 詳細 API 定義（`Result`/`CompareConfiguration`/エラー型）を次ステップで確定予定
 
 ## Phase 3: 実装
