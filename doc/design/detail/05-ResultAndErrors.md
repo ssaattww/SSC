@@ -47,12 +47,29 @@ public enum CompareIssueLevel { Error, Warning }
   - Error 時点で例外
   - `Root` は未完成状態として扱う
 
+例外種別:
+
+- 入力系 Error: `CompareInputException`
+- 実行系 Error: `CompareExecutionException`
+
 ## 5. Required Issue Fields
 
 - `Path`: 例 `Dataset.Groups.Items`
 - `ModelIndex`: 特定可能時に設定
 - `KeyText`: キー問題時に設定
 - `Message`: 人間が読める説明
+
+### 5.1 Path Format
+
+`Path` は `.` 区切りでプロパティチェーンを表現する。
+
+例:
+
+- `Dataset.Groups`
+- `Dataset.Groups.Items`
+- `Dataset.Groups.Items.MetricA`
+
+キー関係の補助情報は `KeyText` に出し、`Path` にインデックス番号は含めない。
 
 ## 6. Recommended Error Response
 

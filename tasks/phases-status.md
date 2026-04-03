@@ -25,6 +25,7 @@
   - SelectMany の各要素が model スロットを持つ点をコメントで明示
   - `Result`/`CompareConfiguration`/IssueCode を詳細設計へ反映
   - 非Draft詳細設計を章ごとに内容拡充（契約・例・実行手順を明文化）
+  - 実装前確認事項 6 点（例外分離、Path/Key例示、CompareIgnore、性能受け入れ、TDD/E2E）を確定
 
 ## Phase 3: 実装
 

@@ -71,3 +71,26 @@ public sealed class CompareConfiguration
 
 `Compare` は常に `CompareResult<T>` を返し、成功時は `Root` が設定される。
 strict 時は Error 発生で例外送出を許可する。
+
+## 7. Exception Types (Strict Mode)
+
+例外は 2 系統に分ける。
+
+```csharp
+public class CompareInputException : Exception
+{
+    public CompareIssueCode Code { get; }
+    public CompareInputException(CompareIssueCode code, string message) : base(message) => Code = code;
+}
+
+public class CompareExecutionException : Exception
+{
+    public CompareIssueCode Code { get; }
+    public CompareExecutionException(CompareIssueCode code, string message) : base(message) => Code = code;
+}
+```
+
+- `CompareInputException`:
+  - 入力妥当性違反（空 model、null 要素など）
+- `CompareExecutionException`:
+  - 正規化・反射・キー処理など実行中エラー

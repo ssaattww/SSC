@@ -40,3 +40,10 @@
 21. CompareKey 無し / 重複キー異常系
 22. Dictionary/List/IEnumerable 各コンテナ系
 23. SelectMany の順序保証
+
+## 7. Test Strategy (TDD + E2E)
+
+24. 仕様項目ごとに先に失敗テストを書く（TDD）
+25. API 入口から出口までの E2E テストを優先する
+26. E2E で `Path/IssueCode/model slot` をまとめて検証する
+27. unit テストは E2E で不足する境界条件を補完する

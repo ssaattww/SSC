@@ -58,3 +58,36 @@ E2=[null,(3,30)]
 - keyUnion は決定論的順序
 - 文字列キーは `StringComparison.Ordinal`
 - 既定比較器で比較不能なキーは Error
+
+## 7. Key Comparison Examples
+
+### 7.1 String Key (`Ordinal`)
+
+```text
+data0 = {"a": 1}
+data1 = {"A": 2}
+
+Ordinal 比較:
+union = ["A", "a"]   // 別キーとして扱う
+```
+
+### 7.2 DateTime Key
+
+```text
+data0 = {2026-04-03T00:00:00Z: X}
+data1 = {2026-04-03T09:00:00+09:00: Y}
+
+UTC 正規化後に同一点なら同一キーとして扱う
+```
+
+### 7.3 Composite Key
+
+```text
+key = (GroupId, ItemId)
+
+比較順:
+1) GroupId
+2) ItemId
+```
+
+複合キーは構成順序を固定し、順序差異による不一致を禁止する。

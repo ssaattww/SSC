@@ -81,4 +81,16 @@
     - `doc/design/detail/07-NonFunctional.md`
     - `doc/design/detail/08-ImplementationChecklist.md`
     - `reports/2026-04-03-final-design-content-enrichment.md`
+- T-011: 実装前確認事項の最終確定
+  - Status: 完了（例外分離・Path/Key例示・CompareIgnore・TDD/E2E方針を反映）
+  - Output:
+    - `doc/design/detail/00-Overview.md`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `doc/design/detail/07-NonFunctional.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/2026-04-03-pre-implementation-decisions-finalization.md`
 

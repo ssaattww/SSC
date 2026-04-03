@@ -32,6 +32,13 @@
 - public プロパティ列挙
 - container 種別判定
 - CompareKey 抽出ルール構築
+- `CompareIgnore` 付与メンバーを除外
+
+反射対象ポリシー:
+
+- 基本は public getter メンバーを広く対象とする
+- 比較から外したいメンバーだけ `CompareIgnore` で明示除外する
+- 制限は最小化し、除外指定で制御する
 
 出力: `TypeMetadata`
 

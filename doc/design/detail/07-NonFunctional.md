@@ -18,7 +18,7 @@
 - 比較中は再列挙禁止
 - one-shot 列挙は明示エラー
 
-## 4. Time Complexity (Target)
+## 4. Time Complexity (Reference)
 
 - Dictionary 正規化: `O(U + M)`
   - `U`: union key 数
@@ -40,3 +40,9 @@
 
 - 事前固定上限は置かない
 - 体感遅延を優先し、必要時にキャッシュ・分割最適化を実施
+
+## 8. Performance Acceptance
+
+- 本フェーズの受け入れ基準は「正しく動作すること」を優先する
+- 性能閾値は固定しない
+- 性能課題は実データ観測後に別タスクで改善する

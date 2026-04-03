@@ -20,6 +20,8 @@ public sealed class Item
     [CompareKey]
     public int ItemId { get; init; }
     public double MetricA { get; init; }
+    [CompareIgnore]
+    public string? InternalMemo { get; init; }
 }
 ```
 
@@ -50,6 +52,20 @@ internal sealed class ParallelNode<T> : Parallel<T>
 - `Values[modelIndex]` が model slot
 - `Children` は構築中内部表現
 - 公開面では型付きプロパティへ変換される
+
+## 3.1 CompareIgnore Attribute
+
+比較対象に入れたくないメンバーは `CompareIgnore` 属性で除外する。
+
+```csharp
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public sealed class CompareIgnoreAttribute : Attribute
+{
+}
+```
+
+- 制限を増やさず、必要な除外だけ明示するための属性
+- `CompareIgnore` が付いたメンバーはノード生成対象から外す
 
 ## 4. Presence State
 
