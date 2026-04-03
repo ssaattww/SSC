@@ -19,8 +19,8 @@
 - 公開面: `IEnumerable` を維持
 
 4. 欠損と値 null
-- 状況: ユーザー要望は未固定
-- 推奨: `indexer` 維持 + `GetState(modelIndex)` 追加で 3 値識別
+- 決定: 区別する
+- 方式: `indexer` 維持 + `GetState(modelIndex)` 追加で 3 値識別
 
 5. 性能上限
 - 決定: 事前固定しない
