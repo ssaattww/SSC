@@ -713,16 +713,27 @@ namespace App
 
             IReadOnlyList<Dataset> models = new List<Dataset> { data0, data1 };
             ParallelDataset root = Api.Compare(models); // ここからライブラリ型
+            // 本例では Group は GroupId、Item は ItemId を比較キーとして扱う想定。
 
             IEnumerable<ParallelDataset> roots = new[] { root };
 
             // 1段目 SelectMany: ParallelDataset -> ParallelGroup
             IEnumerable<ParallelGroup> groups =
                 roots.SelectMany((ParallelDataset d) => d.Groups);
+            // groups の想定内容（GroupId ベース）:
+            // groups[0] = [ GroupId=1, GroupId=1 ]
+            // groups[1] = [ GroupId=2, null      ]
+            // groups[2] = [ null,      GroupId=3 ]
 
             // 2段目 SelectMany: ParallelGroup -> ParallelItem
             IEnumerable<ParallelItem> items =
                 groups.SelectMany((ParallelGroup g) => g.Items);
+            // items の想定内容（外側 Group 順 -> 内側 ItemId 順）:
+            // items[0] = [ ItemId=100, ItemId=100 ] // GroupId=1
+            // items[1] = [ ItemId=200, null       ] // GroupId=1
+            // items[2] = [ null,       ItemId=400 ] // GroupId=1
+            // items[3] = [ ItemId=300, null       ] // GroupId=2
+            // items[4] = [ null,       ItemId=500 ] // GroupId=3
 
             ParallelGroup firstGroup = groups.First();
             Group? model0Group = firstGroup[0];

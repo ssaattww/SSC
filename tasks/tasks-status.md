@@ -38,3 +38,8 @@
   - Output:
     - `doc/DetailDesignDraft.md`（章 18.6.1-18.6.3）
     - `reports/2026-04-03-selectmany-boundary-clarification.md`
+- T-006: SelectMany 結果データのコメント追記
+  - Status: 完了（展開後の `groups` / `items` の具体内容をコードコメントで明示）
+  - Output:
+    - `doc/DetailDesignDraft.md`（章 18.6.3）
+    - `reports/2026-04-03-selectmany-result-comment.md`
