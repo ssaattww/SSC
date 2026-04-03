@@ -33,3 +33,8 @@
   - Output:
     - `doc/DetailDesignDraft.md`（章 18.6）
     - `reports/2026-04-03-selectmany-typed-example.md`
+- T-005: SelectMany の型境界を明確化
+  - Status: 完了（ユーザー型とライブラリ型を分離して記述）
+  - Output:
+    - `doc/DetailDesignDraft.md`（章 18.6.1-18.6.3）
+    - `reports/2026-04-03-selectmany-boundary-clarification.md`
