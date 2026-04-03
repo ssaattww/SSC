@@ -23,3 +23,8 @@
   - Output:
     - `doc/DetailDesignDraft.md`（章 17-18）
     - `reports/2026-04-03-container-and-linq-spec.md`
+- T-003: コンテナ対応と SelectMany の具体例追記
+  - Status: 完了（ドラフト同等粒度の例示を設計書へ反映）
+  - Output:
+    - `doc/DetailDesignDraft.md`（章 17.6, 18.5）
+    - `reports/2026-04-03-container-linq-examples.md`

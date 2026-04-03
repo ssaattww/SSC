@@ -451,6 +451,62 @@ L3 の完了条件:
 
 これらは本フェーズでは非対応とし、入力検証で明示的にエラー化する。
 
+### 17.6 コンテナ別の例示
+
+#### 例1: Dictionary 系（`CompareKey` 不要）
+
+```text
+data0.Scores = { "A" -> 80, "B" -> 70 }
+data1.Scores = { "A" -> 90, "C" -> 60 }
+```
+
+```text
+keyUnion = ["A", "B", "C"]
+
+Element[0] // key "A"
+  Values = [80, 90]
+
+Element[1] // key "B"
+  Values = [70, null]
+
+Element[2] // key "C"
+  Values = [null, 60]
+```
+
+#### 例2: List/配列（`CompareKey` 必須）
+
+```csharp
+public sealed class ItemDetail
+{
+    [CompareKey]
+    public int StepNo { get; init; }
+    public int ValueX { get; init; }
+}
+```
+
+```text
+data0.Details = [{StepNo=1, ValueX=10}, {StepNo=2, ValueX=20}]
+data1.Details = [{StepNo=1, ValueX=11}, {StepNo=3, ValueX=30}]
+```
+
+```text
+keyUnion = [1, 2, 3]
+Element[0] = [Detail(1,10), Detail(1,11)]
+Element[1] = [Detail(2,20), null]
+Element[2] = [null, Detail(3,30)]
+```
+
+#### 例3: `IEnumerable<T>` 宣言プロパティ
+
+```csharp
+public IEnumerable<ItemDetail> Details { get; init; } = Array.Empty<ItemDetail>();
+```
+
+- 実行時型が `List<ItemDetail>` の場合:
+  - Sequence 規則で処理（1回マテリアライズ）
+- 実行時型が対応外 one-shot 列挙体の場合:
+  - `Skip + Result エラー`（strict で例外可）
+
 ---
 
 ## 18. LINQ `SelectMany` 動作仕様（確定）
@@ -480,3 +536,44 @@ L3 の完了条件:
 
 - `SelectMany` 結果は遅延評価を維持する
 - ただし `IEnumerable<T>` 入力のマテリアライズは Compare フェーズで一度だけ行う
+
+### 18.5 `SelectMany` の例示
+
+#### 例1: 2段階展開（Groups -> Items）
+
+```csharp
+var q =
+    Compare(new[] { data0, data1 })
+      .SelectMany(d => d.Groups)
+      .SelectMany(g => g.Items);
+```
+
+このとき `q` は `IEnumerable<Parallel<Item>>` となり、要素順は次の規則になる。
+
+1. `Groups` の要素順（keyUnion 順）
+2. 各 Group 内の `Items` の要素順（keyUnion 順）
+3. LINQ 標準どおり、外側要素ごとに内側を連結
+
+#### 例2: 欠損を含む展開
+
+```text
+Group key=2 の Values = [Group(2), null]
+Group key=3 の Values = [null, Group(3)]
+```
+
+- key=2 の `SelectMany(g => g.Items)`:
+  - model0 側の Items から keyUnion を構築して展開
+- key=3 の `SelectMany(g => g.Items)`:
+  - model1 側の Items から keyUnion を構築して展開
+- 両モデルとも欠損なら空列
+
+#### 例3: モデル軸を展開しないことの確認
+
+```csharp
+var groups = Compare(new[] { data0, data1 }).SelectMany(d => d.Groups);
+var first = groups.First();
+var m0 = first[0];
+var m1 = first[1];
+```
+
+`SelectMany` 後でも要素は `Parallel<Group>` のままであり、`[model]` 参照は維持される。
