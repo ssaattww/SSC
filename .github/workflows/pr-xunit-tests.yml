@@ -1,0 +1,55 @@
+name: PR .NET Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  dotnet-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Discover test projects
+        id: discover
+        shell: bash
+        run: |
+          mapfile -t projects < <(git ls-files '*.csproj' | grep -Ei '(test|tests)' || true)
+
+          if [[ ${#projects[@]} -eq 0 ]]; then
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          {
+            echo "has_tests=true"
+            echo "projects<<EOF"
+            printf '%s\n' "${projects[@]}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Restore and run tests
+        if: ${{ steps.discover.outputs.has_tests == 'true' }}
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            [[ -z "$project" ]] && continue
+            echo "Testing: $project"
+            dotnet restore "$project"
+            dotnet test "$project" --configuration Release --no-restore --verbosity minimal
+          done <<< "${{ steps.discover.outputs.projects }}"
+
+      - name: No test projects found
+        if: ${{ steps.discover.outputs.has_tests != 'true' }}
+        run: echo "::notice::No .NET test projects were found. Skipping tests."
