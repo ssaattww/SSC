@@ -43,3 +43,8 @@
   - Output:
     - `doc/DetailDesignDraft.md`（章 18.6.3）
     - `reports/2026-04-03-selectmany-result-comment.md`
+- T-007: SelectMany 要素の model 単位性を明示
+  - Status: 完了（各要素が `ParallelXxx` として model スロットを持つことをコメントで明示）
+  - Output:
+    - `doc/DetailDesignDraft.md`（章 18.6.3）
+    - `reports/2026-04-03-selectmany-model-slot-clarification.md`

@@ -720,6 +720,8 @@ namespace App
             // 1段目 SelectMany: ParallelDataset -> ParallelGroup
             IEnumerable<ParallelGroup> groups =
                 roots.SelectMany((ParallelDataset d) => d.Groups);
+            // 重要: groups の各要素は ParallelGroup（1要素=複数modelの束）。
+            // groups[i][0] は model0 側、groups[i][1] は model1 側の Group を指す。
             // groups の想定内容（GroupId ベース）:
             // groups[0] = [ GroupId=1, GroupId=1 ]
             // groups[1] = [ GroupId=2, null      ]
@@ -728,12 +730,15 @@ namespace App
             // 2段目 SelectMany: ParallelGroup -> ParallelItem
             IEnumerable<ParallelItem> items =
                 groups.SelectMany((ParallelGroup g) => g.Items);
+            // 重要: items の各要素も ParallelItem（1要素=複数modelの束）。
+            // items[i][0] は model0 側、items[i][1] は model1 側の Item を指す。
             // items の想定内容（外側 Group 順 -> 内側 ItemId 順）:
             // items[0] = [ ItemId=100, ItemId=100 ] // GroupId=1
             // items[1] = [ ItemId=200, null       ] // GroupId=1
             // items[2] = [ null,       ItemId=400 ] // GroupId=1
             // items[3] = [ ItemId=300, null       ] // GroupId=2
             // items[4] = [ null,       ItemId=500 ] // GroupId=3
+            // つまり SelectMany 後も「要素ごとに model スロットを持つ」構造は崩れない。
 
             ParallelGroup firstGroup = groups.First();
             Group? model0Group = firstGroup[0];

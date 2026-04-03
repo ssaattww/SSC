@@ -20,6 +20,7 @@
   - SelectMany の型付き例を追記
   - SelectMany 例をユーザー型/ライブラリ型/利用コードに分離
   - SelectMany 展開結果の具体データをコードコメントで明示
+  - SelectMany の各要素が model スロットを持つ点をコメントで明示
   - 詳細 API 定義（`Result`/`CompareConfiguration`/エラー型）を次ステップで確定予定
 
 ## Phase 3: 実装
