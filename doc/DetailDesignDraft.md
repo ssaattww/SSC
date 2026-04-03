@@ -408,3 +408,75 @@ L3 の完了条件:
 - デフォルト: 例外ではなく `Result` にエラーを集約して返す
 - strict モード: 即時例外を許可する
 - 例外型は詳細設計確定時に固定する（`CompareConfiguration` とセットで定義）
+
+---
+
+## 17. コンテナ対応方針（確定）
+
+### 17.1 対応カテゴリ
+
+本エンジンは、比較対象プロパティが次のいずれかである場合に正規化を行う。
+
+1. Keyed コンテナ
+   - `IDictionary<TKey,TValue>`
+   - `IReadOnlyDictionary<TKey,TValue>`
+2. Sequence コンテナ
+   - `IList<T>` / `IReadOnlyList<T>` / `T[]`
+3. 宣言型が `IEnumerable<T>` の場合
+   - 実行時型を判定し、上記 1 または 2 と同等の規則を適用する
+
+### 17.2 Keyed コンテナ（Dictionary 系）の規則
+
+- 対応付けキーはコンテナの `TKey` をそのまま使う
+- `CompareKey` 属性は不要
+- keyUnion を構築し、`Parallel<TValue>` の要素列へ変換する
+- 各要素は `Element[index][model]` で値参照できる
+
+### 17.3 Sequence コンテナ（List/配列）の規則
+
+- 要素型に `CompareKey` がある場合のみ正規化対象
+- `CompareKey` 無しは `Skip + Result エラー`
+- strict モードでは例外送出可
+
+### 17.4 `IEnumerable<T>` の扱い
+
+- `IEnumerable<T>` は受け付ける
+- ただし処理開始時に一度だけマテリアライズし、以降は再列挙しない
+- 実行時型が Keyed/Sequence のどちらにも該当しない場合は `Skip + Result エラー`
+
+### 17.5 非対応コンテナ
+
+- `IAsyncEnumerable<T>`
+- ストリーム専用の one-shot 列挙体（再現不能な列挙）
+
+これらは本フェーズでは非対応とし、入力検証で明示的にエラー化する。
+
+---
+
+## 18. LINQ `SelectMany` 動作仕様（確定）
+
+### 18.1 基本動作
+
+- `SelectMany` は「構造の 1 階層展開」として扱う
+- モデル次元（`[model]`）を展開する演算ではない
+- 展開単位は常に `Parallel<TElement>`（要素並列）である
+
+### 18.2 順序保証
+
+- 外側列挙順: 親コンテナの要素順
+- 内側列挙順: 子コンテナの keyUnion 順
+- 合成順: LINQ 標準通り「外側要素ごとに内側を順次連結」
+
+よって、`Compare(...).SelectMany(x => x.Groups).SelectMany(g => g.Items)` は
+`Group[index]` の順を保ったまま `Item[index]` を連結する。
+
+### 18.3 欠損時の挙動
+
+- 親要素が一部モデルで欠損でも、存在するモデルから子 keyUnion を作成する
+- 全モデル欠損の親要素では、子列挙は空列となる
+- 欠損判定が必要な場合は `GetState(modelIndex)` を使う
+
+### 18.4 実装上の注意
+
+- `SelectMany` 結果は遅延評価を維持する
+- ただし `IEnumerable<T>` 入力のマテリアライズは Compare フェーズで一度だけ行う
