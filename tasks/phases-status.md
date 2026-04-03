@@ -30,7 +30,10 @@
 
 ## Phase 3: 実装
 
-- Status: Not Started
+- Status: In Progress
+- Notes:
+  - 実装着手前に CI/CD 基盤（.github workflows）をリポジトリ構成へ適合化
+  - 初版まではテスト workflow のみ有効、release publish は無効化
 
 ## Phase 4: 検証・受け入れ
 

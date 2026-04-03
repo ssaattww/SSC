@@ -65,3 +65,11 @@
 - 対応:
   - AGENTS.md に運用ルールを追記
   - 既存PR本文を body-file 指定で再設定
+- ユーザー指摘: release方法や自動テストは `.github` を参考に、このリポジトリ向けに修正すること。
+- 対応:
+  - PRテスト workflow を `main` 対応 + テストプロジェクト自動検出へ修正
+  - publish workflow を固定パス依存から解放し、project/version を解決可能に修正
+- ユーザー指摘: 初版が出るまではテストのみ有効にし、release は実行しないこと。
+- 対応:
+  - publish workflow の `release` トリガーを廃止
+  - `workflow_dispatch` でも `enable_release=true` 指定時のみ実行

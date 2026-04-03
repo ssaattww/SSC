@@ -98,4 +98,10 @@
   - Output:
     - `doc/design/detail/03-ContainerRules.md`（7.3）
     - `reports/2026-04-03-composite-key-clarification.md`
+- T-013: GitHub Actions のリポジトリ適合化
+  - Status: 完了（テスト有効化 + 初版までrelease無効化を反映）
+  - Output:
+    - `.github/workflows/pr-xunit-tests.yml`
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-03-github-workflow-adaptation.md`
 
