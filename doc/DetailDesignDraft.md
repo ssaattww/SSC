@@ -578,7 +578,7 @@ var m1 = first[1];
 
 `SelectMany` 後でも要素は `Parallel<Group>` のままであり、`[model]` 参照は維持される。
 
-### 18.6 `SelectMany` の完全型例（省略なし）
+### 18.6 `SelectMany` の型付き例
 
 ```csharp
 using System;

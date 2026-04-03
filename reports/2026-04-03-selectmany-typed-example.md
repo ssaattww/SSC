@@ -1,4 +1,4 @@
-# SelectMany 省略なし型例 追記レポート
+# SelectMany 型付き例 追記レポート
 
 - Date: 2026-04-03
 - Target: `doc/DetailDesignDraft.md`

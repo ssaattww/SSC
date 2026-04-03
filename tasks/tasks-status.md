@@ -28,8 +28,8 @@
   - Output:
     - `doc/DetailDesignDraft.md`（章 17.6, 18.5）
     - `reports/2026-04-03-container-linq-examples.md`
-- T-004: SelectMany の省略なし型例追記
+- T-004: SelectMany の型付き例追記
   - Status: 完了（型定義・入力データ・クエリ結果型を全明示）
   - Output:
     - `doc/DetailDesignDraft.md`（章 18.6）
-    - `reports/2026-04-03-selectmany-fully-typed-example.md`
+    - `reports/2026-04-03-selectmany-typed-example.md`
