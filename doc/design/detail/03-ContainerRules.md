@@ -11,7 +11,7 @@
 - `TKey` を比較キーとして使用（`CompareKey` 不要）
 - 全 model から keyUnion を作成
 - key ごとに `Parallel<TValue>` を作成
-- key 重複は Dictionary 自体の制約で原理的に発生しない
+- 同一 model 内で比較器上の同値キーが再出現した場合は `DuplicateCompareKeyDetected`
 
 例:
 
@@ -56,12 +56,14 @@ E2=[null,(3,30)]
 ## 6. Key Order Rule
 
 - keyUnion は決定論的順序
-- 文字列キーは `StringComparison.Ordinal`
+- 文字列キー比較は `CompareConfiguration.StringKeyComparison` に従う（既定: `Ordinal`）
+- `OrdinalIgnoreCase` 時は大文字小文字差のみのキーを同一キーとして扱う
+- `OrdinalIgnoreCase` 時の `KeyText` は同値候補のうち `StringComparer.Ordinal` で最小の表記を採用する
 - 既定比較器で比較不能なキーは Error
 
 ## 7. Key Comparison Examples
 
-### 7.1 String Key (`Ordinal`)
+### 7.1 String Key (`Ordinal`, default)
 
 ```text
 data0 = {"a": 1}
@@ -71,7 +73,21 @@ Ordinal 比較:
 union = ["A", "a"]   // 別キーとして扱う
 ```
 
-### 7.2 DateTime Key
+### 7.2 String Key (`OrdinalIgnoreCase`)
+
+```text
+data0 = {"a": 1}
+data1 = {"A": 2}
+
+OrdinalIgnoreCase 比較:
+union = ["A"]  // 同一キーとして統合
+```
+
+注記:
+
+- 表示用 `KeyText` は同値候補の Ordinal 最小表記を採用する（例: `"A"`）。
+
+### 7.3 DateTime Key
 
 ```text
 data0 = {2026-04-03T00:00:00Z: X}
@@ -80,7 +96,7 @@ data1 = {2026-04-03T09:00:00+09:00: Y}
 UTC 正規化後に同一点なら同一キーとして扱う
 ```
 
-### 7.3 Composite Key
+### 7.4 Composite Key
 
 ```text
 key = (GroupId, ItemId)
