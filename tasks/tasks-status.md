@@ -225,3 +225,11 @@
     - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
     - `doc/design/detail/02-PublicApi.md`
     - `reports/2026-04-04-list-member-access-pattern-clarification.md`
+- T-035: Children selector API による階層アクセスの改善
+  - Status: 完了（`Children(model => model.Member)` 形式を追加し、深い階層での string 指定依存を低減）
+  - Output:
+    - `src/SSC/ParallelNodeExtensions.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-children-selector-api-improvement.md`

@@ -148,3 +148,7 @@
 - 対応:
   - `Compare_WithEnumerableProperty_MaterializesEachModelExactlyOnce` に `items[index][modelIndex]?.Value` の検証を追加
   - `doc/design/detail/02-PublicApi.md` に現行 API の参照パターン（`Items[index] x modelIndex`）を追記
+- ユーザー指摘: 深い階層で `GetChildren` を繰り返すのは直感的でない。
+- 対応:
+  - `ParallelNodeExtensions.Children(...)` を追加し、`root.Children(x => x.Groups)[0].Children(x => x.Items)` 形式を導入
+  - E2E テストを `Children(...)` ベースへ更新し、設計書にも新しいアクセス形を追記

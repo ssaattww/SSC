@@ -30,7 +30,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         Assert.Equal(["A", "B", "C"], scores.Select(node => node.KeyText).ToArray());
 
@@ -100,8 +100,8 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<Dataset>>(result.Root);
-        var groups = root.GetChildren<Group>(nameof(Dataset.Groups));
-        var items = groups.SelectMany(group => group.GetChildren<Item>(nameof(Group.Items))).ToList();
+        var groups = root.Children(model => model.Groups);
+        var items = groups.SelectMany(group => group.Children(model => model.Items)).ToList();
 
         Assert.Equal(["1", "2", "3"], groups.Select(group => group.KeyText).ToArray());
         Assert.Equal(5, items.Count);
@@ -192,7 +192,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         Assert.Equal(["A", "a"], scores.Select(node => node.KeyText).ToArray());
         Assert.Equal(20, scores[0][1]);
@@ -229,7 +229,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models, configuration);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         var key = Assert.Single(scores);
         Assert.Equal("A", key.KeyText);
@@ -339,7 +339,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         Assert.Equal(["A", "B", "C", "D"], scores.Select(node => node.KeyText).ToArray());
 

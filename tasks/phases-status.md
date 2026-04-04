@@ -59,6 +59,7 @@
   - 新規チャット再開用の詳細ハンドオーバーレポートを作成
   - `hikitsugi` の `SKILL.md` をベストプラクティス準拠の手順型に再編
   - List メンバーの参照方法を `Items[index] x modelIndex` としてテスト・設計書へ明示
+  - 階層アクセスを簡潔化する `Children(model => model.Member)` API を追加し、深い階層の可読性を改善
 
 ## Phase 4: 検証・受け入れ
 

@@ -54,18 +54,25 @@ public interface ParallelItem : Parallel<Item>
 
 ## 4.1 Container Member Access Pattern (Current API)
 
-現行 API では、コンテナ要素は `GetChildren<TElement>(memberName)` で取得し、
-各要素ノードの model slot は `node[modelIndex]` で参照する。
+現行 API では、コンテナ要素は型付き selector の `Children(...)` で取得できる。
+既存の `GetChildren<TElement>(memberName)` も後方互換として利用可能。
 
 ```csharp
 var root = Assert.IsType<ParallelNode<EnumerableRoot>>(result.Root);
-var items = root.GetChildren<KeyedItem>(nameof(EnumerableRoot.Items));
+var items = root.Children(model => model.Items);
 
 // Items[index] x modelIndex
 var leftValueAtKey1 = items[0][0]?.Value; // 10
 var leftValueAtKey2 = items[1][0]?.Value; // 20
 var rightValueAtKey1 = items[0][1]?.Value; // 30
 var rightStateAtKey2 = items[1].GetState(1); // Missing
+```
+
+深い階層は `Children(...)` を連鎖して辿る。
+
+```csharp
+var groups = root.Children(model => model.Groups);
+var groupItems = groups[0].Children(model => model.Items);
 ```
 
 ## 5. Configuration Entry

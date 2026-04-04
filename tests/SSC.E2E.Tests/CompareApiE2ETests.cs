@@ -235,7 +235,7 @@ public sealed class CompareApiE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<EnumerableRoot>>(result.Root);
-        var items = root.GetChildren<KeyedItem>(nameof(EnumerableRoot.Items));
+        var items = root.Children(model => model.Items);
 
         Assert.Equal(1, left.EnumerationCount);
         Assert.Equal(1, right.EnumerationCount);
@@ -274,7 +274,7 @@ public sealed class CompareApiE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<KeyedRoot>>(result.Root);
-        var items = root.GetChildren<KeyedItem>(nameof(KeyedRoot.Items));
+        var items = root.Children(model => model.Items);
 
         Assert.Equal(["1", "2", "3"], items.Select(item => item.KeyText).ToArray());
 
