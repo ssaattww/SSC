@@ -210,3 +210,7 @@
     - `.codex/skills/hikitsugi/SKILL.md`
     - `.codex/skills/hikitsugi/agents/openai.yaml`
     - `reports/2026-04-04-hikitsugi-skill-scaffold.md`
+- T-032: 新規チャット再開用ハンドオーバーレポートの作成
+  - Status: 完了（次チャット単体で再開できる前提・経緯・決定事項・未解決事項を整理）
+  - Output:
+    - `report/chat-handover-for-new-thread-20260404_1353.md`
