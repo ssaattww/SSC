@@ -192,3 +192,7 @@
 - 対応:
   - T-041 を実装完了し、subagent 再レビューで新規 High/Medium なしを確認
   - 残留リスクは T-042（`GetState` 非侵襲化）として Backlog 登録
+- ユーザー指摘: `hikitsugi` スキルで引き継ぎを開始すること。
+- 対応:
+  - `.codex/skills/hikitsugi/SKILL.md` の手順に沿って状態収集を実施
+  - `reports/chat-handover-for-new-thread-20260404_144004.md` を作成し、8章構成で次チャット再開情報を整理

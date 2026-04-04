@@ -23,6 +23,11 @@
 
 ## Done
 
+- T-043: 新規チャット再開用ハンドオーバーレポート更新（20260404_144004）
+  - Status: 完了（最新ブランチ/PR/Backlog を反映した8章レポートを作成）
+  - Output:
+    - `reports/chat-handover-for-new-thread-20260404_144004.md`
+
 - T-041: Dynamic projection 差分のサブエージェントコードレビュー指摘対応
   - Status: 完了（公開契約・状態評価・衝突回避・境界例外・引数検証を反映、再レビューで High/Medium 新規なし）
   - Input:
