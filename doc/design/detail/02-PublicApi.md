@@ -53,10 +53,27 @@ public static class ParallelDynamicAccessExtensions
 }
 ```
 
+```csharp
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public sealed class GenerateParallelViewAttribute : Attribute
+{
+}
+```
+
+```csharp
+// generated
+public static class DatasetGeneratedViewExtensions
+{
+    // non-compare node の場合は ArgumentException
+    public static DatasetParallelView AsGeneratedView(this Parallel<Dataset> node);
+}
+```
+
 ## 4. Behavior Contract
 
 - indexer の範囲外アクセスは `ModelIndexOutOfRange`
 - dynamic list index の範囲外アクセスも `ModelIndexOutOfRange`
+- generated list index の範囲外アクセスも `ModelIndexOutOfRange`
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
 
@@ -168,6 +185,52 @@ var nodeCount = root.Groups[0].Items[0].NodeCount; // node slot count
 var groups = root.Children(model => model.Groups);
 var groupItems = groups[0].Children(model => model.Items);
 ```
+
+## 4.3 Generated Projection Access Pattern
+
+`dynamic` の代替として、Source Generator で生成される型付き view を利用できる。
+
+```csharp
+[GenerateParallelView]
+public sealed class Dataset
+{
+    public List<Group> Groups { get; init; } = [];
+}
+
+var result = ParallelCompareApi.Compare(models);
+var root = result.Root!.AsGeneratedView();
+
+var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
+var rightStateAt200 = root.Groups[0].Items[1].MetricA.GetState(1); // Missing
+var leftLabel = root.Groups[0].Items[0].Detail.Select(x => x.Label)[0]; // nested value path
+var nodeCount = root.Groups[0].Items[0].NodeMeta.Count;
+```
+
+- generated view は `Parallel<T>` の compare result node に対してのみ有効
+- generated view で取得する値と state の意味は `AsDynamic()` と同一
+- `AsDynamic()` は互換 API として併存する
+- generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
+- Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
+
+## 4.4 Generated Projection Scope (Initial)
+
+初期版の生成対象は次に固定する。
+
+- container path:
+  - `IEnumerable<TElement>`, `IReadOnlyDictionary<TKey, TValue>`, `IDictionary<TKey, TValue>`
+- value path:
+  - `Property[modelIndex]`
+  - `Property.GetState(modelIndex)`
+  - nested object path は `Select(...)` で連鎖
+- out of scope（初期版）:
+  - 任意メソッド呼び出しの投影
+  - indexer プロパティ投影
+
+## 4.5 Generated Naming and Placement
+
+- 生成コードの配置 namespace は `SSC.Generated`
+- 生成型名は fully-qualified name 由来のサニタイズ名を使い、同名型（別 namespace）でも衝突しないようにする
+- nested type は containing type 名を連結して一意化する
 
 ## 4.2 Nullability and State
 
