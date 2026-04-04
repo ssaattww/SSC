@@ -123,3 +123,6 @@
   - 既存流用ロジックを `.github/workflows/publish-nuget.yml` に統合し、`main` push 時 pre-release 作成を追加
   - サブエージェントの High 指摘を反映し、`main` push ラン内で NuGet publish を完結させる構成へ修正
   - 再レビュー Medium 指摘を反映し、stable tag 解決で `v` プレフィックス付きタグを許容
+- ユーザー指摘: NuGet パッケージ名は `ssaattww.SSC` でよい。
+- 対応:
+  - `src/SSC/SSC.csproj` に `<PackageId>ssaattww.SSC</PackageId>` を追加

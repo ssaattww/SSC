@@ -183,3 +183,12 @@
     - `.github/workflows/publish-nuget.yml`
     - `reports/2026-04-04-subagent-code-review-publish-workflow-reuse-fix.md`
     - `reports/2026-04-04-publish-workflow-vtag-compatibility-fix.md`
+- T-027: NuGet 公開用 PackageId の明示化
+  - Status: 完了（パッケージ識別子を `ssaattww.SSC` に更新）
+  - Output:
+    - `src/SSC/SSC.csproj`
+    - `reports/2026-04-04-packageid-rename-for-nuget.md`
+- T-028: PackageId 変更差分のサブエージェントレビュー
+  - Status: 完了（重大不備なし、公開メタデータ改善余地を記録）
+  - Output:
+    - `reports/2026-04-04-subagent-code-review-packageid-rename.md`
