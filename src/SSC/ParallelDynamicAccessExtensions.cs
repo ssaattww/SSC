@@ -5,10 +5,17 @@ namespace SSC;
 
 public static class ParallelDynamicAccessExtensions
 {
-    public static dynamic AsDynamic<T>(this ParallelNode<T> node)
+    public static dynamic AsDynamic<T>(this Parallel<T> node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        return DynamicParallelNodeView.From(node);
+        if (node is not IParallelNode parallelNode)
+        {
+            throw new ArgumentException(
+                "AsDynamic can be used only with compare result nodes.",
+                nameof(node));
+        }
+
+        return DynamicParallelNodeView.From(parallelNode);
     }
 }
 
@@ -30,13 +37,13 @@ internal sealed class DynamicParallelNodeView : DynamicObject
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
     {
-        if (binder.Name == nameof(IParallelNode.KeyText))
+        if (binder.Name == "NodeKeyText")
         {
             result = _node.KeyText;
             return true;
         }
 
-        if (binder.Name == nameof(IParallelNode.Count))
+        if (binder.Name == "NodeCount")
         {
             result = _node.Count;
             return true;
@@ -51,14 +58,27 @@ internal sealed class DynamicParallelNodeView : DynamicObject
         var property = _internalNode.ModelType.GetProperty(
             binder.Name,
             BindingFlags.Instance | BindingFlags.Public);
-        if (property is null)
+        if (property is not null)
         {
-            result = null;
-            return false;
+            result = DynamicParallelValuePathView.FromMember(_node, property.Name);
+            return true;
         }
 
-        result = DynamicParallelValuePathView.FromMember(_node, property.Name);
-        return true;
+        // Keep legacy names for compatibility, but resolve model members first.
+        if (binder.Name == nameof(IParallelNode.KeyText))
+        {
+            result = _node.KeyText;
+            return true;
+        }
+
+        if (binder.Name == nameof(IParallelNode.Count))
+        {
+            result = _node.Count;
+            return true;
+        }
+
+        result = null;
+        return false;
     }
 
     public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
@@ -105,8 +125,21 @@ internal sealed class DynamicParallelListView : DynamicObject
             return false;
         }
 
+        ValidateIndex(index);
         result = DynamicParallelNodeView.From(_nodes[index]);
         return true;
+    }
+
+    private void ValidateIndex(int index)
+    {
+        if (index >= 0 && index < _nodes.Count)
+        {
+            return;
+        }
+
+        throw new CompareExecutionException(
+            CompareIssueCode.ModelIndexOutOfRange,
+            $"list index '{index}' is out of range for count '{_nodes.Count}'.");
     }
 }
 
@@ -128,10 +161,9 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
 
     public ValueState GetState(int modelIndex)
     {
-        return _node.GetState(modelIndex);
+        _ = ResolveValue(modelIndex, out var state);
+        return state;
     }
-
-    public int Count => _node.Count;
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
     {
@@ -143,7 +175,7 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
     {
         if (binder.Name == nameof(GetState) && args is { Length: 1 } && args[0] is int modelIndex)
         {
-            result = _node.GetState(modelIndex);
+            result = GetState(modelIndex);
             return true;
         }
 
@@ -159,15 +191,27 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
             return false;
         }
 
+        result = ResolveValue(modelIndex, out _);
+        return true;
+    }
+
+    private object? ResolveValue(int modelIndex, out ValueState state)
+    {
+        state = _node.GetState(modelIndex);
+        if (state == ValueState.Missing)
+        {
+            return null;
+        }
+
         object? current = _node.GetValue(modelIndex);
+        if (current is null)
+        {
+            state = ValueState.PresentNull;
+            return null;
+        }
+
         foreach (var memberName in _memberPath)
         {
-            if (current is null)
-            {
-                result = null;
-                return true;
-            }
-
             var property = current.GetType().GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
             if (property is null)
             {
@@ -177,9 +221,14 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
             }
 
             current = property.GetValue(current);
+            if (current is null)
+            {
+                state = ValueState.PresentNull;
+                return null;
+            }
         }
 
-        result = current;
-        return true;
+        state = ValueState.PresentValue;
+        return current;
     }
 }

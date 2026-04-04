@@ -4,17 +4,7 @@
 
 ## In Progress
 
-- T-041: Dynamic projection 差分のサブエージェントコードレビュー指摘対応
-  - Status: 進行中（レビュー完了、指摘対応は未着手）
-  - Input:
-    - `reports/2026-04-04-subagent-code-review-dynamic-projection-followup.md`
-  - Candidate Fix Scope:
-    - `AsDynamic` 受け口型と `CompareResult<T>.Root` 契約の整合
-    - dynamic 値パス `GetState` のメンバー単位状態評価
-    - dynamic 予約名衝突（`Count` / `KeyText`）
-    - dynamic list 範囲外 index の例外契約
-    - `CreateLeaf(values, states)` 長さ不一致検証
-    - `doc/design/detail/01-DomainModel.md` の内部表現型整合
+- （なし）
 
 ## Backlog
 
@@ -27,6 +17,19 @@
     - GitHub PR comment: `#9` comment id `4186407883`
 
 ## Done
+
+- T-041: Dynamic projection 差分のサブエージェントコードレビュー指摘対応
+  - Status: 完了（公開契約・状態評価・衝突回避・境界例外・引数検証を反映）
+  - Input:
+    - `reports/2026-04-04-subagent-code-review-dynamic-projection-followup.md`
+  - Output:
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-dynamic-projection-review-fixes.md`
 
 - T-001: 詳細設計の粒度決定
   - Status: 完了（L3 粒度と外部仕様 1-5 を確定）

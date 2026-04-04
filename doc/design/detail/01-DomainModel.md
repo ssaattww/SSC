@@ -45,7 +45,7 @@ Parallel<Dataset>
 internal sealed class ParallelNode<T> : Parallel<T>
 {
     T?[] Values;
-    Dictionary<string, IParallelNode> Children;
+    Dictionary<string, IReadOnlyList<IParallelNode>> Children;
 }
 ```
 
@@ -64,6 +64,7 @@ var metric = root.Groups[0].Items[0].MetricA[0];
 
 - 左の `[]`: key union 後の要素 index
 - 右の `[]`: model index
+- node メタ情報は `NodeCount` / `NodeKeyText` で参照できる（モデル同名メンバー衝突を回避）
 
 ## 3.1 CompareIgnore Attribute
 

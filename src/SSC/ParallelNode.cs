@@ -32,6 +32,15 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
 
     public static ParallelNode<T> CreateLeaf(IReadOnlyList<T?> values, IReadOnlyList<ValueState> states, string? keyText = null)
     {
+        ArgumentNullException.ThrowIfNull(values);
+        ArgumentNullException.ThrowIfNull(states);
+        if (values.Count != states.Count)
+        {
+            throw new ArgumentException(
+                $"values count '{values.Count}' must match states count '{states.Count}'.",
+                nameof(states));
+        }
+
         return new ParallelNode<T>(values.ToArray(), states.ToArray(), keyText);
     }
 

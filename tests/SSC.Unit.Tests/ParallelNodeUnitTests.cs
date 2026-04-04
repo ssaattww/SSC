@@ -27,4 +27,14 @@ public sealed class ParallelNodeUnitTests
         Assert.Equal(ValueState.PresentNull, node.GetState(1));
         Assert.Equal(ValueState.Missing, node.GetState(2));
     }
+
+    [Fact]
+    public void CreateLeaf_LengthMismatch_ThrowsArgumentException()
+    {
+        // Intent: values/states 長が一致しない node は生成させない。
+        var exception = Assert.Throws<ArgumentException>(
+            () => ParallelNode<string>.CreateLeaf(["a", "b"], [ValueState.PresentValue], keyText: "k"));
+
+        Assert.Contains("must match", exception.Message, StringComparison.Ordinal);
+    }
 }

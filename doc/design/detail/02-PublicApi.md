@@ -49,13 +49,14 @@ public interface ParallelItem : Parallel<Item>
 ```csharp
 public static class ParallelDynamicAccessExtensions
 {
-    public static dynamic AsDynamic<T>(this ParallelNode<T> node);
+    public static dynamic AsDynamic<T>(this Parallel<T> node);
 }
 ```
 
 ## 4. Behavior Contract
 
 - indexer の範囲外アクセスは `ModelIndexOutOfRange`
+- dynamic list index の範囲外アクセスも `ModelIndexOutOfRange`
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
 
@@ -154,10 +155,12 @@ var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 dynamic root = result.Root!.AsDynamic();
 var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 var leftItemAt100 = root.Groups[0].Items[0][0]; // Item object
+var nodeCount = root.Groups[0].Items[0].NodeCount; // node slot count
 ```
 
 - `root...Items[index][model]` は要素オブジェクト全体を返す
 - `root...Items[index].MetricA[model]` は要素プロパティ値を返す
+- `root...Items[index].NodeCount` / `NodeKeyText` は node メタ情報を返す
 
 深い階層は `Children(...)` を連鎖して辿る。
 

@@ -185,3 +185,6 @@
 - ユーザー指摘: subagent への再依頼はコストが高いので、途中経過確認方式で運用すること。
 - 対応:
   - subagent レビュー回収は `wait_agent` の定期ポーリングを基本運用にし、再依頼は実行しない方針へ変更
+- ユーザー指摘: 実装差分に設計書更新が必要なら必ず修正すること。
+- 対応:
+  - dynamic projection 指摘対応（T-041）で `doc/design/detail/01-DomainModel.md` と `doc/design/detail/02-PublicApi.md` を同時更新
