@@ -1,6 +1,6 @@
 namespace SSC;
 
-public sealed class ParallelNode<T> : Parallel<T>, IParallelNode
+public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeInternal
 {
     private readonly T?[] _values;
     private readonly ValueState[] _states;
@@ -54,6 +54,13 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode
         }
 
         return nodes.Select(node => (ParallelNode<TElement>)node).ToArray();
+    }
+
+    Type IParallelNodeInternal.ModelType => typeof(T);
+
+    bool IParallelNodeInternal.TryGetChildren(string memberName, out IReadOnlyList<IParallelNode> nodes)
+    {
+        return _children.TryGetValue(memberName, out nodes!);
     }
 
     internal void SetChildren(string memberName, IReadOnlyList<IParallelNode> nodes)

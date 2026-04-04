@@ -46,6 +46,13 @@ public interface ParallelItem : Parallel<Item>
 }
 ```
 
+```csharp
+public static class ParallelDynamicAccessExtensions
+{
+    public static dynamic AsDynamic<T>(this ParallelNode<T> node);
+}
+```
+
 ## 4. Behavior Contract
 
 - indexer の範囲外アクセスは `ModelIndexOutOfRange`
@@ -140,6 +147,13 @@ var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 
 - 左側の `[]`: List のインデックスアクセス（key union 後の要素順）
 - 右側の `[]`: model インデックスアクセス（0=left, 1=right）
+
+上記の記法を実際に使う場合は、`AsDynamic()` で動的投影した root から辿る。
+
+```csharp
+dynamic root = result.Root!.AsDynamic();
+var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
+```
 
 深い階層は `Children(...)` を連鎖して辿る。
 

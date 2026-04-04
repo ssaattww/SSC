@@ -248,3 +248,13 @@
   - Output:
     - `doc/design/detail/02-PublicApi.md`
     - `reports/2026-04-04-public-api-reference-notation-and-nullability.md`
+- T-039: Dynamic 投影アクセス API の実装
+  - Status: 完了（`AsDynamic()` により `root.Groups[0].Items[0].MetricA[0]` 形式の実アクセスを提供）
+  - Output:
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-dynamic-projection-access-api.md`

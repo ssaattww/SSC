@@ -167,3 +167,10 @@
 - 対応:
   - `02-PublicApi` に概念表現を追加し、左 `[]`=List index / 右 `[]`=model index を明記
   - `null` が出る範囲と `GetState(modelIndex)` 併用方針を追記
+- ユーザー指摘: 概念説明ではなく、実際に `root.Groups[0].Items[0].MetricA[0]` でアクセスできるようにしたい。
+- 対応:
+  - `AsDynamic()` と動的投影アクセス層を追加し、上記記法での実アクセスを可能化
+  - E2E テストで `list index -> model index` と `Missing` 判定を検証
+- ユーザー指摘: 作業reportは機能単位で1ファイルにまとめること。
+- 対応:
+  - 本機能は `reports/2026-04-04-dynamic-projection-access-api.md` の1ファイルに集約

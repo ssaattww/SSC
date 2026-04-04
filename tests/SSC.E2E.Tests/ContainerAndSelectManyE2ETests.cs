@@ -128,6 +128,60 @@ public sealed class ContainerAndSelectManyE2ETests
     }
 
     [Fact]
+    public void Compare_DynamicProjection_AllowsListIndexThenModelIndexAccess()
+    {
+        // Intent: AsDynamic で root.Groups[0].Items[0].MetricA[0] 形式のアクセスを可能にする。
+        var models = new[]
+        {
+            new Dataset
+            {
+                Groups =
+                [
+                    new Group
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new Item { ItemId = 100, MetricA = 1.0 },
+                            new Item { ItemId = 200, MetricA = 2.0 },
+                        ],
+                    },
+                ],
+            },
+            new Dataset
+            {
+                Groups =
+                [
+                    new Group
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new Item { ItemId = 100, MetricA = 10.0 },
+                            new Item { ItemId = 300, MetricA = 30.0 },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = Assert.IsType<ParallelNode<Dataset>>(result.Root).AsDynamic();
+
+        double? leftMetricAt100 = root.Groups[0].Items[0].MetricA[0];
+        double? leftMetricAt200 = root.Groups[0].Items[1].MetricA[0];
+        double? rightMetricAt100 = root.Groups[0].Items[0].MetricA[1];
+        double? rightMetricAt200 = root.Groups[0].Items[1].MetricA[1];
+        var rightStateAt200 = (ValueState)root.Groups[0].Items[1].MetricA.GetState(1);
+
+        Assert.Equal(1.0, leftMetricAt100);
+        Assert.Equal(2.0, leftMetricAt200);
+        Assert.Equal(10.0, rightMetricAt100);
+        Assert.Null(rightMetricAt200);
+        Assert.Equal(ValueState.Missing, rightStateAt200);
+    }
+
+    [Fact]
     public void Compare_IgnoresCompareIgnoreMemberInResultPath()
     {
         // Intent: [CompareIgnore] メンバーは比較対象に含めず、Issue の Path にも現れない。

@@ -76,3 +76,10 @@ public interface IParallelNode
 
     ValueState GetState(int modelIndex);
 }
+
+internal interface IParallelNodeInternal
+{
+    Type ModelType { get; }
+
+    bool TryGetChildren(string memberName, out IReadOnlyList<IParallelNode> nodes);
+}
