@@ -283,3 +283,8 @@
 - 対応:
   - `README.md` に `mismatchedItemIds` 例を追加し、`SelectMany(...).Where(...)` で不一致要素を抽出する例へ拡張
   - 対応内容を `reports/2026-04-04-readme-generated-where-filter-example-update.md` に記録
+- ユーザー指摘: `GetState(modelIndex) with ValueState` の説明に、各状態の意味を追記したい。
+- 対応:
+  - `README.md` の `Core Concepts` で `Missing` / `PresentNull` / `PresentValue` の意味を明文化
+  - `README.md` の `Status` の E2E 件数を最新値へ更新
+  - 対応内容を `reports/2026-04-04-readme-valuestate-explanation-update.md` に記録

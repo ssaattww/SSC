@@ -17,7 +17,7 @@ It compares object graphs by aligning member values into per-model slots, normal
 - Target framework: .NET 8
 - Current phase: Phase 3 (implementation in progress)
 - Test status (latest):
-  - E2E: 27 passed
+  - E2E: 33 passed
   - Unit: 4 passed
 
 ## NuGet Packages
@@ -38,7 +38,10 @@ Install both packages when you want typed generated projection API (`AsGenerated
   - `CompareResult<T>.HasError` : whether error-level issues exist
 - Slot model:
   - `Parallel<T>[modelIndex]` for value access
-  - `GetState(modelIndex)` with `ValueState` (`Missing`, `PresentNull`, `PresentValue`)
+  - `GetState(modelIndex)` for slot state access
+  - `ValueState.Missing` : the slot does not exist in the target model
+  - `ValueState.PresentNull` : the slot exists but the value is `null`
+  - `ValueState.PresentValue` : the slot exists and has a non-null value
 
 ## Container Behavior
 

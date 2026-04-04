@@ -16,6 +16,12 @@
 
 ## Done
 
+- T-058: README に ValueState 意味説明を追加
+  - Status: 完了（`GetState` と `Missing/PresentNull/PresentValue` の意味を明文化）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-valuestate-explanation-update.md`
+
 - T-057: README generated 例に不一致抽出の Where サンプル追加
   - Status: 完了（`SelectMany + Where` で差分要素を抽出する実用例を追記）
   - Output:

@@ -88,6 +88,7 @@
   - `DynamicParallelListView` を列挙可能化し、dynamic 入口を含む LINQ 演算子マトリクス E2E を追加
   - README の Source Generator サンプルに `AsGeneratedView()` 経由の LINQ アクセス例（`Select` / `SelectMany`）を追記
   - README の Source Generator サンプルへ `Where` による不一致要素抽出例を追加
+  - README の Core Concepts に `ValueState` 各状態の意味説明を追加し、E2E 件数表示を最新化
 
 ## Phase 4: 検証・受け入れ
 
