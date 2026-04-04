@@ -130,3 +130,8 @@
 - 対応:
   - `README.md` に workflow/NuGet/License バッジを追加
   - `src/SSC/SSC.csproj` に `PackageReadmeFile` と README 同梱設定を追加
+- ユーザー指摘: 次回引き継ぎ用スキル `Hikitsugi` を、リポジトリ内の既定スキル配置へ作成すること。
+- 対応:
+  - `.codex/skills/hikitsugi` を新規作成
+  - `SKILL.md` に引き継ぎ運用フロー（reports/tasks更新を含む）を定義
+  - `agents/openai.yaml` を生成し、後続の詳細プロンプト追加に備えた初期設定を配置

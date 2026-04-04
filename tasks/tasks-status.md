@@ -204,3 +204,9 @@
     - `reports/2026-04-04-subagent-code-review-readme-badges-package-readme.md`
     - `README.md`
     - `reports/2026-04-04-readme-badge-link-fix.md`
+- T-031: リポジトリ内引き継ぎスキル基盤の作成
+  - Status: 完了（`.codex/skills/hikitsugi` の初期スキルを作成し、次回向けの運用手順を定義）
+  - Output:
+    - `.codex/skills/hikitsugi/SKILL.md`
+    - `.codex/skills/hikitsugi/agents/openai.yaml`
+    - `reports/2026-04-04-hikitsugi-skill-scaffold.md`
