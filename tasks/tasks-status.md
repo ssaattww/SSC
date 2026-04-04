@@ -243,3 +243,8 @@
   - Output:
     - `doc/design/detail/02-PublicApi.md`
     - `reports/2026-04-04-public-api-example-consistency-fix.md`
+- T-038: Public API 参照記法と null 判定指針の補足
+  - Status: 完了（概念表現 `root.Groups[0].Items[0].MetricA[0]` と左右 `[]` の意味、null 可能範囲を明文化）
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-public-api-reference-notation-and-nullability.md`

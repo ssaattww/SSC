@@ -132,11 +132,32 @@ var rightMetricAt100 = items[0][1]?.MetricA; // 10.0
 var rightStateAt200 = items[1].GetState(1); // Missing
 ```
 
+意図する参照記法（概念表現）は次の形。
+
+```csharp
+var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
+```
+
+- 左側の `[]`: List のインデックスアクセス（key union 後の要素順）
+- 右側の `[]`: model インデックスアクセス（0=left, 1=right）
+
 深い階層は `Children(...)` を連鎖して辿る。
 
 ```csharp
 var groups = root.Children(model => model.Groups);
 var groupItems = groups[0].Children(model => model.Items);
+```
+
+## 4.2 Nullability and State
+
+- `result.Root` は入力エラー時に `null` になり得る。
+- `node[modelIndex]` の値は `Missing` または `PresentNull` で `null` になり得る。
+- index が有効な限り、`groups[i]` や `items[j]` のノード自体は通常 `null` ではない。
+- `null` の意味を区別する場合は `GetState(modelIndex)` を併用する。
+
+```csharp
+var metric = items[1][1]?.MetricA;
+var state = items[1].GetState(1); // Missing / PresentNull / PresentValue
 ```
 
 ## 5. Configuration Entry

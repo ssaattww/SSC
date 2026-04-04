@@ -62,6 +62,7 @@
   - 階層アクセスを簡潔化する `Children(model => model.Member)` API を追加し、深い階層の可読性を改善
   - `02-PublicApi` に比較前の元データセット例を追加し、アクセス例の前提と型定義を明示
   - `02-PublicApi` のアクセス例を元データセットと同じ型・値軸へ修正し、例示の整合性を担保
+  - `02-PublicApi` に概念表現（`root.Groups[0].Items[0].MetricA[0]`）と null 判定指針を補足
 
 ## Phase 4: 検証・受け入れ
 

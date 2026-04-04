@@ -163,3 +163,7 @@
 - 対応:
   - `4.1` の参照例を `Dataset/Group/Item` 前提へ修正（`MetricA`, `ItemId` union）
   - `ParallelNode<EnumerableRoot>` など不一致な型記述を解消
+- ユーザー指摘: 参考として、意図する完全形 `root.Groups[0].Items[0].MetricA[0]` と、左右 `[]` の意味を追記すること。
+- 対応:
+  - `02-PublicApi` に概念表現を追加し、左 `[]`=List index / 右 `[]`=model index を明記
+  - `null` が出る範囲と `GetState(modelIndex)` 併用方針を追記
