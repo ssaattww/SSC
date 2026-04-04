@@ -255,3 +255,8 @@
 - 対応:
   - `README.md` の Minimal Example を `result.AsDynamic()` ベースへ更新
   - `root.Items[index].Price[modelIndex]` と `GetState(modelIndex)` の参照例へ差し替え
+- ユーザー指摘: README のコードサンプルはクラス定義を省略せず、`var` も使わないこと。
+- 対応:
+  - `README.md` の Minimal/Source Generator サンプルを完全形へ更新
+  - `ProductModel[]` / `Dataset[]` / `CompareResult<T>` / `ValueState` など型を明示
+  - `README.md` 全体で `var` 不使用を確認

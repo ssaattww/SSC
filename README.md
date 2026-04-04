@@ -74,9 +74,10 @@ dotnet test SSC.sln -c Release --verbosity minimal
 ## Minimal Example
 
 ```csharp
+using System.Collections.Generic;
 using SSC;
 
-var models = new[]
+ProductModel[] models =
 {
     new ProductModel
     {
@@ -96,7 +97,7 @@ var models = new[]
     },
 };
 
-var result = ParallelCompareApi.Compare(models);
+CompareResult<ProductModel> result = ParallelCompareApi.Compare(models);
 dynamic root = result.AsDynamic()!;
 
 // item keys are normalized as union: 1, 2, 3
@@ -104,7 +105,7 @@ decimal? leftPriceAtKey1 = root.Items[0].Price[0];   // 100
 decimal? rightPriceAtKey1 = root.Items[0].Price[1];  // null (missing)
 decimal? leftPriceAtKey2 = root.Items[1].Price[0];   // 200
 decimal? rightPriceAtKey2 = root.Items[1].Price[1];  // 250
-var stateAtKey3Left = (ValueState)root.Items[2].GetState(0); // Missing
+ValueState stateAtKey3Left = (ValueState)root.Items[2].GetState(0); // Missing
 
 public sealed class ProductModel
 {
@@ -123,6 +124,7 @@ public sealed class ProductItem
 ## Source Generator Example
 
 ```csharp
+using System.Collections.Generic;
 using SSC;
 using SSC.Generated;
 
@@ -148,9 +150,43 @@ public sealed class Item
     public double MetricA { get; init; }
 }
 
-var result = ParallelCompareApi.Compare(models);
-var root = result.AsGeneratedView();
-var leftMetricAt100 = root!.Groups[0].Items[0].MetricA[0];
+Dataset[] models =
+{
+    new Dataset
+    {
+        Groups =
+        [
+            new Group
+            {
+                GroupId = 1,
+                Items =
+                [
+                    new Item { ItemId = 100, MetricA = 1.0 },
+                    new Item { ItemId = 200, MetricA = 2.0 },
+                ],
+            },
+        ],
+    },
+    new Dataset
+    {
+        Groups =
+        [
+            new Group
+            {
+                GroupId = 1,
+                Items =
+                [
+                    new Item { ItemId = 100, MetricA = 10.0 },
+                    new Item { ItemId = 300, MetricA = 30.0 },
+                ],
+            },
+        ],
+    },
+};
+
+CompareResult<Dataset> result = ParallelCompareApi.Compare(models);
+double? leftMetricAt100 = result.AsGeneratedView()!.Groups[0].Items[0].MetricA[0];
+ValueState rightStateAt200 = result.AsGeneratedView()!.Groups[0].Items[1].MetricA.GetState(1);
 ```
 
 ## Documentation
