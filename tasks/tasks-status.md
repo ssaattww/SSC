@@ -131,3 +131,17 @@
     - `doc/design/detail/07-NonFunctional.md`
     - `doc/design/detail/08-ImplementationChecklist.md`
     - `reports/2026-04-04-design-update-keytext-and-string-comparison.md`
+- T-018: OrdinalIgnoreCase における KeyText 表示の厳密化
+  - Status: 完了（同値候補の Ordinal 最小表記で `KeyText` を正規化）
+  - Output:
+    - `src/SSC/ParallelCompareApi.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `doc/design/detail/07-NonFunctional.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/2026-04-04-phase3-keytext-canonicalization.md`
+- T-019: KeyText 厳密化差分のサブエージェントレビュー
+  - Status: 完了（重大な不備なし、残留リスクを記録）
+  - Output:
+    - `reports/2026-04-04-subagent-code-review-keytext-canonicalization.md`

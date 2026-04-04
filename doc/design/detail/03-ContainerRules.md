@@ -58,7 +58,7 @@ E2=[null,(3,30)]
 - keyUnion は決定論的順序
 - 文字列キー比較は `CompareConfiguration.StringKeyComparison` に従う（既定: `Ordinal`）
 - `OrdinalIgnoreCase` 時は大文字小文字差のみのキーを同一キーとして扱う
-- `KeyText` は入力時の文字列表記を保持し、強制的な大小文字正規化は行わない
+- `OrdinalIgnoreCase` 時の `KeyText` は同値候補のうち `StringComparer.Ordinal` で最小の表記を採用する
 - 既定比較器で比較不能なキーは Error
 
 ## 7. Key Comparison Examples
@@ -80,12 +80,12 @@ data0 = {"a": 1}
 data1 = {"A": 2}
 
 OrdinalIgnoreCase 比較:
-union = ["a"] もしくは ["A"]  // 同一キーとして統合
+union = ["A"]  // 同一キーとして統合
 ```
 
 注記:
 
-- 表示用 `KeyText` は入力表記を保持する（例: `"a"` または `"A"`）。
+- 表示用 `KeyText` は同値候補の Ordinal 最小表記を採用する（例: `"A"`）。
 
 ### 7.3 DateTime Key
 

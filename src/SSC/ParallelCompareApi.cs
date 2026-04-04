@@ -136,6 +136,7 @@ public static class ParallelCompareApi
         var comparer = new KeyComparer(keyType, context.Configuration.StringKeyComparison);
         var maps = new Dictionary<object, object?>[parentSlots.Length];
         var union = new HashSet<object>(comparer);
+        var keyTexts = new Dictionary<object, string>(comparer);
 
         for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
         {
@@ -180,13 +181,19 @@ public static class ParallelCompareApi
                 }
 
                 var normalizedKey = NormalizeKey(entryKey);
+                UpdateCanonicalKeyText(
+                    keyTexts,
+                    normalizedKey,
+                    KeyToText(entryKey),
+                    keyType,
+                    context.Configuration.StringKeyComparison);
                 if (maps[modelIndex].ContainsKey(normalizedKey))
                 {
                     context.RecordExecutionError(
                         CompareIssueCode.DuplicateCompareKeyDetected,
                         path,
                         modelIndex,
-                        KeyToText(normalizedKey),
+                        keyTexts[normalizedKey],
                         $"duplicate compare key '{normalizedKey}'.");
                     continue;
                 }
@@ -212,7 +219,12 @@ public static class ParallelCompareApi
                 slots[modelIndex] = value is null ? NodeSlot.PresentNull : NodeSlot.PresentValue(value);
             }
 
-            var childNode = BuildNode(elementType, slots, path, context, keyText: KeyToText(key));
+            var childNode = BuildNode(
+                elementType,
+                slots,
+                path,
+                context,
+                keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key));
             children.Add(childNode);
         }
 
@@ -242,6 +254,7 @@ public static class ParallelCompareApi
         var comparer = new KeyComparer(keyType, context.Configuration.StringKeyComparison);
         var maps = new Dictionary<object, object?>[parentSlots.Length];
         var union = new HashSet<object>(comparer);
+        var keyTexts = new Dictionary<object, string>(comparer);
 
         for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
         {
@@ -325,13 +338,19 @@ public static class ParallelCompareApi
                 }
 
                 var normalizedKey = NormalizeKey(key);
+                UpdateCanonicalKeyText(
+                    keyTexts,
+                    normalizedKey,
+                    KeyToText(key),
+                    keyType,
+                    context.Configuration.StringKeyComparison);
                 if (maps[modelIndex].ContainsKey(normalizedKey))
                 {
                     context.RecordExecutionError(
                         CompareIssueCode.DuplicateCompareKeyDetected,
                         path,
                         modelIndex,
-                        KeyToText(normalizedKey),
+                        keyTexts[normalizedKey],
                         $"duplicate compare key '{normalizedKey}'.");
                     continue;
                 }
@@ -357,7 +376,12 @@ public static class ParallelCompareApi
                 slots[modelIndex] = value is null ? NodeSlot.PresentNull : NodeSlot.PresentValue(value);
             }
 
-            var childNode = BuildNode(elementType, slots, path, context, keyText: KeyToText(key));
+            var childNode = BuildNode(
+                elementType,
+                slots,
+                path,
+                context,
+                keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key));
             children.Add(childNode);
         }
 
@@ -478,6 +502,36 @@ public static class ParallelCompareApi
     private static string KeyToText(object key)
     {
         return key.ToString() ?? string.Empty;
+    }
+
+    private static void UpdateCanonicalKeyText(
+        IDictionary<object, string> keyTexts,
+        object normalizedKey,
+        string candidate,
+        Type keyType,
+        StringComparison stringKeyComparison)
+    {
+        if (!keyTexts.TryGetValue(normalizedKey, out var existing))
+        {
+            keyTexts[normalizedKey] = candidate;
+            return;
+        }
+
+        keyTexts[normalizedKey] = SelectCanonicalKeyText(existing, candidate, keyType, stringKeyComparison);
+    }
+
+    private static string SelectCanonicalKeyText(
+        string existing,
+        string candidate,
+        Type keyType,
+        StringComparison stringKeyComparison)
+    {
+        if (keyType == typeof(string) && stringKeyComparison == StringComparison.OrdinalIgnoreCase)
+        {
+            return StringComparer.Ordinal.Compare(candidate, existing) < 0 ? candidate : existing;
+        }
+
+        return existing;
     }
 
     private readonly record struct NodeSlot(object? Value, ValueState State)

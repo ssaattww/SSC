@@ -204,7 +204,7 @@ public sealed class ContainerAndSelectManyE2ETests
     [Fact]
     public void Compare_StringDictionaryRespectsOrdinalIgnoreCaseConfiguration()
     {
-        // Intent: StringComparison.OrdinalIgnoreCase 指定時は大文字小文字差を同一キーとして統合する。
+        // Intent: StringComparison.OrdinalIgnoreCase 指定時は同値キーを統合し、KeyText も規則的に正規化する。
         var models = new[]
         {
             new ScoreRoot
@@ -232,7 +232,7 @@ public sealed class ContainerAndSelectManyE2ETests
         var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
 
         var key = Assert.Single(scores);
-        Assert.Equal("a", key.KeyText, StringComparer.OrdinalIgnoreCase);
+        Assert.Equal("A", key.KeyText);
         Assert.Equal(10, key[0]);
         Assert.Equal(20, key[1]);
     }
@@ -240,7 +240,7 @@ public sealed class ContainerAndSelectManyE2ETests
     [Fact]
     public void Compare_StringDictionaryDuplicateInSameModel_WithOrdinalIgnoreCase_RecordsDuplicateIssue()
     {
-        // Intent: OrdinalIgnoreCase 同値で同一 model 内キーが衝突した場合は重複 Issue を記録する。
+        // Intent: OrdinalIgnoreCase 同値衝突の重複 Issue では KeyText を正規化済み表記で返す。
         var models = new[]
         {
             new ScoreRoot
@@ -269,7 +269,7 @@ public sealed class ContainerAndSelectManyE2ETests
         var issue = Assert.Single(result.Issues.Where(item => item.Code == CompareIssueCode.DuplicateCompareKeyDetected));
         Assert.Equal("ScoreRoot.Scores", issue.Path);
         Assert.Equal(0, issue.ModelIndex);
-        Assert.Equal("a", issue.KeyText, StringComparer.OrdinalIgnoreCase);
+        Assert.Equal("A", issue.KeyText);
     }
 
     [Fact]

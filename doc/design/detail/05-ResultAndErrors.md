@@ -62,7 +62,7 @@ public enum CompareIssueLevel { Error, Warning }
 `KeyText` の運用:
 
 - null 系エラー（null key / null sequence element）は `"<null>"` を設定
-- 文字列キーの大小文字差は入力表記を保持し、強制正規化はしない
+- `OrdinalIgnoreCase` 時の文字列キーは同値候補の `StringComparer.Ordinal` 最小表記へ正規化する
 
 ### 5.1 Path Format
 

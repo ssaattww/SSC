@@ -104,3 +104,7 @@
 - ユーザー指摘: コードレビューはサブエージェントへ委任し、レビュー結果をレポート出力すること。
 - 対応:
   - サブエージェントレビューの運用を継続し、レビュー結果を `reports/2026-04-04-subagent-code-review.md` に記録
+  - KeyText 厳密化後の再レビュー結果を `reports/2026-04-04-subagent-code-review-keytext-canonicalization.md` に記録
+- ユーザー指摘: 基本的に厳密な方針を優先したい。
+- 対応:
+  - `OrdinalIgnoreCase` の `KeyText` 表示を厳密化し、同値候補の Ordinal 最小表記へ正規化する仕様に更新
