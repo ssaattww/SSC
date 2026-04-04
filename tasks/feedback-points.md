@@ -182,3 +182,6 @@
 - 対応:
   - GitHub PR #9 にフォローアップコメントを追加（comment id: `4186407883`）
   - `tasks/tasks-status.md` の Backlog に型付き投影 API（T-040）を登録
+- ユーザー指摘: subagent への再依頼はコストが高いので、途中経過確認方式で運用すること。
+- 対応:
+  - subagent レビュー回収は `wait_agent` の定期ポーリングを基本運用にし、再依頼は実行しない方針へ変更
