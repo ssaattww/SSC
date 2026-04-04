@@ -242,6 +242,46 @@ public sealed class CompareApiE2ETests
         Assert.Equal(["1", "2"], items.Select(item => item.KeyText).ToArray());
     }
 
+    [Fact]
+    public void Compare_WithListMemberAcrossModels_BuildsUnionAndPreservesModelSlots()
+    {
+        // Intent: モデル直下の List メンバーで、両 model が複数要素を持つ場合も key union と slot 対応を維持する。
+        var models = new[]
+        {
+            new KeyedRoot
+            {
+                Items =
+                [
+                    new KeyedItem { Id = 1, Value = 10 },
+                    new KeyedItem { Id = 2, Value = 20 },
+                ],
+            },
+            new KeyedRoot
+            {
+                Items =
+                [
+                    new KeyedItem { Id = 2, Value = 200 },
+                    new KeyedItem { Id = 3, Value = 300 },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsType<ParallelNode<KeyedRoot>>(result.Root);
+        var items = root.GetChildren<KeyedItem>(nameof(KeyedRoot.Items));
+
+        Assert.Equal(["1", "2", "3"], items.Select(item => item.KeyText).ToArray());
+
+        Assert.Equal(10, items[0][0]?.Value);
+        Assert.Equal(ValueState.Missing, items[0].GetState(1));
+
+        Assert.Equal(20, items[1][0]?.Value);
+        Assert.Equal(200, items[1][1]?.Value);
+
+        Assert.Equal(ValueState.Missing, items[2].GetState(0));
+        Assert.Equal(300, items[2][1]?.Value);
+    }
+
     public sealed class SimpleRoot
     {
         public int Value { get; init; }

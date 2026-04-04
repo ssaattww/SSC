@@ -108,3 +108,6 @@
 - ユーザー指摘: 基本的に厳密な方針を優先したい。
 - 対応:
   - `OrdinalIgnoreCase` の `KeyText` 表示を厳密化し、同値候補の Ordinal 最小表記へ正規化する仕様に更新
+- ユーザー指摘: List 比較の確認は Dictionary ではなく、モデルの List メンバー比較を対象にすること。
+- 対応:
+  - モデル直下 List メンバーで両 model 複数要素の E2E ケースを追加し、key union / model slot / Missing を明示検証

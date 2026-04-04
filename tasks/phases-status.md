@@ -43,7 +43,8 @@
   - レビュー指摘の考慮漏れ論点（文字列キー比較/KeyText 表示）を `doc/design/detail` に明文化
   - `OrdinalIgnoreCase` 時の `KeyText` を同値候補の Ordinal 最小表記へ正規化し、診断表示の決定性を強化
   - 厳密化差分に対してサブエージェント再レビューを実施し、Low リスクのみ記録
-  - `dotnet test SSC.sln --configuration Release` は成功（E2E 17件 / Unit 2件）
+  - モデル直下 List メンバーについて、両 model 複数要素ケースの E2E を追加し、union/slot を明示検証
+  - `dotnet test SSC.sln --configuration Release` は成功（E2E 18件 / Unit 2件）
 
 ## Phase 4: 検証・受け入れ
 

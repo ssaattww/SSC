@@ -145,3 +145,8 @@
   - Status: 完了（重大な不備なし、残留リスクを記録）
   - Output:
     - `reports/2026-04-04-subagent-code-review-keytext-canonicalization.md`
+- T-020: List メンバー比較の複数要素カバレッジ補強
+  - Status: 完了（両 model が複数要素を持つ List 比較の union/slot を E2E で検証）
+  - Output:
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `reports/2026-04-04-list-member-coverage-extension.md`
