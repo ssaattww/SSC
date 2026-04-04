@@ -233,3 +233,8 @@
     - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
     - `doc/design/detail/02-PublicApi.md`
     - `reports/2026-04-04-children-selector-api-improvement.md`
+- T-036: Public API 章への元データセット例追記
+  - Status: 完了（`Dataset / Group / Item` 定義と、`Dataset -> Groups -> Items` の前提入力を明示）
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-public-api-source-dataset-clarification.md`

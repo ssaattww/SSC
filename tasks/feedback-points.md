@@ -152,3 +152,10 @@
 - 対応:
   - `ParallelNodeExtensions.Children(...)` を追加し、`root.Children(x => x.Groups)[0].Children(x => x.Items)` 形式を導入
   - E2E テストを `Children(...)` ベースへ更新し、設計書にも新しいアクセス形を追記
+- ユーザー指摘: `doc/design/detail/02-PublicApi.md` に元データセットがどのようなものか記載すること。
+- 対応:
+  - `Source Dataset Example` 節を追加し、`Dataset -> Groups -> Items` の2モデル入力例を追記
+  - `ItemId` union で整列される前提を補足
+- ユーザー指摘: 元データセット例に型定義も追記すること。
+- 対応:
+  - `Source Dataset Example` 節に `Dataset / Group / Item` の型定義を追加

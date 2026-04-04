@@ -52,6 +52,68 @@ public interface ParallelItem : Parallel<Item>
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
 
+## 4.0 Source Dataset Example
+
+`Children(...)` のアクセス例がどの入力データを前提にしているかを明示するため、
+比較前の元データセット例を以下に示す。
+
+```csharp
+public sealed class Dataset
+{
+    public List<Group> Groups { get; init; } = [];
+}
+
+public sealed class Group
+{
+    [CompareKey]
+    public int GroupId { get; init; }
+    public List<Item> Items { get; init; } = [];
+}
+
+public sealed class Item
+{
+    [CompareKey]
+    public int ItemId { get; init; }
+    public double MetricA { get; init; }
+}
+
+var models = new[]
+{
+    new Dataset
+    {
+        Groups =
+        [
+            new Group
+            {
+                GroupId = 1,
+                Items =
+                [
+                    new Item { ItemId = 100, MetricA = 1.0 },
+                    new Item { ItemId = 200, MetricA = 2.0 },
+                ],
+            },
+        ],
+    },
+    new Dataset
+    {
+        Groups =
+        [
+            new Group
+            {
+                GroupId = 1,
+                Items =
+                [
+                    new Item { ItemId = 100, MetricA = 10.0 },
+                    new Item { ItemId = 300, MetricA = 30.0 },
+                ],
+            },
+        ],
+    },
+};
+```
+
+この入力では `GroupId=1` が対応し、`Items` は `ItemId` の union（`100, 200, 300`）で揃う。
+
 ## 4.1 Container Member Access Pattern (Current API)
 
 現行 API では、コンテナ要素は型付き selector の `Children(...)` で取得できる。
