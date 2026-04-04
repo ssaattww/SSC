@@ -120,14 +120,16 @@ var models = new[]
 既存の `GetChildren<TElement>(memberName)` も後方互換として利用可能。
 
 ```csharp
-var root = Assert.IsType<ParallelNode<EnumerableRoot>>(result.Root);
-var items = root.Children(model => model.Items);
+var root = Assert.IsType<ParallelNode<Dataset>>(result.Root);
+var groups = root.Children(model => model.Groups);
+var items = groups[0].Children(model => model.Items);
 
-// Items[index] x modelIndex
-var leftValueAtKey1 = items[0][0]?.Value; // 10
-var leftValueAtKey2 = items[1][0]?.Value; // 20
-var rightValueAtKey1 = items[0][1]?.Value; // 30
-var rightStateAtKey2 = items[1].GetState(1); // Missing
+// ItemId union は [100, 200, 300]
+// Items[index] x modelIndex (0=left, 1=right)
+var leftMetricAt100 = items[0][0]?.MetricA; // 1.0
+var leftMetricAt200 = items[1][0]?.MetricA; // 2.0
+var rightMetricAt100 = items[0][1]?.MetricA; // 10.0
+var rightStateAt200 = items[1].GetState(1); // Missing
 ```
 
 深い階層は `Children(...)` を連鎖して辿る。

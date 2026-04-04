@@ -159,3 +159,7 @@
 - ユーザー指摘: 元データセット例に型定義も追記すること。
 - 対応:
   - `Source Dataset Example` 節に `Dataset / Group / Item` の型定義を追加
+- ユーザー指摘: 上のデータセットとアクセス例が揃っていない。
+- 対応:
+  - `4.1` の参照例を `Dataset/Group/Item` 前提へ修正（`MetricA`, `ItemId` union）
+  - `ParallelNode<EnumerableRoot>` など不一致な型記述を解消

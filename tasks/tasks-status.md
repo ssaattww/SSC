@@ -238,3 +238,8 @@
   - Output:
     - `doc/design/detail/02-PublicApi.md`
     - `reports/2026-04-04-public-api-source-dataset-clarification.md`
+- T-037: Public API サンプルの整合修正
+  - Status: 完了（`4.0` の元データセット例と `4.1` のアクセス例を同じ型/値軸に統一）
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-public-api-example-consistency-fix.md`
