@@ -125,6 +125,7 @@ public sealed class ProductItem
 
 ```csharp
 using System.Collections.Generic;
+using System.Linq;
 using SSC;
 using SSC.Generated;
 
@@ -187,6 +188,23 @@ Dataset[] models =
 CompareResult<Dataset> result = ParallelCompareApi.Compare(models);
 double? leftMetricAt100 = result.AsGeneratedView()!.Groups[0].Items[0].MetricA[0];
 ValueState rightStateAt200 = result.AsGeneratedView()!.Groups[0].Items[1].MetricA.GetState(1);
+
+int[] groupIds = result.AsGeneratedView()!.Groups
+    .Select(group => group.GroupId[0]!.Value)
+    .ToArray();
+
+int[] itemIds = result.AsGeneratedView()!.Groups
+    .SelectMany(group => group.Items)
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .ToArray();
+
+int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
+    .SelectMany(group => group.Items)
+    .Where(item =>
+        item.MetricA.GetState(0) != item.MetricA.GetState(1)
+        || item.MetricA[0] != item.MetricA[1])
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .ToArray();
 ```
 
 ## Documentation

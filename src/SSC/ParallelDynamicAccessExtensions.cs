@@ -111,7 +111,7 @@ internal sealed class DynamicParallelNodeView : DynamicObject
     }
 }
 
-internal sealed class DynamicParallelListView : DynamicObject
+internal sealed class DynamicParallelListView : DynamicObject, IReadOnlyList<object?>
 {
     private readonly IReadOnlyList<IParallelNode> _nodes;
 
@@ -121,6 +121,15 @@ internal sealed class DynamicParallelListView : DynamicObject
     }
 
     public int Count => _nodes.Count;
+
+    public object? this[int index]
+    {
+        get
+        {
+            ValidateIndex(index);
+            return DynamicParallelNodeView.From(_nodes[index]);
+        }
+    }
 
     public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
     {
@@ -134,6 +143,16 @@ internal sealed class DynamicParallelListView : DynamicObject
         result = DynamicParallelNodeView.From(_nodes[index]);
         return true;
     }
+
+    public IEnumerator<object?> GetEnumerator()
+    {
+        for (var index = 0; index < _nodes.Count; index++)
+        {
+            yield return DynamicParallelNodeView.From(_nodes[index]);
+        }
+    }
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
     private void ValidateIndex(int index)
     {
