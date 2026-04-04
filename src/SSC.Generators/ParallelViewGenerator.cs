@@ -100,9 +100,15 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         source.AppendLine();
         source.AppendLine($"internal static class {rootPrefix}_GeneratedViewExtensions");
         source.AppendLine("{");
-        source.AppendLine($"    internal static {rootViewName} AsGeneratedView(this global::SSC.Parallel<{rootTypeName}> node)");
+        source.AppendLine($"    internal static {rootViewName}? AsGeneratedView(this global::SSC.CompareResult<{rootTypeName}> result)");
         source.AppendLine("    {");
-        source.AppendLine("        var parallelNode = global::SSC.ParallelGeneratedRuntime.RequireNode(node, nameof(AsGeneratedView));");
+        source.AppendLine("        global::System.ArgumentNullException.ThrowIfNull(result);");
+        source.AppendLine("        if (result.Root is null)");
+        source.AppendLine("        {");
+        source.AppendLine("            return null;");
+        source.AppendLine("        }");
+        source.AppendLine();
+        source.AppendLine("        var parallelNode = global::SSC.ParallelGeneratedRuntime.RequireNode(result.Root, nameof(AsGeneratedView));");
         source.AppendLine($"        return new {rootViewName}(parallelNode);");
         source.AppendLine("    }");
         source.AppendLine("}");

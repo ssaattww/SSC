@@ -16,6 +16,39 @@
 
 ## Done
 
+- T-049: README へ Source Generator 対応を明記し、Generators パッケージへ README 同梱
+  - Status: 完了（ルート README を更新し、`ssaattww.SSC.Generators` の package readme を設定）
+  - Output:
+    - `README.md`
+    - `src/SSC.Generators/SSC.Generators.csproj`
+    - `reports/2026-04-04-readme-source-generator-and-generator-package-readme.md`
+
+- T-048: NuGet 2パッケージ同時配布とバージョン同期
+  - Status: 完了（`ssaattww.SSC` と `ssaattww.SSC.Generators` を同一 `PackageVersion` で同時 pack/publish）
+  - Output:
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-04-nuget-dual-package-synchronized-version-publish.md`
+
+- T-047: 投影切替を CompareResult 段階へ前倒し
+  - Status: 完了（dynamic / generated の切替を `CompareResult` 入口で選択可能化）
+  - Output:
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `src/SSC.Generators/ParallelViewGenerator.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-projection-switch-at-result-stage.md`
+    - `reports/2026-04-04-subagent-review-projection-switch.md`
+
+- T-046: PR テスト workflow の generator 対象追加
+  - Status: 完了（PR CI で source generator プロジェクトを build 対象に追加）
+  - Output:
+    - `.github/workflows/pr-xunit-tests.yml`
+    - `reports/2026-04-04-pr-tests-generator-target-extension.md`
+
 - T-045: runtime コード生成方式の比較整理
   - Status: 完了（runtime でのコード生成 3方式と Roslyn Scripting の位置づけを整理）
   - Output:

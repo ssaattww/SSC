@@ -74,6 +74,11 @@
   - `src/SSC.Generators` を追加し、`[GenerateParallelView]` 付き型に対する `AsGeneratedView()` と型付き view 生成を実装
   - generated projection の E2E を追加し、`dotnet test SSC.sln --configuration Release` 成功を確認（E2E 25件 / Unit 4件）
   - runtime コード生成の選択肢（Reflection.Emit / Roslyn Compilation / 事前生成切替）と Roslyn Scripting との差分をレポート化
+  - PR テスト workflow を拡張し、xUnit 実行前に source generator プロジェクトも build 検証するよう更新
+  - `CompareResult` 拡張を追加し、`ParallelCompareApi.Compare(models).AsDynamic()` / `AsGeneratedView()` で投影方式を早い段階で切替可能に更新（`result.Root!...` 導線は廃止）
+  - 上記差分を subagent でレビューし、doc の可視性表記（public/internal）不一致と旧 dynamic サンプル導線を修正
+  - NuGet publish workflow を2パッケージ同時配布へ更新し、`ssaattww.SSC` と `ssaattww.SSC.Generators` に同一バージョンを適用
+  - ルート README に Source Generator 対応と2パッケージ利用導線を追記し、`SSC.Generators` パッケージにも README を同梱
 
 ## Phase 4: 検証・受け入れ
 

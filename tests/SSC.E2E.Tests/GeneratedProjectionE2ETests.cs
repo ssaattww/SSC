@@ -73,8 +73,7 @@ public sealed class GeneratedProjectionE2ETests
             },
         };
 
-        var result = ParallelCompareApi.Compare(models);
-        var root = result.Root!.AsGeneratedView();
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
 
         var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0];
         var leftMetricAt200 = root.Groups[0].Items[1].MetricA[0];
@@ -134,8 +133,7 @@ public sealed class GeneratedProjectionE2ETests
             },
         };
 
-        var result = ParallelCompareApi.Compare(models);
-        var root = result.Root!.AsGeneratedView();
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
 
         var exception = Assert.Throws<CompareExecutionException>(() =>
         {
@@ -146,12 +144,24 @@ public sealed class GeneratedProjectionE2ETests
     }
 
     [Fact]
+    public void Compare_GeneratedProjection_WhenRootMissing_ResultExtensionReturnsNull()
+    {
+        // Intent: CompareResult 入口でも generated 投影を選択でき、Root 未生成時は null を返す。
+        var result = ParallelCompareApi.Compare(Array.Empty<GeneratedDataset>());
+
+        var root = result.AsGeneratedView();
+
+        Assert.True(result.HasError);
+        Assert.Null(root);
+    }
+
+    [Fact]
     public void AsGeneratedView_WithNonCompareNode_ThrowsArgumentException()
     {
         // Intent: compare result node 以外は AsGeneratedView の対象外とする。
-        Parallel<GeneratedDataset> node = new FakeGeneratedParallel();
+        var result = new CompareResult<GeneratedDataset> { Root = new FakeGeneratedParallel() };
 
-        var exception = Assert.Throws<ArgumentException>(() => node.AsGeneratedView());
+        var exception = Assert.Throws<ArgumentException>(() => result.AsGeneratedView());
 
         Assert.Contains("compare result nodes", exception.Message, StringComparison.Ordinal);
     }

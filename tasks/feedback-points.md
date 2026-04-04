@@ -218,3 +218,28 @@
 - 対応:
   - `reports/2026-04-04-runtime-code-generation-options.md` を作成
   - 3方式（Reflection.Emit/Expression、Roslyn Compilation API、事前生成切替）と Roslyn Scripting との差分を明文化
+- ユーザー指摘: source generator を CI のテスト対象に追加すること。
+- 対応:
+  - `.github/workflows/pr-xunit-tests.yml` を改修し、test project に加えて generator project も検出/restore/build するステップを追加
+  - `reports/2026-04-04-pr-tests-generator-target-extension.md` に変更内容を記録
+- ユーザー指摘: `result.Root!.AsGeneratedView()` ではなく、もっと前段で dynamic / generated を切替したい。
+- 対応:
+  - `CompareResult<T>` 入口拡張を追加し、`ParallelCompareApi.Compare(models).AsDynamic()` を実装
+  - Source Generator 生成に `AsGeneratedView(this CompareResult<T>)` を追加し、`ParallelCompareApi.Compare(models).AsGeneratedView()` を実装
+  - 互換性維持のため既存 `result.Root!.AsDynamic()` / `result.Root!.AsGeneratedView()` は維持
+  - 変更内容を `reports/2026-04-04-projection-switch-at-result-stage.md` に記録
+- ユーザー指摘: 正式リリース前なので互換導線は不要。`result.Root!...` 系は残さず整理したい。
+- 対応:
+  - `AsDynamic` を `CompareResult<T>` 入口専用へ変更し、`Parallel<T>` 入口は廃止
+  - Source Generator 生成の `AsGeneratedView` は `CompareResult<T>` 入口のみを生成
+  - E2E/Unit テストを `CompareResult` 入口導線へ統一
+- ユーザー指摘: NuGet は runtime と source generator を2パッケージ同時配布し、バージョンを揃えること。
+- 対応:
+  - `.github/workflows/publish-nuget.yml` を更新し、`src/SSC/SSC.csproj` と `src/SSC.Generators/SSC.Generators.csproj` を固定対象として同時 pack/publish する構成へ変更
+  - `Resolve package version` で決定した単一 `package_version` を2プロジェクトに共通適用
+  - dry-run で2パッケージが同一バージョンで生成されることを確認し、`reports/2026-04-04-nuget-dual-package-synchronized-version-publish.md` に記録
+- ユーザー指摘: ルート README を追加/更新し、Source Generator 対応も明記すること。
+- 対応:
+  - `README.md` に `ssaattww.SSC.Generators` バッジ、2パッケージ構成、`[GenerateParallelView]` + `AsGeneratedView()` の利用例を追記
+  - `src/SSC.Generators/SSC.Generators.csproj` に `PackageReadmeFile` とルート README 同梱設定を追加
+  - pack dry-run で `SSC.Generators` の readme 未設定警告が解消されたことを確認

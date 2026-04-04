@@ -58,7 +58,7 @@ internal sealed class ParallelNode<T> : Parallel<T>
 `AsDynamic()` を使うと、コンテナ階層を次の形でアクセスできる。
 
 ```csharp
-dynamic root = result.Root!.AsDynamic();
+dynamic root = ParallelCompareApi.Compare(models).AsDynamic();
 var metric = root.Groups[0].Items[0].MetricA[0];
 ```
 
@@ -77,7 +77,7 @@ public sealed class Dataset
     public List<Group> Groups { get; init; } = [];
 }
 
-var typedRoot = result.Root!.AsGeneratedView();
+var typedRoot = ParallelCompareApi.Compare(models).AsGeneratedView();
 var metric = typedRoot.Groups[0].Items[0].MetricA[0];
 var keyText = typedRoot.Groups[0].Items[0].NodeMeta.KeyText;
 ```
@@ -85,7 +85,7 @@ var keyText = typedRoot.Groups[0].Items[0].NodeMeta.KeyText;
 - `dynamic` 非依存で IDE 補完を利用できる
 - list index 範囲外は `ModelIndexOutOfRange`
 - node メタ情報は `NodeMeta` 配下（`NodeMeta.Count` / `NodeMeta.KeyText`）で参照する
-- 既存 `AsDynamic()` は後方互換として継続利用できる
+- 投影切替の入口は `CompareResult` 拡張（`AsDynamic()` / `AsGeneratedView()`）に統一する
 
 ## 3.1 CompareIgnore Attribute
 

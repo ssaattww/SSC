@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <PackageId>ssaattww.SSC.Generators</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5128;RS1036;RS1032;RS2008</NoWarn>
   </PropertyGroup>
@@ -19,6 +20,9 @@
           Pack="true"
           PackagePath="analyzers/dotnet/cs"
           Visible="false" />
+    <None Include="..\..\README.md"
+          Pack="true"
+          PackagePath="\" />
   </ItemGroup>
 
 </Project>
