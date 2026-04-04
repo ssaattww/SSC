@@ -9,3 +9,8 @@ public sealed class CompareIgnoreAttribute : Attribute
 public sealed class CompareKeyAttribute : Attribute
 {
 }
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public sealed class GenerateParallelViewAttribute : Attribute
+{
+}

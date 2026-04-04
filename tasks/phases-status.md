@@ -68,6 +68,12 @@
   - dynamic projection 差分をサブエージェント再レビューし、追跡タスク（T-041）で公開契約整合（`AsDynamic` 入口）/ `GetState` 意味整合 / 予約名衝突 / 境界例外 / `CreateLeaf` 引数検証を実装完了
   - T-041 完了後の再レビューで High/Medium の新規指摘なしを確認し、`value path GetState` 非侵襲化は残留課題（T-042）として Backlog 化
   - 新規チャット再開向けに `reports/chat-handover-for-new-thread-20260404_144004.md` を作成し、最新状態を8章構成で整理
+  - dynamic 依存低減について補完性/性能観点の方式評価を実施し、段階移行案（C -> A -> B）を `reports/2026-04-04-typed-access-approach-evaluation.md` に整理
+  - 方針を更新し、最終到達点を Source Generator 案（案3）へ設定したロードマップを `reports/2026-04-04-source-generator-roadmap.md` に記録
+  - subagent 設計レビュー結果を反映し、配布戦略（runtime/generator 分離）と generated API 契約（scope/命名/失敗契約/Dictionary表現）を設計へ明記
+  - `src/SSC.Generators` を追加し、`[GenerateParallelView]` 付き型に対する `AsGeneratedView()` と型付き view 生成を実装
+  - generated projection の E2E を追加し、`dotnet test SSC.sln --configuration Release` 成功を確認（E2E 25件 / Unit 4件）
+  - runtime コード生成の選択肢（Reflection.Emit / Roslyn Compilation / 事前生成切替）と Roslyn Scripting との差分をレポート化
 
 ## Phase 4: 検証・受け入れ
 

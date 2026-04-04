@@ -196,3 +196,25 @@
 - 対応:
   - `.codex/skills/hikitsugi/SKILL.md` の手順に沿って状態収集を実施
   - `reports/chat-handover-for-new-thread-20260404_144004.md` を作成し、8章構成で次チャット再開情報を整理
+- ユーザー指摘: dynamic 中心のアクセスは補完性と実行性能の面で改善余地がある。
+- 対応:
+  - `src/SSC/ParallelDynamicAccessExtensions.cs` を基点にボトルネックと代替方式を調査
+  - `reports/2026-04-04-typed-access-approach-evaluation.md` に方式比較（型付きチェーン API / source generator / 内部事前計算）と段階移行案を記録
+  - 優先順を「T-042（非侵襲化）-> T-040（型付き API）」で継続する方針を明確化
+- ユーザー指摘: 最終目標は案3（Source Generator）を目指したい。
+- 対応:
+  - `reports/2026-04-04-source-generator-roadmap.md` を作成し、段階導入（基盤整備 -> PoC -> 公開API化）を定義
+  - `tasks/tasks-status.md` の T-040 を Source Generator 最終目標として更新
+- ユーザー指摘: 1,2 は行わず、案3 を最初から完遂すること。`AsDynamic()` は壊さないこと。
+- 対応:
+  - 設計を先行更新し、案3（Source Generator）を直接実装する方針へ切替
+  - runtime/generator 分離、生成範囲、失敗契約、命名衝突回避を設計に明記
+  - `AsDynamic()` 既存実装は変更せず、回帰テストを通して互換維持を確認
+- ユーザー指摘: 実装前レビューは subagent で実施すること。
+- 対応:
+  - subagent に事前設計レビューを依頼し、指摘を `reports/2026-04-04-subagent-design-review-source-generator.md` に記録
+  - 指摘反映後に実装を実行し、`dotnet test SSC.sln --configuration Release` の成功を確認
+- ユーザー指摘: runtime コード生成の 1-3 方式をレポートに残すこと。
+- 対応:
+  - `reports/2026-04-04-runtime-code-generation-options.md` を作成
+  - 3方式（Reflection.Emit/Expression、Roslyn Compilation API、事前生成切替）と Roslyn Scripting との差分を明文化

@@ -51,7 +51,7 @@ internal sealed class ParallelNode<T> : Parallel<T>
 
 - `Values[modelIndex]` が model slot
 - `Children` は構築中内部表現
-- 公開面では `Children(...)` または `AsDynamic()` により階層アクセスへ投影される
+- 公開面では `Children(...)` / `AsDynamic()` / generated projection により階層アクセスへ投影される
 
 ## 3.2 Dynamic Projection Access (Public)
 
@@ -65,6 +65,27 @@ var metric = root.Groups[0].Items[0].MetricA[0];
 - 左の `[]`: key union 後の要素 index
 - 右の `[]`: model index
 - node メタ情報は `NodeCount` / `NodeKeyText` で参照できる（モデル同名メンバー衝突を回避）
+
+## 3.3 Generated Projection Access (Public)
+
+`[GenerateParallelView]` を root model に付与すると、Source Generator が型付き view を生成する。
+
+```csharp
+[GenerateParallelView]
+public sealed class Dataset
+{
+    public List<Group> Groups { get; init; } = [];
+}
+
+var typedRoot = result.Root!.AsGeneratedView();
+var metric = typedRoot.Groups[0].Items[0].MetricA[0];
+var keyText = typedRoot.Groups[0].Items[0].NodeMeta.KeyText;
+```
+
+- `dynamic` 非依存で IDE 補完を利用できる
+- list index 範囲外は `ModelIndexOutOfRange`
+- node メタ情報は `NodeMeta` 配下（`NodeMeta.Count` / `NodeMeta.KeyText`）で参照する
+- 既存 `AsDynamic()` は後方互換として継続利用できる
 
 ## 3.1 CompareIgnore Attribute
 

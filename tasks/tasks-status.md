@@ -8,13 +8,6 @@
 
 ## Backlog
 
-- T-040: dynamic 依存を減らす型付き投影 API の追加
-  - Status: 未着手（次回課題）
-  - Scope:
-    - `AsDynamic()` の補完弱さを解消するため、IDE 補完が効く型付きアクセス API を設計・実装
-    - `list index -> model index` と `GetState(modelIndex)` の意味を維持
-  - Tracking:
-    - GitHub PR comment: `#9` comment id `4186407883`
 - T-042: dynamic 値パス `GetState` の非侵襲化
   - Status: 未着手（残留リスク）
   - Scope:
@@ -22,6 +15,31 @@
     - 副作用 getter / 例外 getter モデルでの安全性テストを追加
 
 ## Done
+
+- T-045: runtime コード生成方式の比較整理
+  - Status: 完了（runtime でのコード生成 3方式と Roslyn Scripting の位置づけを整理）
+  - Output:
+    - `reports/2026-04-04-runtime-code-generation-options.md`
+
+- T-040: dynamic 依存を減らす型付き投影 API の追加
+  - Status: 完了（Source Generator ベースの generated projection API を実装）
+  - Output:
+    - `src/SSC.Generators/SSC.Generators.csproj`
+    - `src/SSC.Generators/ParallelViewGenerator.cs`
+    - `src/SSC/CompareAttributes.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/2026-04-04-source-generator-generated-projection-implementation.md`
+    - `reports/2026-04-04-subagent-design-review-source-generator.md`
+
+- T-044: dynamic 依存低減のアクセス方式評価
+  - Status: 完了（補完性/性能を軸に代替案を比較し、段階移行案を整理）
+  - Output:
+    - `reports/2026-04-04-typed-access-approach-evaluation.md`
 
 - T-043: 新規チャット再開用ハンドオーバーレポート更新（20260404_144004）
   - Status: 完了（最新ブランチ/PR/Backlog を反映した8章レポートを作成）

@@ -48,3 +48,13 @@
 26. API 入口から出口までの E2E テストを優先する
 27. E2E で `Path/IssueCode/model slot` をまとめて検証する
 28. unit テストは E2E で不足する境界条件を補完する
+
+## 8. Generated Projection
+
+29. `GenerateParallelViewAttribute` を追加し、生成対象の明示契約を定義したか
+30. Source Generator で `AsGeneratedView()` と型付き view を生成できるか
+31. generated API で `list index -> model index` アクセスを再現できるか
+32. generated API の範囲外 index が `ModelIndexOutOfRange` で失敗するか
+33. `AsDynamic()` の既存挙動が回帰していないか
+34. 複数 namespace / nested type / internal type で生成コードがコンパイルできるか
+35. `Count/KeyText` 衝突系と nullable value-path 系で dynamic 回帰がないか
