@@ -79,6 +79,8 @@
   - 上記差分を subagent でレビューし、doc の可視性表記（public/internal）不一致と旧 dynamic サンプル導線を修正
   - NuGet publish workflow を2パッケージ同時配布へ更新し、`ssaattww.SSC` と `ssaattww.SSC.Generators` に同一バージョンを適用
   - ルート README に Source Generator 対応と2パッケージ利用導線を追記し、`SSC.Generators` パッケージにも README を同梱
+  - NuGet metadata（repository/license）を両パッケージへ追加し、README に generator downloads バッジを追加
+  - README の Minimal Example を `result.AsDynamic()` 入口の最新 dynamic 導線へ更新
 
 ## Phase 4: 検証・受け入れ
 

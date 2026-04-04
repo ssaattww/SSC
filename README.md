@@ -5,6 +5,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
 [![NuGet Version (Generators)](https://img.shields.io/nuget/v/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
+[![NuGet Downloads (Generators)](https://img.shields.io/nuget/dt/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ssaattww/SSC/blob/main/LICENSE)
 
 SSC is a .NET library for structural comparison of multiple models.
@@ -96,13 +97,14 @@ var models = new[]
 };
 
 var result = ParallelCompareApi.Compare(models);
-var root = (ParallelNode<ProductModel>)result.Root!;
-var items = root.GetChildren<ProductItem>(nameof(ProductModel.Items));
+dynamic root = result.AsDynamic()!;
 
-// items keys: 1, 2, 3
-// key 1: [present, missing]
-// key 2: [present, present]
-// key 3: [missing, present]
+// item keys are normalized as union: 1, 2, 3
+decimal? leftPriceAtKey1 = root.Items[0].Price[0];   // 100
+decimal? rightPriceAtKey1 = root.Items[0].Price[1];  // null (missing)
+decimal? leftPriceAtKey2 = root.Items[1].Price[0];   // 200
+decimal? rightPriceAtKey2 = root.Items[1].Price[1];  // 250
+var stateAtKey3Left = (ValueState)root.Items[2].GetState(0); // Missing
 
 public sealed class ProductModel
 {

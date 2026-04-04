@@ -243,3 +243,15 @@
   - `README.md` に `ssaattww.SSC.Generators` バッジ、2パッケージ構成、`[GenerateParallelView]` + `AsGeneratedView()` の利用例を追記
   - `src/SSC.Generators/SSC.Generators.csproj` に `PackageReadmeFile` とルート README 同梱設定を追加
   - pack dry-run で `SSC.Generators` の readme 未設定警告が解消されたことを確認
+- ユーザー指摘: `main` から同期すること。
+- 対応:
+  - 作業中差分を一時退避したうえで `origin/main` を rebase で取り込み、退避差分を復元
+- ユーザー指摘: NuGet 上の repository 情報と license 情報を表示できるようにし、source generator 側のバッジも追加すること。
+- 対応:
+  - `src/SSC/SSC.csproj` と `src/SSC.Generators/SSC.Generators.csproj` に `PackageProjectUrl` / `RepositoryUrl` / `RepositoryType` / `PackageLicenseExpression` を追加
+  - `README.md` に `ssaattww.SSC.Generators` downloads バッジを追加
+  - pack 後の `.nuspec` で license/projectUrl/repository が両パッケージに含まれることを確認
+- ユーザー指摘: README の Minimal Example も最新の dynamic 方式に揃えること。
+- 対応:
+  - `README.md` の Minimal Example を `result.AsDynamic()` ベースへ更新
+  - `root.Items[index].Price[modelIndex]` と `GetState(modelIndex)` の参照例へ差し替え
