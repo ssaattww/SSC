@@ -98,6 +98,53 @@ public sealed class GeneratedProjectionE2ETests
     }
 
     [Fact]
+    public void Compare_GeneratedProjection_ListSupportsLinqSelect()
+    {
+        // Intent: generated list は IEnumerable として LINQ Select を利用できる。
+        var models = new[]
+        {
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 100, MetricA = 1.0, Detail = new GeneratedDetail { Label = "l-100" } },
+                            new GeneratedItem { ItemId = 200, MetricA = 2.0, Detail = new GeneratedDetail { Label = "l-200" } },
+                        ],
+                    },
+                ],
+            },
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 100, MetricA = 10.0, Detail = new GeneratedDetail { Label = "r-100" } },
+                            new GeneratedItem { ItemId = 200, MetricA = 20.0, Detail = new GeneratedDetail { Label = "r-200" } },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        int[] groupIds = root.Groups.Select(group => group.GroupId[0]!.Value).ToArray();
+        int[] itemIds = root.Groups[0].Items.Select(item => item.ItemId[0]!.Value).ToArray();
+
+        Assert.Equal(new[] { 1 }, groupIds);
+        Assert.Equal(new[] { 100, 200 }, itemIds);
+    }
+
+    [Fact]
     public void Compare_GeneratedProjection_ListIndexOutOfRange_ThrowsExecutionException()
     {
         // Intent: generated list index 範囲外アクセスは ModelIndexOutOfRange で失敗する。

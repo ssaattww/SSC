@@ -16,6 +16,44 @@
 
 ## Done
 
+- T-058: README に ValueState 意味説明を追加
+  - Status: 完了（`GetState` と `Missing/PresentNull/PresentValue` の意味を明文化）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-valuestate-explanation-update.md`
+
+- T-057: README generated 例に不一致抽出の Where サンプル追加
+  - Status: 完了（`SelectMany + Where` で差分要素を抽出する実用例を追記）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-generated-where-filter-example-update.md`
+
+- T-056: README の generated 例へ LINQ アクセス追記
+  - Status: 完了（`AsGeneratedView()` 側に `Select` / `SelectMany` の具体例を追加）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-generated-linq-example-update.md`
+
+- T-055: LINQ 演算子マトリクス検証（dynamic 含む）
+  - Status: 完了（Node/Generated/Dynamic の3入口で主要 LINQ 演算子の回帰検証を追加）
+  - Output:
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/LinqMatrixE2ETests.cs`
+    - `reports/2026-04-04-linq-operator-matrix-with-dynamic.md`
+
+- T-054: LINQ 互換検証の E2E 分離追加
+  - Status: 完了（Node/Generated の両入口で主要 LINQ 演算を回帰検証）
+  - Output:
+    - `tests/SSC.E2E.Tests/LinqCompatibilityE2ETests.cs`
+    - `reports/2026-04-04-linq-compatibility-e2e-coverage.md`
+
+- T-053: Generated projection list の LINQ 互換化
+  - Status: 完了（`ParallelGeneratedList<,>` を `IEnumerable<TView>` として利用可能化）
+  - Output:
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `reports/2026-04-04-generated-list-linq-compatibility.md`
+
 - T-052: README サンプルを省略なし・`var` なしへ統一
   - Status: 完了（Minimal/Source Generator サンプルを完全形へ更新し、`var` を排除）
   - Output:

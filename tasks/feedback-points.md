@@ -260,3 +260,31 @@
   - `README.md` の Minimal/Source Generator サンプルを完全形へ更新
   - `ProductModel[]` / `Dataset[]` / `CompareResult<T>` / `ValueState` など型を明示
   - `README.md` 全体で `var` 不使用を確認
+- ユーザー指摘: generated view list に対して `root.Groups.Select(...)` のような LINQ 拡張を使いたい。
+- 対応:
+  - `ParallelGeneratedList<TElement, TView>` を `IReadOnlyList<TView>` として実装し、`IEnumerable<TView>` 列挙を提供
+  - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs` に LINQ `Select` 利用ケースを追加
+  - 対応内容を `reports/2026-04-04-generated-list-linq-compatibility.md` に記録
+- ユーザー指摘: 現在存在する LINQ がすべて動くことを確認するテストを追加し、別ファイルへ分離したい。
+- 対応:
+  - `tests/SSC.E2E.Tests/LinqCompatibilityE2ETests.cs` を新規追加し、LINQ 互換検証を独立ファイル化
+  - Node 入口（`Children(...)`）と generated 入口（`AsGeneratedView()`）で主要 LINQ 演算連鎖を検証
+  - 対応内容を `reports/2026-04-04-linq-compatibility-e2e-coverage.md` に記録
+- ユーザー指摘: LINQ の完全マトリクス版が必要。dynamic も動作確認したい。
+- 対応:
+  - `tests/SSC.E2E.Tests/LinqMatrixE2ETests.cs` を追加し、Node/Generated/Dynamic の3入口で演算子マトリクス検証を追加
+  - dynamic list を LINQ 列挙可能にするため `DynamicParallelListView` に `IReadOnlyList<object?>` 実装を追加
+  - 対応内容を `reports/2026-04-04-linq-operator-matrix-with-dynamic.md` に記録
+- ユーザー指摘: README の `AsGeneratedView` 側にも、今回追加した LINQ アクセス例を追加したい。
+- 対応:
+  - `README.md` の Source Generator サンプルへ `using System.Linq;` と `Select` / `SelectMany` の利用例を追記
+  - 対応内容を `reports/2026-04-04-readme-generated-linq-example-update.md` に記録
+- ユーザー指摘: generated サンプルは、`Where` で不一致要素を絞る実用例のほうがよい。
+- 対応:
+  - `README.md` に `mismatchedItemIds` 例を追加し、`SelectMany(...).Where(...)` で不一致要素を抽出する例へ拡張
+  - 対応内容を `reports/2026-04-04-readme-generated-where-filter-example-update.md` に記録
+- ユーザー指摘: `GetState(modelIndex) with ValueState` の説明に、各状態の意味を追記したい。
+- 対応:
+  - `README.md` の `Core Concepts` で `Missing` / `PresentNull` / `PresentValue` の意味を明文化
+  - `README.md` の `Status` の E2E 件数を最新値へ更新
+  - 対応内容を `reports/2026-04-04-readme-valuestate-explanation-update.md` に記録

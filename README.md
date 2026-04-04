@@ -17,7 +17,7 @@ It compares object graphs by aligning member values into per-model slots, normal
 - Target framework: .NET 8
 - Current phase: Phase 3 (implementation in progress)
 - Test status (latest):
-  - E2E: 27 passed
+  - E2E: 33 passed
   - Unit: 4 passed
 
 ## NuGet Packages
@@ -38,7 +38,10 @@ Install both packages when you want typed generated projection API (`AsGenerated
   - `CompareResult<T>.HasError` : whether error-level issues exist
 - Slot model:
   - `Parallel<T>[modelIndex]` for value access
-  - `GetState(modelIndex)` with `ValueState` (`Missing`, `PresentNull`, `PresentValue`)
+  - `GetState(modelIndex)` for slot state access
+  - `ValueState.Missing` : the slot does not exist in the target model
+  - `ValueState.PresentNull` : the slot exists but the value is `null`
+  - `ValueState.PresentValue` : the slot exists and has a non-null value
 
 ## Container Behavior
 
@@ -125,6 +128,7 @@ public sealed class ProductItem
 
 ```csharp
 using System.Collections.Generic;
+using System.Linq;
 using SSC;
 using SSC.Generated;
 
@@ -187,6 +191,23 @@ Dataset[] models =
 CompareResult<Dataset> result = ParallelCompareApi.Compare(models);
 double? leftMetricAt100 = result.AsGeneratedView()!.Groups[0].Items[0].MetricA[0];
 ValueState rightStateAt200 = result.AsGeneratedView()!.Groups[0].Items[1].MetricA.GetState(1);
+
+int[] groupIds = result.AsGeneratedView()!.Groups
+    .Select(group => group.GroupId[0]!.Value)
+    .ToArray();
+
+int[] itemIds = result.AsGeneratedView()!.Groups
+    .SelectMany(group => group.Items)
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .ToArray();
+
+int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
+    .SelectMany(group => group.Items)
+    .Where(item =>
+        item.MetricA.GetState(0) != item.MetricA.GetState(1)
+        || item.MetricA[0] != item.MetricA[1])
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .ToArray();
 ```
 
 ## Documentation

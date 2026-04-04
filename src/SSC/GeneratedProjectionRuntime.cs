@@ -16,7 +16,7 @@ public readonly struct ParallelGeneratedMeta
     public ValueState GetState(int modelIndex) => _node.GetState(modelIndex);
 }
 
-public sealed class ParallelGeneratedList<TElement, TView>
+public sealed class ParallelGeneratedList<TElement, TView> : IReadOnlyList<TView>
 {
     private readonly IReadOnlyList<ParallelNode<TElement>> _nodes;
     private readonly Func<ParallelNode<TElement>, TView> _viewFactory;
@@ -51,6 +51,16 @@ public sealed class ParallelGeneratedList<TElement, TView>
             CompareIssueCode.ModelIndexOutOfRange,
             $"list index '{index}' is out of range for count '{_nodes.Count}'.");
     }
+
+    public IEnumerator<TView> GetEnumerator()
+    {
+        for (var index = 0; index < _nodes.Count; index++)
+        {
+            yield return _viewFactory(_nodes[index]);
+        }
+    }
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public sealed class ParallelGeneratedValue<TModel, TValue>

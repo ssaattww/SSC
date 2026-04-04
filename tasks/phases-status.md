@@ -82,6 +82,13 @@
   - NuGet metadata（repository/license）を両パッケージへ追加し、README に generator downloads バッジを追加
   - README の Minimal Example を `result.AsDynamic()` 入口の最新 dynamic 導線へ更新
   - README のコードサンプルを省略なし・`var` なしの完全形へ統一
+  - `ParallelGeneratedList<,>` を `IReadOnlyList<TView>` 化し、generated view list で LINQ `Select` を利用可能化
+  - generated projection E2E に list の LINQ 列挙シナリオを追加し、回帰防止を強化
+  - LINQ 互換検証を `LinqCompatibilityE2ETests` として分離し、Node/Generated 両入口で主要演算を網羅確認
+  - `DynamicParallelListView` を列挙可能化し、dynamic 入口を含む LINQ 演算子マトリクス E2E を追加
+  - README の Source Generator サンプルに `AsGeneratedView()` 経由の LINQ アクセス例（`Select` / `SelectMany`）を追記
+  - README の Source Generator サンプルへ `Where` による不一致要素抽出例を追加
+  - README の Core Concepts に `ValueState` 各状態の意味説明を追加し、E2E 件数表示を最新化
 
 ## Phase 4: 検証・受け入れ
 
