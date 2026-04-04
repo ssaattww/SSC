@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-04-03
+- Updated: 2026-04-04
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -34,8 +34,15 @@
 - Notes:
   - 実装着手前に CI/CD 基盤（.github workflows）をリポジトリ構成へ適合化
   - 初版まではテスト workflow のみ有効、release publish は無効化
+  - 最小実装スケルトンを基盤に E2E テストを拡張（StringComparison、3 model slot、Issue診断情報、IEnumerable 1回列挙）
+  - 既存テスト（E2E/Unit）へ意図コメントを追記し、仕様意図を明示
+  - `CompareKeyValueIsNull` の Issue `KeyText` を `<null>` で可視化
+  - OrdinalIgnoreCase 同値の同一モデル内辞書キー衝突を `DuplicateCompareKeyDetected` として検知
+  - sequence element が null の場合も `CompareKeyValueIsNull.KeyText` を `<null>` で統一
+  - サブエージェントレビューを実施し、重大度 Critical/High/Medium の指摘なしを確認
+  - レビュー指摘の考慮漏れ論点（文字列キー比較/KeyText 表示）を `doc/design/detail` に明文化
+  - `dotnet test SSC.sln --configuration Release` は成功（E2E 17件 / Unit 2件）
 
 ## Phase 4: 検証・受け入れ
 
 - Status: Not Started
-

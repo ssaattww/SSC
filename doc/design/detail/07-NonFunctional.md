@@ -4,7 +4,8 @@
 
 - 同一入力で同一列挙順
 - keyUnion 順序は決定論的
-- 文字列キーは `StringComparison.Ordinal`
+- 文字列キー比較は `CompareConfiguration.StringKeyComparison` に従う（既定: `Ordinal`）
+- `KeyText` は入力表記を保持し、強制正規化を行わない
 
 ## 2. Reflection Metadata Cache
 

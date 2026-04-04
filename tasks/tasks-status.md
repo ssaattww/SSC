@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-04-03
+- Updated: 2026-04-04
 
 ## In Progress
 
@@ -104,4 +104,30 @@
     - `.github/workflows/pr-xunit-tests.yml`
     - `.github/workflows/publish-nuget.yml`
     - `reports/2026-04-03-github-workflow-adaptation.md`
-
+- T-014: Phase 3 E2E テスト拡張と診断情報の補強
+  - Status: 完了（既存テストへの意図コメント追記 + 追加E2Eで仕様検証を拡張）
+  - Output:
+    - `src/SSC/ParallelCompareApi.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `reports/2026-04-04-phase3-tdd-e2e-extension.md`
+- T-015: Phase 3 辞書キー衝突検知と null 診断情報の整合化
+  - Status: 完了（OrdinalIgnoreCase 同値衝突を重複エラー化し、sequence null 要素の KeyText を統一）
+  - Output:
+    - `src/SSC/ParallelCompareApi.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `reports/2026-04-04-phase3-key-collision-null-keytext-fix.md`
+- T-016: Phase 3 サブエージェントコードレビュー
+  - Status: 完了（重大な不備なし、残留リスクを整理）
+  - Output:
+    - `reports/2026-04-04-subagent-code-review.md`
+- T-017: 設計書更新（文字列キー比較と KeyText 表示方針）
+  - Status: 完了（考慮漏れ論点を設計へ明文化）
+  - Output:
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `doc/design/detail/07-NonFunctional.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/2026-04-04-design-update-keytext-and-string-comparison.md`

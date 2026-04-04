@@ -29,7 +29,7 @@
 ## 5. Determinism/Quality
 
 15. 同一入力で列挙順が再現するか
-16. 文字列キー比較が `Ordinal` で固定されているか
+16. 文字列キー比較が `StringKeyComparison` 設定（`Ordinal` / `OrdinalIgnoreCase`）に従うか
 17. Reflection キャッシュがスレッド安全か
 18. 中間データ破棄でリークを起こさないか
 

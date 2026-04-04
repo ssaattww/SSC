@@ -33,7 +33,7 @@ public enum CompareIssueLevel { Error, Warning }
 - `InputModelNullElement`: models 内に null
 - `UnsupportedContainerType`: 未対応コンテナ
 - `CompareKeyNotFoundOnSequenceElement`: List 要素に CompareKey 無し
-- `CompareKeyValueIsNull`: CompareKey 値が null
+- `CompareKeyValueIsNull`: CompareKey 値 / dictionary key / sequence element が null
 - `DuplicateCompareKeyDetected`: 重複キー
 - `ModelIndexOutOfRange`: indexer 範囲外
 - `ReflectionMetadataBuildFailed`: 反射メタデータ構築失敗
@@ -58,6 +58,11 @@ public enum CompareIssueLevel { Error, Warning }
 - `ModelIndex`: 特定可能時に設定
 - `KeyText`: キー問題時に設定
 - `Message`: 人間が読める説明
+
+`KeyText` の運用:
+
+- null 系エラー（null key / null sequence element）は `"<null>"` を設定
+- 文字列キーの大小文字差は入力表記を保持し、強制正規化はしない
 
 ### 5.1 Path Format
 
