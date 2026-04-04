@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <PackageId>ssaattww.SSC</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/ssaattww/SSC</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ssaattww/SSC</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

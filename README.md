@@ -5,6 +5,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
 [![NuGet Version (Generators)](https://img.shields.io/nuget/v/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
+[![NuGet Downloads (Generators)](https://img.shields.io/nuget/dt/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ssaattww/SSC/blob/main/LICENSE)
 
 SSC is a .NET library for structural comparison of multiple models.

@@ -7,6 +7,10 @@
     <IsPackable>true</IsPackable>
     <PackageId>ssaattww.SSC.Generators</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/ssaattww/SSC</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ssaattww/SSC</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5128;RS1036;RS1032;RS2008</NoWarn>
   </PropertyGroup>

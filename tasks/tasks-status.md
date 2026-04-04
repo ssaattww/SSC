@@ -16,6 +16,14 @@
 
 ## Done
 
+- T-050: NuGet metadata 整備と generator バッジ追加
+  - Status: 完了（repository/license metadata を両パッケージへ追加し、README の generator バッジを拡張）
+  - Output:
+    - `src/SSC/SSC.csproj`
+    - `src/SSC.Generators/SSC.Generators.csproj`
+    - `README.md`
+    - `reports/2026-04-04-nuget-metadata-and-generator-badges.md`
+
 - T-049: README へ Source Generator 対応を明記し、Generators パッケージへ README 同梱
   - Status: 完了（ルート README を更新し、`ssaattww.SSC.Generators` の package readme を設定）
   - Output:
