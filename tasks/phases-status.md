@@ -55,6 +55,9 @@
   - ルートREADMEへ配布導線バッジを追加し、NuGet package readme として同梱設定を反映
   - READMEレビュー指摘を反映し、ライセンスバッジリンクを絶対URLへ補正
   - `dotnet test SSC.sln --configuration Release` は成功（E2E 18件 / Unit 2件）
+  - 次回作業再開を支援するリポジトリ内スキル `hikitsugi` の基盤を追加
+  - 新規チャット再開用の詳細ハンドオーバーレポートを作成
+  - `hikitsugi` の `SKILL.md` をベストプラクティス準拠の手順型に再編
 
 ## Phase 4: 検証・受け入れ
 

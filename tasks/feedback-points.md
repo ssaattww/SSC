@@ -130,3 +130,17 @@
 - 対応:
   - `README.md` に workflow/NuGet/License バッジを追加
   - `src/SSC/SSC.csproj` に `PackageReadmeFile` と README 同梱設定を追加
+- ユーザー指摘: 次回引き継ぎ用スキル `Hikitsugi` を、リポジトリ内の既定スキル配置へ作成すること。
+- 対応:
+  - `.codex/skills/hikitsugi` を新規作成
+  - `SKILL.md` に引き継ぎ運用フロー（reports/tasks更新を含む）を定義
+  - `agents/openai.yaml` を生成し、後続の詳細プロンプト追加に備えた初期設定を配置
+- ユーザー指摘: 新しいチャットで同じ前提のまま再開できるよう、要約ではない詳細ハンドオーバーレポートを指定形式で作成すること。
+- 対応:
+  - `report/chat-handover-for-new-thread-20260404_1353.md` を作成
+  - 目的/背景/経緯/決定事項/未解決事項/次依頼文/貼り付け用本文を1ファイルに整理
+- ユーザー指摘: `.codex/skills/hikitsugi/SKILL.md` を確認し、skillベストプラクティス上必要なら修正すること。
+- 対応:
+  - `SKILL.md` を trigger/output contract/workflow/quality gate を持つ構成へ再編
+  - 8章出力要件を維持したまま、曖昧表現を減らし再利用性を向上
+  - `quick_validate.py` で妥当性確認（`Skill is valid!`）
