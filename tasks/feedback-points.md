@@ -251,3 +251,7 @@
   - `src/SSC/SSC.csproj` と `src/SSC.Generators/SSC.Generators.csproj` に `PackageProjectUrl` / `RepositoryUrl` / `RepositoryType` / `PackageLicenseExpression` を追加
   - `README.md` に `ssaattww.SSC.Generators` downloads バッジを追加
   - pack 後の `.nuspec` で license/projectUrl/repository が両パッケージに含まれることを確認
+- ユーザー指摘: README の Minimal Example も最新の dynamic 方式に揃えること。
+- 対応:
+  - `README.md` の Minimal Example を `result.AsDynamic()` ベースへ更新
+  - `root.Items[index].Price[modelIndex]` と `GetState(modelIndex)` の参照例へ差し替え

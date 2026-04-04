@@ -16,6 +16,12 @@
 
 ## Done
 
+- T-051: README Minimal Example を最新 dynamic 導線へ更新
+  - Status: 完了（`ParallelCompareApi.Compare(models)` の結果に対して `result.AsDynamic()` を使う例へ更新）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-minimal-example-dynamic-update.md`
+
 - T-050: NuGet metadata 整備と generator バッジ追加
   - Status: 完了（repository/license metadata を両パッケージへ追加し、README の generator バッジを拡張）
   - Output:
