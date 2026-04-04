@@ -166,3 +166,20 @@
     - `.github/workflows/publish-nuget.yml`
     - `reports/2026-04-04-subagent-code-review-nuget-workflow.md`
     - `reports/2026-04-04-nuget-workflow-release-version-alignment.md`
+- T-024: publish workflow 流用による main pre-release 自動化
+  - Status: 完了（`push: main` で pre-release 作成し、既存 publish job へ連携）
+  - Output:
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-04-publish-workflow-reuse-main-prerelease.md`
+- T-025: publish workflow 流用差分のレビュー指摘対応
+  - Status: 完了（releaseイベント依存を解消し、main push ランで publish を完結）
+  - Output:
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-04-subagent-code-review-publish-workflow-reuse.md`
+    - `reports/2026-04-04-publish-workflow-reuse-review-fix.md`
+- T-026: publish workflow の vタグ互換性補正
+  - Status: 完了（stable tag 検出で `v1.2.3` 形式を許容）
+  - Output:
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-04-subagent-code-review-publish-workflow-reuse-fix.md`
+    - `reports/2026-04-04-publish-workflow-vtag-compatibility-fix.md`

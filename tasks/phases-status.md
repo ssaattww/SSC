@@ -47,6 +47,9 @@
   - トップレベル README を整備し、実装状況・利用導線・基本例を明文化
   - NuGet publish workflow を再有効化し、`release` 公開時の自動配布を復帰
   - 再有効化差分をサブエージェントレビューし、release タグ版数と NuGet 版数の整合ロジックを追加
+  - `publish-nuget.yml` を流用し、`main` への push から pre-release 作成 -> publish 連携を自動化
+  - レビュー指摘に基づき、`main` push ラン内で pre-release publish を完結する構成へ修正
+  - stable tag 解決で `v` プレフィックス付きタグ互換を追加
   - `dotnet test SSC.sln --configuration Release` は成功（E2E 18件 / Unit 2件）
 
 ## Phase 4: 検証・受け入れ
