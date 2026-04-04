@@ -139,3 +139,8 @@
 - 対応:
   - `report/chat-handover-for-new-thread-20260404_1353.md` を作成
   - 目的/背景/経緯/決定事項/未解決事項/次依頼文/貼り付け用本文を1ファイルに整理
+- ユーザー指摘: `.codex/skills/hikitsugi/SKILL.md` を確認し、skillベストプラクティス上必要なら修正すること。
+- 対応:
+  - `SKILL.md` を trigger/output contract/workflow/quality gate を持つ構成へ再編
+  - 8章出力要件を維持したまま、曖昧表現を減らし再利用性を向上
+  - `quick_validate.py` で妥当性確認（`Skill is valid!`）

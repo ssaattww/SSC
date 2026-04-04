@@ -214,3 +214,8 @@
   - Status: 完了（次チャット単体で再開できる前提・経緯・決定事項・未解決事項を整理）
   - Output:
     - `report/chat-handover-for-new-thread-20260404_1353.md`
+- T-033: Hikitsugi スキルのベストプラクティス準拠化
+  - Status: 完了（依頼文直置き構成から、トリガー/契約/手順/品質ゲートを持つ再利用型へ再構成）
+  - Output:
+    - `.codex/skills/hikitsugi/SKILL.md`
+    - `reports/2026-04-04-hikitsugi-skill-best-practice-update.md`
