@@ -235,11 +235,17 @@ public sealed class CompareApiE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<EnumerableRoot>>(result.Root);
-        var items = root.GetChildren<KeyedItem>(nameof(EnumerableRoot.Items));
+        var items = root.Children(model => model.Items);
 
         Assert.Equal(1, left.EnumerationCount);
         Assert.Equal(1, right.EnumerationCount);
         Assert.Equal(["1", "2"], items.Select(item => item.KeyText).ToArray());
+
+        // Intent: union 済み Items[index] ごとに model slot を参照できる（Items[index] x modelIndex）。
+        Assert.Equal(10, items[0][0]?.Value);
+        Assert.Equal(20, items[1][0]?.Value);
+        Assert.Equal(30, items[0][1]?.Value);
+        Assert.Equal(ValueState.Missing, items[1].GetState(1));
     }
 
     [Fact]
@@ -268,7 +274,7 @@ public sealed class CompareApiE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<KeyedRoot>>(result.Root);
-        var items = root.GetChildren<KeyedItem>(nameof(KeyedRoot.Items));
+        var items = root.Children(model => model.Items);
 
         Assert.Equal(["1", "2", "3"], items.Select(item => item.KeyText).ToArray());
 

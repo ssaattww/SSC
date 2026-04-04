@@ -144,3 +144,55 @@
   - `SKILL.md` を trigger/output contract/workflow/quality gate を持つ構成へ再編
   - 8章出力要件を維持したまま、曖昧表現を減らし再利用性を向上
   - `quick_validate.py` で妥当性確認（`Skill is valid!`）
+- ユーザー指摘: Enumerable ケースでは `Items[index]` と model slot（left/right）で値を参照したい。
+- 対応:
+  - `Compare_WithEnumerableProperty_MaterializesEachModelExactlyOnce` に `items[index][modelIndex]?.Value` の検証を追加
+  - `doc/design/detail/02-PublicApi.md` に現行 API の参照パターン（`Items[index] x modelIndex`）を追記
+- ユーザー指摘: 深い階層で `GetChildren` を繰り返すのは直感的でない。
+- 対応:
+  - `ParallelNodeExtensions.Children(...)` を追加し、`root.Children(x => x.Groups)[0].Children(x => x.Items)` 形式を導入
+  - E2E テストを `Children(...)` ベースへ更新し、設計書にも新しいアクセス形を追記
+- ユーザー指摘: `doc/design/detail/02-PublicApi.md` に元データセットがどのようなものか記載すること。
+- 対応:
+  - `Source Dataset Example` 節を追加し、`Dataset -> Groups -> Items` の2モデル入力例を追記
+  - `ItemId` union で整列される前提を補足
+- ユーザー指摘: 元データセット例に型定義も追記すること。
+- 対応:
+  - `Source Dataset Example` 節に `Dataset / Group / Item` の型定義を追加
+- ユーザー指摘: 上のデータセットとアクセス例が揃っていない。
+- 対応:
+  - `4.1` の参照例を `Dataset/Group/Item` 前提へ修正（`MetricA`, `ItemId` union）
+  - `ParallelNode<EnumerableRoot>` など不一致な型記述を解消
+- ユーザー指摘: 参考として、意図する完全形 `root.Groups[0].Items[0].MetricA[0]` と、左右 `[]` の意味を追記すること。
+- 対応:
+  - `02-PublicApi` に概念表現を追加し、左 `[]`=List index / 右 `[]`=model index を明記
+  - `null` が出る範囲と `GetState(modelIndex)` 併用方針を追記
+- ユーザー指摘: 概念説明ではなく、実際に `root.Groups[0].Items[0].MetricA[0]` でアクセスできるようにしたい。
+- 対応:
+  - `AsDynamic()` と動的投影アクセス層を追加し、上記記法での実アクセスを可能化
+  - E2E テストで `list index -> model index` と `Missing` 判定を検証
+- ユーザー指摘: オブジェクト全体取得（`root.Items[indexNo][0]`）もできるように拡張すること。
+- 対応:
+  - Dynamic node に model indexer を追加し、`root...Items[index][model]` で要素オブジェクト全体を取得可能化
+  - E2E テストでオブジェクト全体取得と node-level `GetState` を検証
+- ユーザー指摘: 作業reportは機能単位で1ファイルにまとめること。
+- 対応:
+  - 本機能は `reports/2026-04-04-dynamic-projection-access-api.md` の1ファイルに集約
+- ユーザー指摘: dynamic 連打だと補完が弱いので、今回は動作優先で良いが次回課題として issue へ追加すること。
+- 対応:
+  - GitHub PR #9 にフォローアップコメントを追加（comment id: `4186407883`）
+  - `tasks/tasks-status.md` の Backlog に型付き投影 API（T-040）を登録
+- ユーザー指摘: subagent への再依頼はコストが高いので、途中経過確認方式で運用すること。
+- 対応:
+  - subagent レビュー回収は `wait_agent` の定期ポーリングを基本運用にし、再依頼は実行しない方針へ変更
+- ユーザー指摘: 実装差分に設計書更新が必要なら必ず修正すること。
+- 対応:
+  - dynamic projection 指摘対応（T-041）で `doc/design/detail/01-DomainModel.md` と `doc/design/detail/02-PublicApi.md` を同時更新
+- ユーザー指摘: 作業を継続して進めること。
+- 対応:
+  - T-041 を実装完了し、subagent 再レビューで新規 High/Medium なしを確認
+  - 残留リスクは T-042（`GetState` 非侵襲化）として Backlog 登録
+- ユーザー指摘: `hikitsugi` スキルで引き継ぎを開始すること。
+- 対応:
+  - `.codex/skills/hikitsugi/SKILL.md` の手順に沿って状態収集を実施
+  - `reports/chat-handover-for-new-thread-20260404_144004.md` を作成し、8章構成で次チャット再開情報を整理

@@ -30,7 +30,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         Assert.Equal(["A", "B", "C"], scores.Select(node => node.KeyText).ToArray());
 
@@ -100,8 +100,8 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<Dataset>>(result.Root);
-        var groups = root.GetChildren<Group>(nameof(Dataset.Groups));
-        var items = groups.SelectMany(group => group.GetChildren<Item>(nameof(Group.Items))).ToList();
+        var groups = root.Children(model => model.Groups);
+        var items = groups.SelectMany(group => group.Children(model => model.Items)).ToList();
 
         Assert.Equal(["1", "2", "3"], groups.Select(group => group.KeyText).ToArray());
         Assert.Equal(5, items.Count);
@@ -125,6 +125,211 @@ public sealed class ContainerAndSelectManyE2ETests
         Assert.Equal("500", items[4].KeyText);
         Assert.Equal(ValueState.Missing, items[4].GetState(0));
         Assert.Equal(500, items[4][1]?.ItemId);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_AllowsListIndexThenModelIndexAccess()
+    {
+        // Intent: AsDynamic で root.Groups[0].Items[0].MetricA[0] 形式のアクセスを可能にする。
+        var models = new[]
+        {
+            new Dataset
+            {
+                Groups =
+                [
+                    new Group
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new Item { ItemId = 100, MetricA = 1.0 },
+                            new Item { ItemId = 200, MetricA = 2.0 },
+                        ],
+                    },
+                ],
+            },
+            new Dataset
+            {
+                Groups =
+                [
+                    new Group
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new Item { ItemId = 100, MetricA = 10.0 },
+                            new Item { ItemId = 300, MetricA = 30.0 },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        Parallel<Dataset> parallelRoot = Assert.IsAssignableFrom<Parallel<Dataset>>(result.Root);
+        dynamic root = parallelRoot.AsDynamic();
+
+        double? leftMetricAt100 = root.Groups[0].Items[0].MetricA[0];
+        double? leftMetricAt200 = root.Groups[0].Items[1].MetricA[0];
+        double? rightMetricAt100 = root.Groups[0].Items[0].MetricA[1];
+        double? rightMetricAt200 = root.Groups[0].Items[1].MetricA[1];
+        var leftItemAt100 = (Item?)root.Groups[0].Items[0][0];
+        var rightItemAt200 = (Item?)root.Groups[0].Items[1][1];
+        var rightStateAt200 = (ValueState)root.Groups[0].Items[1].MetricA.GetState(1);
+        var rightNodeStateAt200 = (ValueState)root.Groups[0].Items[1].GetState(1);
+
+        Assert.Equal(1.0, leftMetricAt100);
+        Assert.Equal(2.0, leftMetricAt200);
+        Assert.Equal(10.0, rightMetricAt100);
+        Assert.Null(rightMetricAt200);
+        Assert.Equal(100, leftItemAt100?.ItemId);
+        Assert.Null(rightItemAt200);
+        Assert.Equal(ValueState.Missing, rightStateAt200);
+        Assert.Equal(ValueState.Missing, rightNodeStateAt200);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_ValuePathGetState_ReflectsMemberState()
+    {
+        // Intent: 値パスの GetState は親nodeではなく最終メンバー値の状態を返す。
+        var models = new[]
+        {
+            new NullableDataset
+            {
+                Items =
+                [
+                    new NullableItem
+                    {
+                        ItemId = 100,
+                        Detail = new NullableDetail
+                        {
+                            Label = null,
+                        },
+                    },
+                ],
+            },
+            new NullableDataset
+            {
+                Items =
+                [
+                    new NullableItem
+                    {
+                        ItemId = 200,
+                        Detail = new NullableDetail
+                        {
+                            Label = "present",
+                        },
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.Root!.AsDynamic();
+
+        var leftLabel = (string?)root.Items[0].Detail.Label[0];
+        var leftLabelState = (ValueState)root.Items[0].Detail.Label.GetState(0);
+        var rightLabelState = (ValueState)root.Items[0].Detail.Label.GetState(1);
+        var rightLabel = (string?)root.Items[1].Detail.Label[1];
+        var rightPresentState = (ValueState)root.Items[1].Detail.Label.GetState(1);
+
+        Assert.Null(leftLabel);
+        Assert.Equal(ValueState.PresentNull, leftLabelState);
+        Assert.Equal(ValueState.Missing, rightLabelState);
+        Assert.Equal("present", rightLabel);
+        Assert.Equal(ValueState.PresentValue, rightPresentState);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_PrefersModelMember_WhenNameCollidesWithNodeMeta()
+    {
+        // Intent: モデル側に Count/KeyText がある場合は、そちらの値アクセスを優先する。
+        var models = new[]
+        {
+            new CollisionDataset
+            {
+                Items =
+                [
+                    new CollisionItem { ItemId = 100, Count = 10, KeyText = "left-key" },
+                ],
+            },
+            new CollisionDataset
+            {
+                Items =
+                [
+                    new CollisionItem { ItemId = 100, Count = 20, KeyText = "right-key" },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.Root!.AsDynamic();
+
+        var leftCount = (int?)root.Items[0].Count[0];
+        var rightCount = (int?)root.Items[0].Count[1];
+        var leftKeyText = (string?)root.Items[0].KeyText[0];
+        var rightKeyText = (string?)root.Items[0].KeyText[1];
+        var nodeCount = (int)root.Items[0].NodeCount;
+        var nodeKeyText = (string?)root.Items[0].NodeKeyText;
+
+        Assert.Equal(10, leftCount);
+        Assert.Equal(20, rightCount);
+        Assert.Equal("left-key", leftKeyText);
+        Assert.Equal("right-key", rightKeyText);
+        Assert.Equal(2, nodeCount);
+        Assert.Equal("100", nodeKeyText);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_ListIndexOutOfRange_ThrowsExecutionException()
+    {
+        // Intent: dynamic list index 範囲外は契約例外で失敗する。
+        var models = new[]
+        {
+            new Dataset
+            {
+                Groups =
+                [
+                    new Group
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new Item { ItemId = 100, MetricA = 1.0 },
+                        ],
+                    },
+                ],
+            },
+            new Dataset
+            {
+                Groups =
+                [
+                    new Group
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new Item { ItemId = 100, MetricA = 10.0 },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.Root!.AsDynamic();
+
+        var exception = Assert.Throws<CompareExecutionException>(() =>
+        {
+            var _ = root.Groups[99];
+        });
+        var negativeException = Assert.Throws<CompareExecutionException>(() =>
+        {
+            var _ = root.Groups[-1];
+        });
+
+        Assert.Equal(CompareIssueCode.ModelIndexOutOfRange, exception.Code);
+        Assert.Equal(CompareIssueCode.ModelIndexOutOfRange, negativeException.Code);
     }
 
     [Fact]
@@ -192,7 +397,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         Assert.Equal(["A", "a"], scores.Select(node => node.KeyText).ToArray());
         Assert.Equal(20, scores[0][1]);
@@ -229,7 +434,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models, configuration);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         var key = Assert.Single(scores);
         Assert.Equal("A", key.KeyText);
@@ -339,7 +544,7 @@ public sealed class ContainerAndSelectManyE2ETests
 
         var result = ParallelCompareApi.Compare(models);
         var root = Assert.IsType<ParallelNode<ScoreRoot>>(result.Root);
-        var scores = root.GetChildren<int>(nameof(ScoreRoot.Scores));
+        var scores = root.Children(model => model.Scores);
 
         Assert.Equal(["A", "B", "C", "D"], scores.Select(node => node.KeyText).ToArray());
 
@@ -387,5 +592,38 @@ public sealed class ContainerAndSelectManyE2ETests
 
         [CompareIgnore]
         public string? InternalMemo { get; init; }
+    }
+
+    public sealed class NullableDataset
+    {
+        public List<NullableItem> Items { get; init; } = [];
+    }
+
+    public sealed class NullableItem
+    {
+        [CompareKey]
+        public int ItemId { get; init; }
+
+        public NullableDetail? Detail { get; init; }
+    }
+
+    public sealed class NullableDetail
+    {
+        public string? Label { get; init; }
+    }
+
+    public sealed class CollisionDataset
+    {
+        public List<CollisionItem> Items { get; init; } = [];
+    }
+
+    public sealed class CollisionItem
+    {
+        [CompareKey]
+        public int ItemId { get; init; }
+
+        public int Count { get; init; }
+
+        public string? KeyText { get; init; }
     }
 }

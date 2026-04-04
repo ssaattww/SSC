@@ -45,13 +45,26 @@ Parallel<Dataset>
 internal sealed class ParallelNode<T> : Parallel<T>
 {
     T?[] Values;
-    Dictionary<string, IParallelNode> Children;
+    Dictionary<string, IReadOnlyList<IParallelNode>> Children;
 }
 ```
 
 - `Values[modelIndex]` が model slot
 - `Children` は構築中内部表現
-- 公開面では型付きプロパティへ変換される
+- 公開面では `Children(...)` または `AsDynamic()` により階層アクセスへ投影される
+
+## 3.2 Dynamic Projection Access (Public)
+
+`AsDynamic()` を使うと、コンテナ階層を次の形でアクセスできる。
+
+```csharp
+dynamic root = result.Root!.AsDynamic();
+var metric = root.Groups[0].Items[0].MetricA[0];
+```
+
+- 左の `[]`: key union 後の要素 index
+- 右の `[]`: model index
+- node メタ情報は `NodeCount` / `NodeKeyText` で参照できる（モデル同名メンバー衝突を回避）
 
 ## 3.1 CompareIgnore Attribute
 

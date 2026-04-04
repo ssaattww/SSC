@@ -4,13 +4,42 @@
 
 ## In Progress
 
-- なし
+- （なし）
 
 ## Backlog
 
-- なし
+- T-040: dynamic 依存を減らす型付き投影 API の追加
+  - Status: 未着手（次回課題）
+  - Scope:
+    - `AsDynamic()` の補完弱さを解消するため、IDE 補完が効く型付きアクセス API を設計・実装
+    - `list index -> model index` と `GetState(modelIndex)` の意味を維持
+  - Tracking:
+    - GitHub PR comment: `#9` comment id `4186407883`
+- T-042: dynamic 値パス `GetState` の非侵襲化
+  - Status: 未着手（残留リスク）
+  - Scope:
+    - `GetState` 呼び出し時に getter 実行へ依存しない状態判定方式を設計
+    - 副作用 getter / 例外 getter モデルでの安全性テストを追加
 
 ## Done
+
+- T-043: 新規チャット再開用ハンドオーバーレポート更新（20260404_144004）
+  - Status: 完了（最新ブランチ/PR/Backlog を反映した8章レポートを作成）
+  - Output:
+    - `reports/chat-handover-for-new-thread-20260404_144004.md`
+
+- T-041: Dynamic projection 差分のサブエージェントコードレビュー指摘対応
+  - Status: 完了（公開契約・状態評価・衝突回避・境界例外・引数検証を反映、再レビューで High/Medium 新規なし）
+  - Input:
+    - `reports/2026-04-04-subagent-code-review-dynamic-projection-followup.md`
+  - Output:
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-dynamic-projection-review-fixes.md`
 
 - T-001: 詳細設計の粒度決定
   - Status: 完了（L3 粒度と外部仕様 1-5 を確定）
@@ -219,3 +248,42 @@
   - Output:
     - `.codex/skills/hikitsugi/SKILL.md`
     - `reports/2026-04-04-hikitsugi-skill-best-practice-update.md`
+- T-034: List メンバー参照パターンの明確化
+  - Status: 完了（`Items[index] x modelIndex` のアクセス形をテストと設計書へ明記）
+  - Output:
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-list-member-access-pattern-clarification.md`
+- T-035: Children selector API による階層アクセスの改善
+  - Status: 完了（`Children(model => model.Member)` 形式を追加し、深い階層での string 指定依存を低減）
+  - Output:
+    - `src/SSC/ParallelNodeExtensions.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-children-selector-api-improvement.md`
+- T-036: Public API 章への元データセット例追記
+  - Status: 完了（`Dataset / Group / Item` 定義と、`Dataset -> Groups -> Items` の前提入力を明示）
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-public-api-source-dataset-clarification.md`
+- T-037: Public API サンプルの整合修正
+  - Status: 完了（`4.0` の元データセット例と `4.1` のアクセス例を同じ型/値軸に統一）
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-public-api-example-consistency-fix.md`
+- T-038: Public API 参照記法と null 判定指針の補足
+  - Status: 完了（概念表現 `root.Groups[0].Items[0].MetricA[0]` と左右 `[]` の意味、null 可能範囲を明文化）
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-public-api-reference-notation-and-nullability.md`
+- T-039: Dynamic 投影アクセス API の実装
+  - Status: 完了（`AsDynamic()` により `root.Groups[0].Items[0].MetricA[0]` と `root.Groups[0].Items[0][0]` の実アクセスを提供）
+  - Output:
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-dynamic-projection-access-api.md`

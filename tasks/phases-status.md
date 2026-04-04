@@ -58,6 +58,16 @@
   - 次回作業再開を支援するリポジトリ内スキル `hikitsugi` の基盤を追加
   - 新規チャット再開用の詳細ハンドオーバーレポートを作成
   - `hikitsugi` の `SKILL.md` をベストプラクティス準拠の手順型に再編
+  - List メンバーの参照方法を `Items[index] x modelIndex` としてテスト・設計書へ明示
+  - 階層アクセスを簡潔化する `Children(model => model.Member)` API を追加し、深い階層の可読性を改善
+  - `02-PublicApi` に比較前の元データセット例を追加し、アクセス例の前提と型定義を明示
+  - `02-PublicApi` のアクセス例を元データセットと同じ型・値軸へ修正し、例示の整合性を担保
+  - `02-PublicApi` に概念表現（`root.Groups[0].Items[0].MetricA[0]`）と null 判定指針を補足
+  - `AsDynamic()` を追加し、`root.Groups[0].Items[0].MetricA[0]` と `root.Groups[0].Items[0][0]` 形式の実アクセスを提供
+  - 補完性向上のため、次回課題として型付き投影 API（T-040）を Backlog 登録
+  - dynamic projection 差分をサブエージェント再レビューし、追跡タスク（T-041）で公開契約整合（`AsDynamic` 入口）/ `GetState` 意味整合 / 予約名衝突 / 境界例外 / `CreateLeaf` 引数検証を実装完了
+  - T-041 完了後の再レビューで High/Medium の新規指摘なしを確認し、`value path GetState` 非侵襲化は残留課題（T-042）として Backlog 化
+  - 新規チャット再開向けに `reports/chat-handover-for-new-thread-20260404_144004.md` を作成し、最新状態を8章構成で整理
 
 ## Phase 4: 検証・受け入れ
 
