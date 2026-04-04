@@ -219,3 +219,9 @@
   - Output:
     - `.codex/skills/hikitsugi/SKILL.md`
     - `reports/2026-04-04-hikitsugi-skill-best-practice-update.md`
+- T-034: List メンバー参照パターンの明確化
+  - Status: 完了（`Items[index] x modelIndex` のアクセス形をテストと設計書へ明記）
+  - Output:
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-04-list-member-access-pattern-clarification.md`

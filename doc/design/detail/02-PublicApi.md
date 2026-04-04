@@ -52,6 +52,22 @@ public interface ParallelItem : Parallel<Item>
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
 
+## 4.1 Container Member Access Pattern (Current API)
+
+現行 API では、コンテナ要素は `GetChildren<TElement>(memberName)` で取得し、
+各要素ノードの model slot は `node[modelIndex]` で参照する。
+
+```csharp
+var root = Assert.IsType<ParallelNode<EnumerableRoot>>(result.Root);
+var items = root.GetChildren<KeyedItem>(nameof(EnumerableRoot.Items));
+
+// Items[index] x modelIndex
+var leftValueAtKey1 = items[0][0]?.Value; // 10
+var leftValueAtKey2 = items[1][0]?.Value; // 20
+var rightValueAtKey1 = items[0][1]?.Value; // 30
+var rightStateAtKey2 = items[1].GetState(1); // Missing
+```
+
 ## 5. Configuration Entry
 
 ```csharp

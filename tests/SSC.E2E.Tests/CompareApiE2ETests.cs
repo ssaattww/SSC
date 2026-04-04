@@ -240,6 +240,12 @@ public sealed class CompareApiE2ETests
         Assert.Equal(1, left.EnumerationCount);
         Assert.Equal(1, right.EnumerationCount);
         Assert.Equal(["1", "2"], items.Select(item => item.KeyText).ToArray());
+
+        // Intent: union 済み Items[index] ごとに model slot を参照できる（Items[index] x modelIndex）。
+        Assert.Equal(10, items[0][0]?.Value);
+        Assert.Equal(20, items[1][0]?.Value);
+        Assert.Equal(30, items[0][1]?.Value);
+        Assert.Equal(ValueState.Missing, items[1].GetState(1));
     }
 
     [Fact]

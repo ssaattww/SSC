@@ -144,3 +144,7 @@
   - `SKILL.md` を trigger/output contract/workflow/quality gate を持つ構成へ再編
   - 8章出力要件を維持したまま、曖昧表現を減らし再利用性を向上
   - `quick_validate.py` で妥当性確認（`Skill is valid!`）
+- ユーザー指摘: Enumerable ケースでは `Items[index]` と model slot（left/right）で値を参照したい。
+- 対応:
+  - `Compare_WithEnumerableProperty_MaterializesEachModelExactlyOnce` に `items[index][modelIndex]?.Value` の検証を追加
+  - `doc/design/detail/02-PublicApi.md` に現行 API の参照パターン（`Items[index] x modelIndex`）を追記
