@@ -150,3 +150,8 @@
   - Output:
     - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
     - `reports/2026-04-04-list-member-coverage-extension.md`
+- T-021: リポジトリ README の整備
+  - Status: 完了（オンボーディング用のトップレベル README を作成）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-bootstrap.md`

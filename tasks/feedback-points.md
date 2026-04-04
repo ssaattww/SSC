@@ -111,3 +111,6 @@
 - ユーザー指摘: List 比較の確認は Dictionary ではなく、モデルの List メンバー比較を対象にすること。
 - 対応:
   - モデル直下 List メンバーで両 model 複数要素の E2E ケースを追加し、key union / model slot / Missing を明示検証
+- ユーザー指摘: README を作成すること。
+- 対応:
+  - トップレベル `README.md` を新規作成し、概要・API・実行手順・最小サンプルを記載
