@@ -218,3 +218,7 @@
 - 対応:
   - `reports/2026-04-04-runtime-code-generation-options.md` を作成
   - 3方式（Reflection.Emit/Expression、Roslyn Compilation API、事前生成切替）と Roslyn Scripting との差分を明文化
+- ユーザー指摘: source generator を CI のテスト対象に追加すること。
+- 対応:
+  - `.github/workflows/pr-xunit-tests.yml` を改修し、test project に加えて generator project も検出/restore/build するステップを追加
+  - `reports/2026-04-04-pr-tests-generator-target-extension.md` に変更内容を記録

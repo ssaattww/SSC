@@ -74,6 +74,7 @@
   - `src/SSC.Generators` を追加し、`[GenerateParallelView]` 付き型に対する `AsGeneratedView()` と型付き view 生成を実装
   - generated projection の E2E を追加し、`dotnet test SSC.sln --configuration Release` 成功を確認（E2E 25件 / Unit 4件）
   - runtime コード生成の選択肢（Reflection.Emit / Roslyn Compilation / 事前生成切替）と Roslyn Scripting との差分をレポート化
+  - PR テスト workflow を拡張し、xUnit 実行前に source generator プロジェクトも build 検証するよう更新
 
 ## Phase 4: 検証・受け入れ
 

@@ -16,6 +16,12 @@
 
 ## Done
 
+- T-046: PR テスト workflow の generator 対象追加
+  - Status: 完了（PR CI で source generator プロジェクトを build 対象に追加）
+  - Output:
+    - `.github/workflows/pr-xunit-tests.yml`
+    - `reports/2026-04-04-pr-tests-generator-target-extension.md`
+
 - T-045: runtime コード生成方式の比較整理
   - Status: 完了（runtime でのコード生成 3方式と Roslyn Scripting の位置づけを整理）
   - Output:

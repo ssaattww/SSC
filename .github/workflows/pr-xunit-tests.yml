@@ -21,23 +21,45 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Discover test projects
+      - name: Discover test and generator projects
         id: discover
         shell: bash
         run: |
-          mapfile -t projects < <(git ls-files '*.csproj' | grep -Ei '(test|tests)' || true)
+          mapfile -t test_projects < <(git ls-files '*.csproj' | grep -Ei '(test|tests)' || true)
+          mapfile -t generator_projects < <(git ls-files '*.csproj' | grep -Ei '(generator|generators)' | grep -Evi '(test|tests)' || true)
 
-          if [[ ${#projects[@]} -eq 0 ]]; then
+          if [[ ${#test_projects[@]} -eq 0 ]]; then
             echo "has_tests=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          else
+            {
+              echo "has_tests=true"
+              echo "test_projects<<EOF"
+              printf '%s\n' "${test_projects[@]}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           fi
 
-          {
-            echo "has_tests=true"
-            echo "projects<<EOF"
-            printf '%s\n' "${projects[@]}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          if [[ ${#generator_projects[@]} -eq 0 ]]; then
+            echo "has_generators=false" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "has_generators=true"
+              echo "generator_projects<<EOF"
+              printf '%s\n' "${generator_projects[@]}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore and build source generators
+        if: ${{ steps.discover.outputs.has_generators == 'true' }}
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            [[ -z "$project" ]] && continue
+            echo "Building generator: $project"
+            dotnet restore "$project"
+            dotnet build "$project" --configuration Release --no-restore --verbosity minimal
+          done <<< "${{ steps.discover.outputs.generator_projects }}"
 
       - name: Restore and run tests
         if: ${{ steps.discover.outputs.has_tests == 'true' }}
@@ -48,7 +70,7 @@ jobs:
             echo "Testing: $project"
             dotnet restore "$project"
             dotnet test "$project" --configuration Release --no-restore --verbosity minimal
-          done <<< "${{ steps.discover.outputs.projects }}"
+          done <<< "${{ steps.discover.outputs.test_projects }}"
 
       - name: No test projects found
         if: ${{ steps.discover.outputs.has_tests != 'true' }}
