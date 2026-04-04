@@ -2,10 +2,10 @@
 
 [![PR xUnit](https://github.com/ssaattww/SSC/actions/workflows/pr-xunit-tests.yml/badge.svg)](https://github.com/ssaattww/SSC/actions/workflows/pr-xunit-tests.yml)
 [![Publish NuGet](https://github.com/ssaattww/SSC/actions/workflows/publish-nuget.yml/badge.svg)](https://github.com/ssaattww/SSC/actions/workflows/publish-nuget.yml)
-[![NuGet Version](https://img.shields.io/nuget/v/devo6.SSC)](https://www.nuget.org/packages/devo6.SSC/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/devo6.SSC)](https://www.nuget.org/packages/devo6.SSC/)
-[![NuGet Version (Generators)](https://img.shields.io/nuget/v/devo6.SSC.Generators)](https://www.nuget.org/packages/devo6.SSC.Generators/)
-[![NuGet Downloads (Generators)](https://img.shields.io/nuget/dt/devo6.SSC.Generators)](https://www.nuget.org/packages/devo6.SSC.Generators/)
+[![NuGet Version (Runtime)](https://img.shields.io/nuget/v/devo6.SSC)](https://www.nuget.org/packages/devo6.SSC/)
+[![NuGet Downloads (Runtime)](https://img.shields.io/nuget/dt/devo6.SSC)](https://www.nuget.org/packages/devo6.SSC/)
+[![NuGet Version (Source Generator)](https://img.shields.io/nuget/v/devo6.SSC.Generators)](https://www.nuget.org/packages/devo6.SSC.Generators/)
+[![NuGet Downloads (Source Generator)](https://img.shields.io/nuget/dt/devo6.SSC.Generators)](https://www.nuget.org/packages/devo6.SSC.Generators/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ssaattww/SSC/blob/main/LICENSE)
 
 SSC is a .NET library for structural comparison of multiple models.

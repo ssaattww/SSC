@@ -294,3 +294,7 @@
   - `src/SSC.Generators/SSC.Generators.csproj` の PackageId を `devo6.SSC.Generators` へ更新
   - `README.md` の NuGet バッジ/パッケージ表記を `devo6.*` へ更新
   - 対応内容を `reports/2026-04-04-packageid-rename-to-devo6.md` に記録
+- ユーザー指摘: NuGet バッジでどちらが generator か分かるようにしたい。
+- 対応:
+  - `README.md` の NuGet バッジ表示名を `Runtime` と `Source Generator` が明示される表現へ更新
+  - 対応内容を `reports/2026-04-04-readme-badge-runtime-generator-clarification.md` に記録

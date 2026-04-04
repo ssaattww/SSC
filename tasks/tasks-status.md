@@ -16,6 +16,12 @@
 
 ## Done
 
+- T-060: README NuGet バッジの runtime/generator 表記明確化
+  - Status: 完了（バッジ表示名に Runtime / Source Generator を明示）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-badge-runtime-generator-clarification.md`
+
 - T-059: NuGet PackageId を devo6 系へ変更
   - Status: 完了（runtime/generator の PackageId と README 表記を `devo6.*` へ更新）
   - Output:
