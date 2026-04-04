@@ -114,3 +114,7 @@
 - ユーザー指摘: README を作成すること。
 - 対応:
   - トップレベル `README.md` を新規作成し、概要・API・実行手順・最小サンプルを記載
+- ユーザー指摘: NuGet に push する workflow を復活させること。
+- 対応:
+  - `publish-nuget.yml` の disable 条件を撤去し、`release: published` トリガーで publish を再有効化
+  - サブエージェントレビューで指摘された版数不整合を修正し、release タグ版数を優先採用するよう更新

@@ -1,12 +1,11 @@
-name: Publish NuGet Package (Disabled Until v1)
+name: Publish NuGet Package
 
 on:
+  release:
+    types:
+      - published
   workflow_dispatch:
     inputs:
-      enable_release:
-        description: "Set true to run publish intentionally"
-        required: true
-        default: "false"
       project_path:
         description: "Path to .csproj to pack/publish (optional)"
         required: false
@@ -16,7 +15,6 @@ on:
 
 jobs:
   publish:
-    if: ${{ github.event.inputs.enable_release == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -67,9 +65,13 @@ jobs:
         run: |
           project="${{ steps.project.outputs.project }}"
           manual_version="${{ github.event.inputs.package_version }}"
+          event_name="${{ github.event_name }}"
+          release_tag="${{ github.event.release.tag_name }}"
 
           if [[ -n "$manual_version" ]]; then
             package_version="$manual_version"
+          elif [[ "$event_name" == "release" ]]; then
+            package_version="${release_tag#v}"
           else
             version_prefix=$(grep -oPm1 '(?<=<VersionPrefix>)[^<]+' "$project" || true)
             if [[ -z "$version_prefix" ]]; then
