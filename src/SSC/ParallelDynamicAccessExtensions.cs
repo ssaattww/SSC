@@ -5,14 +5,19 @@ namespace SSC;
 
 public static class ParallelDynamicAccessExtensions
 {
-    public static dynamic AsDynamic<T>(this Parallel<T> node)
+    public static dynamic? AsDynamic<T>(this CompareResult<T> result)
     {
-        ArgumentNullException.ThrowIfNull(node);
-        if (node is not IParallelNode parallelNode || parallelNode is not IParallelNodeInternal)
+        ArgumentNullException.ThrowIfNull(result);
+        if (result.Root is null)
+        {
+            return null;
+        }
+
+        if (result.Root is not IParallelNode parallelNode || parallelNode is not IParallelNodeInternal)
         {
             throw new ArgumentException(
                 "AsDynamic can be used only with compare result nodes.",
-                nameof(node));
+                nameof(result));
         }
 
         return DynamicParallelNodeView.From(parallelNode);

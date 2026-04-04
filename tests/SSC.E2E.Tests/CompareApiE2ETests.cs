@@ -16,6 +16,17 @@ public sealed class CompareApiE2ETests
     }
 
     [Fact]
+    public void Compare_WithEmptyModels_ResultAsDynamicReturnsNull()
+    {
+        // Intent: CompareResult 入口の AsDynamic でも Root 未生成時は null を返す。
+        var result = ParallelCompareApi.Compare(Array.Empty<SimpleRoot>());
+
+        dynamic? root = result.AsDynamic();
+
+        Assert.Null(root);
+    }
+
+    [Fact]
     public void Compare_WithEmptyModels_ThrowsInputExceptionInStrictMode()
     {
         // Intent: 入力モデルが空の場合は strict=true で入力例外を即時送出する。

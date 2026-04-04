@@ -49,7 +49,7 @@ public interface ParallelItem : Parallel<Item>
 ```csharp
 public static class ParallelDynamicAccessExtensions
 {
-    public static dynamic AsDynamic<T>(this Parallel<T> node);
+    public static dynamic? AsDynamic<T>(this CompareResult<T> result);
 }
 ```
 
@@ -61,11 +61,11 @@ public sealed class GenerateParallelViewAttribute : Attribute
 ```
 
 ```csharp
-// generated
-public static class DatasetGeneratedViewExtensions
+// generated (consumer assembly)
+internal static class DatasetGeneratedViewExtensions
 {
     // non-compare node の場合は ArgumentException
-    public static DatasetParallelView AsGeneratedView(this Parallel<Dataset> node);
+    internal static DatasetParallelView? AsGeneratedView(this CompareResult<Dataset> result);
 }
 ```
 
@@ -169,7 +169,7 @@ var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 上記の記法を実際に使う場合は、`AsDynamic()` で動的投影した root から辿る。
 
 ```csharp
-dynamic root = result.Root!.AsDynamic();
+dynamic root = result.AsDynamic();
 var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 var leftItemAt100 = root.Groups[0].Items[0][0]; // Item object
 var nodeCount = root.Groups[0].Items[0].NodeCount; // node slot count
@@ -197,8 +197,7 @@ public sealed class Dataset
     public List<Group> Groups { get; init; } = [];
 }
 
-var result = ParallelCompareApi.Compare(models);
-var root = result.Root!.AsGeneratedView();
+var root = ParallelCompareApi.Compare(models).AsGeneratedView();
 
 var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 var rightStateAt200 = root.Groups[0].Items[1].MetricA.GetState(1); // Missing
@@ -206,9 +205,9 @@ var leftLabel = root.Groups[0].Items[0].Detail.Select(x => x.Label)[0]; // neste
 var nodeCount = root.Groups[0].Items[0].NodeMeta.Count;
 ```
 
-- generated view は `Parallel<T>` の compare result node に対してのみ有効
+- generated view は `CompareResult<T>` の compare result node に対してのみ有効
 - generated view で取得する値と state の意味は `AsDynamic()` と同一
-- `AsDynamic()` は互換 API として併存する
+- 投影切替の入口は `CompareResult` 拡張に統一する
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
 - Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
 
@@ -243,7 +242,7 @@ var nodeCount = root.Groups[0].Items[0].NodeMeta.Count;
 var metric = items[1][1]?.MetricA;
 var state = items[1].GetState(1); // Missing / PresentNull / PresentValue
 
-dynamic root = result.Root!.AsDynamic();
+dynamic root = result.AsDynamic();
 var objectState = root.Groups[0].Items[1].GetState(1); // Missing / PresentNull / PresentValue
 ```
 

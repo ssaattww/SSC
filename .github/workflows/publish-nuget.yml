@@ -9,9 +9,6 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      project_path:
-        description: "Path to .csproj to pack/publish (optional)"
-        required: false
       package_version:
         description: "Package version override (optional)"
         required: false
@@ -36,38 +33,34 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Resolve package project
-        id: project
+      - name: Resolve package projects
+        id: projects
         shell: bash
         run: |
-          input_project="${{ github.event.inputs.project_path }}"
-          if [[ -n "$input_project" ]]; then
-            if [[ ! -f "$input_project" ]]; then
-              echo "project_path was provided but not found: $input_project"
-              exit 1
-            fi
-            project="$input_project"
-          else
-            mapfile -t candidates < <(git ls-files '*.csproj' | grep -Evi '(test|tests)' || true)
-            if [[ ${#candidates[@]} -eq 0 ]]; then
-              echo "No publishable .csproj found. Provide workflow_dispatch input: project_path"
-              exit 1
-            fi
-            if [[ ${#candidates[@]} -gt 1 ]]; then
-              echo "Multiple .csproj candidates found. Provide workflow_dispatch input: project_path"
-              printf ' - %s\n' "${candidates[@]}"
-              exit 1
-            fi
-            project="${candidates[0]}"
-          fi
+          projects=(
+            "src/SSC/SSC.csproj"
+            "src/SSC.Generators/SSC.Generators.csproj"
+          )
 
-          echo "project=$project" >> "$GITHUB_OUTPUT"
+          for project in "${projects[@]}"; do
+            if [[ ! -f "$project" ]]; then
+              echo "Publish project not found: $project"
+              exit 1
+            fi
+          done
+
+          {
+            echo "projects<<EOF"
+            printf '%s\n' "${projects[@]}"
+            echo "EOF"
+            echo "version_seed_project=${projects[0]}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Resolve package version
         id: version
         shell: bash
         run: |
-          project="${{ steps.project.outputs.project }}"
+          project="${{ steps.projects.outputs.version_seed_project }}"
           manual_version="${{ github.event.inputs.package_version }}"
           event_name="${{ github.event_name }}"
           ref_name="${{ github.ref_name }}"
@@ -134,19 +127,33 @@ jobs:
           echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
 
       - name: Restore
-        run: dotnet restore "${{ steps.project.outputs.project }}"
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            [[ -z "$project" ]] && continue
+            dotnet restore "$project"
+          done <<< "${{ steps.projects.outputs.projects }}"
 
       - name: Build
-        run: dotnet build "${{ steps.project.outputs.project }}" --configuration Release --no-restore
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            [[ -z "$project" ]] && continue
+            dotnet build "$project" --configuration Release --no-restore
+          done <<< "${{ steps.projects.outputs.projects }}"
 
       - name: Pack
+        shell: bash
         run: |
-          dotnet pack "${{ steps.project.outputs.project }}" \
-            --configuration Release \
-            --no-build \
-            --output ./artifacts \
-            -p:ContinuousIntegrationBuild=true \
-            -p:PackageVersion=${{ steps.version.outputs.package_version }}
+          while IFS= read -r project; do
+            [[ -z "$project" ]] && continue
+            dotnet pack "$project" \
+              --configuration Release \
+              --no-build \
+              --output ./artifacts \
+              -p:ContinuousIntegrationBuild=true \
+              -p:PackageVersion=${{ steps.version.outputs.package_version }}
+          done <<< "${{ steps.projects.outputs.projects }}"
 
       - name: Validate NuGet API key
         if: ${{ env.NUGET_API_KEY == '' }}

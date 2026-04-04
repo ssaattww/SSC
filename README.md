@@ -4,6 +4,7 @@
 [![Publish NuGet](https://github.com/ssaattww/SSC/actions/workflows/publish-nuget.yml/badge.svg)](https://github.com/ssaattww/SSC/actions/workflows/publish-nuget.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
+[![NuGet Version (Generators)](https://img.shields.io/nuget/v/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ssaattww/SSC/blob/main/LICENSE)
 
 SSC is a .NET library for structural comparison of multiple models.
@@ -15,8 +16,17 @@ It compares object graphs by aligning member values into per-model slots, normal
 - Target framework: .NET 8
 - Current phase: Phase 3 (implementation in progress)
 - Test status (latest):
-  - E2E: 18 passed
-  - Unit: 2 passed
+  - E2E: 27 passed
+  - Unit: 4 passed
+
+## NuGet Packages
+
+- Runtime package:
+  - `ssaattww.SSC`
+- Source Generator package:
+  - `ssaattww.SSC.Generators`
+
+Install both packages when you want typed generated projection API (`AsGeneratedView()`).
 
 ## Core Concepts
 
@@ -106,6 +116,39 @@ public sealed class ProductItem
 
     public decimal Price { get; init; }
 }
+```
+
+## Source Generator Example
+
+```csharp
+using SSC;
+using SSC.Generated;
+
+[GenerateParallelView]
+public sealed class Dataset
+{
+    public List<Group> Groups { get; init; } = [];
+}
+
+public sealed class Group
+{
+    [CompareKey]
+    public int GroupId { get; init; }
+
+    public List<Item> Items { get; init; } = [];
+}
+
+public sealed class Item
+{
+    [CompareKey]
+    public int ItemId { get; init; }
+
+    public double MetricA { get; init; }
+}
+
+var result = ParallelCompareApi.Compare(models);
+var root = result.AsGeneratedView();
+var leftMetricAt100 = root!.Groups[0].Items[0].MetricA[0];
 ```
 
 ## Documentation

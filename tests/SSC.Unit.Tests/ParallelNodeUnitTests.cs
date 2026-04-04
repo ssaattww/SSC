@@ -42,9 +42,9 @@ public sealed class ParallelNodeUnitTests
     public void AsDynamic_WithNonCompareNode_ThrowsArgumentException()
     {
         // Intent: compare result node 以外は AsDynamic の対象外とする。
-        Parallel<string> node = new FakeParallel();
+        var result = new CompareResult<string> { Root = new FakeParallel() };
 
-        var exception = Assert.Throws<ArgumentException>(() => node.AsDynamic());
+        var exception = Assert.Throws<ArgumentException>(() => result.AsDynamic());
 
         Assert.Contains("compare result nodes", exception.Message, StringComparison.Ordinal);
     }

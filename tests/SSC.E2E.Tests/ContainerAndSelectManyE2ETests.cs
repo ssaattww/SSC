@@ -166,8 +166,7 @@ public sealed class ContainerAndSelectManyE2ETests
         };
 
         var result = ParallelCompareApi.Compare(models);
-        Parallel<Dataset> parallelRoot = Assert.IsAssignableFrom<Parallel<Dataset>>(result.Root);
-        dynamic root = parallelRoot.AsDynamic();
+        dynamic root = result.AsDynamic()!;
 
         double? leftMetricAt100 = root.Groups[0].Items[0].MetricA[0];
         double? leftMetricAt200 = root.Groups[0].Items[1].MetricA[0];
@@ -225,7 +224,7 @@ public sealed class ContainerAndSelectManyE2ETests
         };
 
         var result = ParallelCompareApi.Compare(models);
-        dynamic root = result.Root!.AsDynamic();
+        dynamic root = result.AsDynamic()!;
 
         var leftLabel = (string?)root.Items[0].Detail.Label[0];
         var leftLabelState = (ValueState)root.Items[0].Detail.Label.GetState(0);
@@ -263,7 +262,7 @@ public sealed class ContainerAndSelectManyE2ETests
         };
 
         var result = ParallelCompareApi.Compare(models);
-        dynamic root = result.Root!.AsDynamic();
+        dynamic root = result.AsDynamic()!;
 
         var leftCount = (int?)root.Items[0].Count[0];
         var rightCount = (int?)root.Items[0].Count[1];
@@ -317,7 +316,7 @@ public sealed class ContainerAndSelectManyE2ETests
         };
 
         var result = ParallelCompareApi.Compare(models);
-        dynamic root = result.Root!.AsDynamic();
+        dynamic root = result.AsDynamic()!;
 
         var exception = Assert.Throws<CompareExecutionException>(() =>
         {
