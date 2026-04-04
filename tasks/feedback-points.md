@@ -118,3 +118,8 @@
 - 対応:
   - `publish-nuget.yml` の disable 条件を撤去し、`release: published` トリガーで publish を再有効化
   - サブエージェントレビューで指摘された版数不整合を修正し、release タグ版数を優先採用するよう更新
+- ユーザー指摘: `workflows/publish-nuget.yml` を流用すること。
+- 対応:
+  - 既存流用ロジックを `.github/workflows/publish-nuget.yml` に統合し、`main` push 時 pre-release 作成を追加
+  - サブエージェントの High 指摘を反映し、`main` push ラン内で NuGet publish を完結させる構成へ修正
+  - 再レビュー Medium 指摘を反映し、stable tag 解決で `v` プレフィックス付きタグを許容

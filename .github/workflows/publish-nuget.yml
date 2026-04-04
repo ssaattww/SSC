@@ -4,6 +4,9 @@ on:
   release:
     types:
       - published
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       project_path:
@@ -17,7 +20,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: read
     env:
       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
@@ -66,12 +70,54 @@ jobs:
           project="${{ steps.project.outputs.project }}"
           manual_version="${{ github.event.inputs.package_version }}"
           event_name="${{ github.event_name }}"
+          ref_name="${{ github.ref_name }}"
           release_tag="${{ github.event.release.tag_name }}"
+          release_is_prerelease="${{ github.event.release.prerelease }}"
 
           if [[ -n "$manual_version" ]]; then
             package_version="$manual_version"
           elif [[ "$event_name" == "release" ]]; then
-            package_version="${release_tag#v}"
+            base_version="${release_tag#v}"
+            if [[ "$release_is_prerelease" == "true" ]]; then
+              if [[ "$base_version" == *-* ]]; then
+                package_version="$base_version"
+              else
+                package_version="${base_version}-pre"
+              fi
+            else
+              if [[ "$base_version" == *-* ]]; then
+                echo "Release is not pre-release, but tag contains pre-release suffix: $release_tag"
+                exit 1
+              fi
+              package_version="$base_version"
+            fi
+          elif [[ "$event_name" == "push" && "$ref_name" == "main" ]]; then
+            version_prefix=$(grep -oPm1 '(?<=<VersionPrefix>)[^<]+' "$project" || true)
+            if [[ -z "$version_prefix" ]]; then
+              version_prefix="0.1.0"
+            fi
+
+            latest_stable_tag=$(git tag --sort=-v:refname | grep -E '^(v)?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+            if [[ -n "$latest_stable_tag" ]]; then
+              base_version="${latest_stable_tag#v}"
+              commits_since_base=$(git rev-list --count "${latest_stable_tag}..HEAD")
+            else
+              base_version="$version_prefix"
+              commits_since_base=$(git rev-list --count HEAD)
+            fi
+
+            if [[ ! "$base_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Invalid base version format: $base_version"
+              exit 1
+            fi
+
+            IFS='.' read -r major minor patch <<< "$base_version"
+            if [[ "$commits_since_base" -lt 1 ]]; then
+              commits_since_base=1
+            fi
+
+            next_patch=$((patch + commits_since_base))
+            package_version="${major}.${minor}.${next_patch}-pre"
           else
             version_prefix=$(grep -oPm1 '(?<=<VersionPrefix>)[^<]+' "$project" || true)
             if [[ -z "$version_prefix" ]]; then
@@ -115,3 +161,45 @@ jobs:
             --api-key "${{ env.NUGET_API_KEY }}" \
             --source "https://api.nuget.org/v3/index.json" \
             --skip-duplicate
+
+      - name: Verify gh CLI
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+        run: gh --version
+
+      - name: Create GitHub Pre-release
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          repo="${{ github.repository }}"
+          sha="${{ github.sha }}"
+          tag="${{ steps.version.outputs.package_version }}"
+
+          if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
+            echo "GitHub pre-release already exists: $tag"
+            exit 0
+          fi
+
+          notes_file=$(mktemp)
+          {
+            echo "Automated pre-release from main push."
+            echo
+            pr_numbers=$(gh api -H "Accept: application/vnd.github+json" "/repos/${repo}/commits/${sha}/pulls" --jq '.[].number' 2>/dev/null || true)
+            if [[ -n "${pr_numbers}" ]]; then
+              echo "Related pull requests:"
+              while IFS= read -r pr; do
+                [[ -z "${pr}" ]] && continue
+                echo "- #${pr}"
+              done <<< "${pr_numbers}"
+            else
+              echo "Related pull request: not found."
+            fi
+          } > "$notes_file"
+
+          gh release create "$tag" \
+            --repo "$repo" \
+            --target "$sha" \
+            --title "$tag" \
+            --notes-file "$notes_file" \
+            --prerelease
