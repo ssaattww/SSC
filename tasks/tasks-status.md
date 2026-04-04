@@ -8,7 +8,13 @@
 
 ## Backlog
 
-- なし
+- T-040: dynamic 依存を減らす型付き投影 API の追加
+  - Status: 未着手（次回課題）
+  - Scope:
+    - `AsDynamic()` の補完弱さを解消するため、IDE 補完が効く型付きアクセス API を設計・実装
+    - `list index -> model index` と `GetState(modelIndex)` の意味を維持
+  - Tracking:
+    - GitHub PR comment: `#9` comment id `4186407883`
 
 ## Done
 

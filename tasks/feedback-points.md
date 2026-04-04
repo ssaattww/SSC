@@ -178,3 +178,7 @@
 - ユーザー指摘: 作業reportは機能単位で1ファイルにまとめること。
 - 対応:
   - 本機能は `reports/2026-04-04-dynamic-projection-access-api.md` の1ファイルに集約
+- ユーザー指摘: dynamic 連打だと補完が弱いので、今回は動作優先で良いが次回課題として issue へ追加すること。
+- 対応:
+  - GitHub PR #9 にフォローアップコメントを追加（comment id: `4186407883`）
+  - `tasks/tasks-status.md` の Backlog に型付き投影 API（T-040）を登録

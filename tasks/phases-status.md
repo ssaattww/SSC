@@ -64,6 +64,7 @@
   - `02-PublicApi` のアクセス例を元データセットと同じ型・値軸へ修正し、例示の整合性を担保
   - `02-PublicApi` に概念表現（`root.Groups[0].Items[0].MetricA[0]`）と null 判定指針を補足
   - `AsDynamic()` を追加し、`root.Groups[0].Items[0].MetricA[0]` と `root.Groups[0].Items[0][0]` 形式の実アクセスを提供
+  - 補完性向上のため、次回課題として型付き投影 API（T-040）を Backlog 登録
 
 ## Phase 4: 検証・受け入れ
 
