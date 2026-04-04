@@ -123,3 +123,10 @@
   - 既存流用ロジックを `.github/workflows/publish-nuget.yml` に統合し、`main` push 時 pre-release 作成を追加
   - サブエージェントの High 指摘を反映し、`main` push ラン内で NuGet publish を完結させる構成へ修正
   - 再レビュー Medium 指摘を反映し、stable tag 解決で `v` プレフィックス付きタグを許容
+- ユーザー指摘: NuGet パッケージ名は `ssaattww.SSC` でよい。
+- 対応:
+  - `src/SSC/SSC.csproj` に `<PackageId>ssaattww.SSC</PackageId>` を追加
+- ユーザー指摘: ルートREADMEをNuGetパッケージへ同梱し、READMEに各種バッジを追加すること。
+- 対応:
+  - `README.md` に workflow/NuGet/License バッジを追加
+  - `src/SSC/SSC.csproj` に `PackageReadmeFile` と README 同梱設定を追加

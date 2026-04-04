@@ -50,6 +50,10 @@
   - `publish-nuget.yml` を流用し、`main` への push から pre-release 作成 -> publish 連携を自動化
   - レビュー指摘に基づき、`main` push ラン内で pre-release publish を完結する構成へ修正
   - stable tag 解決で `v` プレフィックス付きタグ互換を追加
+  - NuGet パッケージ識別子を `ssaattww.SSC` へ明示変更し、公開時の名前衝突を回避
+  - PackageId 変更差分をレビューし、NuGet readme メタデータ不足を残留課題として記録
+  - ルートREADMEへ配布導線バッジを追加し、NuGet package readme として同梱設定を反映
+  - READMEレビュー指摘を反映し、ライセンスバッジリンクを絶対URLへ補正
   - `dotnet test SSC.sln --configuration Release` は成功（E2E 18件 / Unit 2件）
 
 ## Phase 4: 検証・受け入れ
