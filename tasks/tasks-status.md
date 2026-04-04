@@ -15,11 +15,16 @@
     - `list index -> model index` と `GetState(modelIndex)` の意味を維持
   - Tracking:
     - GitHub PR comment: `#9` comment id `4186407883`
+- T-042: dynamic 値パス `GetState` の非侵襲化
+  - Status: 未着手（残留リスク）
+  - Scope:
+    - `GetState` 呼び出し時に getter 実行へ依存しない状態判定方式を設計
+    - 副作用 getter / 例外 getter モデルでの安全性テストを追加
 
 ## Done
 
 - T-041: Dynamic projection 差分のサブエージェントコードレビュー指摘対応
-  - Status: 完了（公開契約・状態評価・衝突回避・境界例外・引数検証を反映）
+  - Status: 完了（公開契約・状態評価・衝突回避・境界例外・引数検証を反映、再レビューで High/Medium 新規なし）
   - Input:
     - `reports/2026-04-04-subagent-code-review-dynamic-projection-followup.md`
   - Output:

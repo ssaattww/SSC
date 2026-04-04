@@ -37,4 +37,28 @@ public sealed class ParallelNodeUnitTests
 
         Assert.Contains("must match", exception.Message, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void AsDynamic_WithNonCompareNode_ThrowsArgumentException()
+    {
+        // Intent: compare result node 以外は AsDynamic の対象外とする。
+        Parallel<string> node = new FakeParallel();
+
+        var exception = Assert.Throws<ArgumentException>(() => node.AsDynamic());
+
+        Assert.Contains("compare result nodes", exception.Message, StringComparison.Ordinal);
+    }
+
+    private sealed class FakeParallel : Parallel<string>
+    {
+        public string? this[int modelIndex] => null;
+
+        public int Count => 1;
+
+        public bool AllPresent => false;
+
+        public bool AnyPresent => false;
+
+        public ValueState GetState(int modelIndex) => ValueState.Missing;
+    }
 }

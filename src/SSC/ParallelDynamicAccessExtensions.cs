@@ -8,7 +8,7 @@ public static class ParallelDynamicAccessExtensions
     public static dynamic AsDynamic<T>(this Parallel<T> node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        if (node is not IParallelNode parallelNode)
+        if (node is not IParallelNode parallelNode || parallelNode is not IParallelNodeInternal)
         {
             throw new ArgumentException(
                 "AsDynamic can be used only with compare result nodes.",

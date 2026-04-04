@@ -230,10 +230,14 @@ public sealed class ContainerAndSelectManyE2ETests
         var leftLabel = (string?)root.Items[0].Detail.Label[0];
         var leftLabelState = (ValueState)root.Items[0].Detail.Label.GetState(0);
         var rightLabelState = (ValueState)root.Items[0].Detail.Label.GetState(1);
+        var rightLabel = (string?)root.Items[1].Detail.Label[1];
+        var rightPresentState = (ValueState)root.Items[1].Detail.Label.GetState(1);
 
         Assert.Null(leftLabel);
         Assert.Equal(ValueState.PresentNull, leftLabelState);
         Assert.Equal(ValueState.Missing, rightLabelState);
+        Assert.Equal("present", rightLabel);
+        Assert.Equal(ValueState.PresentValue, rightPresentState);
     }
 
     [Fact]
@@ -319,8 +323,13 @@ public sealed class ContainerAndSelectManyE2ETests
         {
             var _ = root.Groups[99];
         });
+        var negativeException = Assert.Throws<CompareExecutionException>(() =>
+        {
+            var _ = root.Groups[-1];
+        });
 
         Assert.Equal(CompareIssueCode.ModelIndexOutOfRange, exception.Code);
+        Assert.Equal(CompareIssueCode.ModelIndexOutOfRange, negativeException.Code);
     }
 
     [Fact]

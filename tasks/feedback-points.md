@@ -188,3 +188,7 @@
 - ユーザー指摘: 実装差分に設計書更新が必要なら必ず修正すること。
 - 対応:
   - dynamic projection 指摘対応（T-041）で `doc/design/detail/01-DomainModel.md` と `doc/design/detail/02-PublicApi.md` を同時更新
+- ユーザー指摘: 作業を継続して進めること。
+- 対応:
+  - T-041 を実装完了し、subagent 再レビューで新規 High/Medium なしを確認
+  - 残留リスクは T-042（`GetState` 非侵襲化）として Backlog 登録

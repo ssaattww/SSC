@@ -66,6 +66,7 @@
   - `AsDynamic()` を追加し、`root.Groups[0].Items[0].MetricA[0]` と `root.Groups[0].Items[0][0]` 形式の実アクセスを提供
   - 補完性向上のため、次回課題として型付き投影 API（T-040）を Backlog 登録
   - dynamic projection 差分をサブエージェント再レビューし、追跡タスク（T-041）で公開契約整合（`AsDynamic` 入口）/ `GetState` 意味整合 / 予約名衝突 / 境界例外 / `CreateLeaf` 引数検証を実装完了
+  - T-041 完了後の再レビューで High/Medium の新規指摘なしを確認し、`value path GetState` 非侵襲化は残留課題（T-042）として Backlog 化
 
 ## Phase 4: 検証・受け入れ
 
