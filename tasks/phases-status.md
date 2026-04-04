@@ -45,6 +45,8 @@
   - 厳密化差分に対してサブエージェント再レビューを実施し、Low リスクのみ記録
   - モデル直下 List メンバーについて、両 model 複数要素ケースの E2E を追加し、union/slot を明示検証
   - トップレベル README を整備し、実装状況・利用導線・基本例を明文化
+  - NuGet publish workflow を再有効化し、`release` 公開時の自動配布を復帰
+  - 再有効化差分をサブエージェントレビューし、release タグ版数と NuGet 版数の整合ロジックを追加
   - `dotnet test SSC.sln --configuration Release` は成功（E2E 18件 / Unit 2件）
 
 ## Phase 4: 検証・受け入れ

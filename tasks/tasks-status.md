@@ -155,3 +155,14 @@
   - Output:
     - `README.md`
     - `reports/2026-04-04-readme-bootstrap.md`
+- T-022: NuGet publish workflow の再有効化
+  - Status: 完了（release 公開時の自動 publish と手動実行を有効化）
+  - Output:
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-04-nuget-workflow-reactivation.md`
+- T-023: NuGet workflow 再有効化差分のレビュー反映
+  - Status: 完了（release タグと package version の整合を修正）
+  - Output:
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-04-subagent-code-review-nuget-workflow.md`
+    - `reports/2026-04-04-nuget-workflow-release-version-alignment.md`
