@@ -192,3 +192,15 @@
   - Status: 完了（重大不備なし、公開メタデータ改善余地を記録）
   - Output:
     - `reports/2026-04-04-subagent-code-review-packageid-rename.md`
+- T-029: README バッジ追加とパッケージREADME同梱設定
+  - Status: 完了（ルートREADMEにバッジ追加、NuGet package readme を設定）
+  - Output:
+    - `README.md`
+    - `src/SSC/SSC.csproj`
+    - `reports/2026-04-04-readme-badges-and-package-readme.md`
+- T-030: README バッジ設定のレビュー反映
+  - Status: 完了（ライセンスバッジのリンクを絶対URLへ修正）
+  - Output:
+    - `reports/2026-04-04-subagent-code-review-readme-badges-package-readme.md`
+    - `README.md`
+    - `reports/2026-04-04-readme-badge-link-fix.md`

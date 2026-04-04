@@ -126,3 +126,7 @@
 - ユーザー指摘: NuGet パッケージ名は `ssaattww.SSC` でよい。
 - 対応:
   - `src/SSC/SSC.csproj` に `<PackageId>ssaattww.SSC</PackageId>` を追加
+- ユーザー指摘: ルートREADMEをNuGetパッケージへ同梱し、READMEに各種バッジを追加すること。
+- 対応:
+  - `README.md` に workflow/NuGet/License バッジを追加
+  - `src/SSC/SSC.csproj` に `PackageReadmeFile` と README 同梱設定を追加
