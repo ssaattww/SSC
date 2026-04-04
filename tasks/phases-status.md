@@ -91,6 +91,7 @@
   - README の Core Concepts に `ValueState` 各状態の意味説明を追加し、E2E 件数表示を最新化
   - NuGet PackageId を `devo6.SSC` / `devo6.SSC.Generators` へ変更し、README の NuGet 導線を新IDへ更新
   - README の NuGet バッジ表示名に Runtime / Source Generator を明示し、パッケージ種別の判読性を改善
+  - README 冒頭の NuGet バッジを runtime / source generator でレイアウト分離（水平線付き）
 
 ## Phase 4: 検証・受け入れ
 

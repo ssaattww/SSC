@@ -298,3 +298,8 @@
 - 対応:
   - `README.md` の NuGet バッジ表示名を `Runtime` と `Source Generator` が明示される表現へ更新
   - 対応内容を `reports/2026-04-04-readme-badge-runtime-generator-clarification.md` に記録
+- ユーザー指摘: 表記だけでは判別しづらいので、バッジ群を水平線などで分けたい。
+- 対応:
+  - `README.md` 冒頭を `Runtime Package` / `Source Generator Package` の2区画へ再レイアウト
+  - 区画間に `---` を追加して視覚分離
+  - 対応内容を `reports/2026-04-04-readme-badge-layout-separation.md` に記録

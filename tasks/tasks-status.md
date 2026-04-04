@@ -16,6 +16,12 @@
 
 ## Done
 
+- T-061: README バッジを runtime/generator で視覚分離
+  - Status: 完了（水平線と見出しで NuGet バッジ群を2区画化）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-04-readme-badge-layout-separation.md`
+
 - T-060: README NuGet バッジの runtime/generator 表記明確化
   - Status: 完了（バッジ表示名に Runtime / Source Generator を明示）
   - Output:
