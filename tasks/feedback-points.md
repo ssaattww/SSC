@@ -288,3 +288,9 @@
   - `README.md` の `Core Concepts` で `Missing` / `PresentNull` / `PresentValue` の意味を明文化
   - `README.md` の `Status` の E2E 件数を最新値へ更新
   - 対応内容を `reports/2026-04-04-readme-valuestate-explanation-update.md` に記録
+- ユーザー指摘: パッケージ名の `ssaattww` を `devo6` へ変更したい。
+- 対応:
+  - `src/SSC/SSC.csproj` の PackageId を `devo6.SSC` へ更新
+  - `src/SSC.Generators/SSC.Generators.csproj` の PackageId を `devo6.SSC.Generators` へ更新
+  - `README.md` の NuGet バッジ/パッケージ表記を `devo6.*` へ更新
+  - 対応内容を `reports/2026-04-04-packageid-rename-to-devo6.md` に記録

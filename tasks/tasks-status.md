@@ -16,6 +16,14 @@
 
 ## Done
 
+- T-059: NuGet PackageId を devo6 系へ変更
+  - Status: 完了（runtime/generator の PackageId と README 表記を `devo6.*` へ更新）
+  - Output:
+    - `src/SSC/SSC.csproj`
+    - `src/SSC.Generators/SSC.Generators.csproj`
+    - `README.md`
+    - `reports/2026-04-04-packageid-rename-to-devo6.md`
+
 - T-058: README に ValueState 意味説明を追加
   - Status: 完了（`GetState` と `Missing/PresentNull/PresentValue` の意味を明文化）
   - Output:

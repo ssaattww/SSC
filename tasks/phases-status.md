@@ -89,6 +89,7 @@
   - README の Source Generator サンプルに `AsGeneratedView()` 経由の LINQ アクセス例（`Select` / `SelectMany`）を追記
   - README の Source Generator サンプルへ `Where` による不一致要素抽出例を追加
   - README の Core Concepts に `ValueState` 各状態の意味説明を追加し、E2E 件数表示を最新化
+  - NuGet PackageId を `devo6.SSC` / `devo6.SSC.Generators` へ変更し、README の NuGet 導線を新IDへ更新
 
 ## Phase 4: 検証・受け入れ
 
