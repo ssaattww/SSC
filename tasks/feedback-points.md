@@ -171,6 +171,10 @@
 - 対応:
   - `AsDynamic()` と動的投影アクセス層を追加し、上記記法での実アクセスを可能化
   - E2E テストで `list index -> model index` と `Missing` 判定を検証
+- ユーザー指摘: オブジェクト全体取得（`root.Items[indexNo][0]`）もできるように拡張すること。
+- 対応:
+  - Dynamic node に model indexer を追加し、`root...Items[index][model]` で要素オブジェクト全体を取得可能化
+  - E2E テストでオブジェクト全体取得と node-level `GetState` を検証
 - ユーザー指摘: 作業reportは機能単位で1ファイルにまとめること。
 - 対応:
   - 本機能は `reports/2026-04-04-dynamic-projection-access-api.md` の1ファイルに集約

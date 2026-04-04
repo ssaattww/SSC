@@ -63,7 +63,7 @@
   - `02-PublicApi` に比較前の元データセット例を追加し、アクセス例の前提と型定義を明示
   - `02-PublicApi` のアクセス例を元データセットと同じ型・値軸へ修正し、例示の整合性を担保
   - `02-PublicApi` に概念表現（`root.Groups[0].Items[0].MetricA[0]`）と null 判定指針を補足
-  - `AsDynamic()` を追加し、`root.Groups[0].Items[0].MetricA[0]` 形式の実アクセスを提供
+  - `AsDynamic()` を追加し、`root.Groups[0].Items[0].MetricA[0]` と `root.Groups[0].Items[0][0]` 形式の実アクセスを提供
 
 ## Phase 4: 検証・受け入れ
 

@@ -172,13 +172,19 @@ public sealed class ContainerAndSelectManyE2ETests
         double? leftMetricAt200 = root.Groups[0].Items[1].MetricA[0];
         double? rightMetricAt100 = root.Groups[0].Items[0].MetricA[1];
         double? rightMetricAt200 = root.Groups[0].Items[1].MetricA[1];
+        var leftItemAt100 = (Item?)root.Groups[0].Items[0][0];
+        var rightItemAt200 = (Item?)root.Groups[0].Items[1][1];
         var rightStateAt200 = (ValueState)root.Groups[0].Items[1].MetricA.GetState(1);
+        var rightNodeStateAt200 = (ValueState)root.Groups[0].Items[1].GetState(1);
 
         Assert.Equal(1.0, leftMetricAt100);
         Assert.Equal(2.0, leftMetricAt200);
         Assert.Equal(10.0, rightMetricAt100);
         Assert.Null(rightMetricAt200);
+        Assert.Equal(100, leftItemAt100?.ItemId);
+        Assert.Null(rightItemAt200);
         Assert.Equal(ValueState.Missing, rightStateAt200);
+        Assert.Equal(ValueState.Missing, rightNodeStateAt200);
     }
 
     [Fact]

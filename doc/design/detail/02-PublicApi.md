@@ -153,7 +153,11 @@ var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 ```csharp
 dynamic root = result.Root!.AsDynamic();
 var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
+var leftItemAt100 = root.Groups[0].Items[0][0]; // Item object
 ```
+
+- `root...Items[index][model]` は要素オブジェクト全体を返す
+- `root...Items[index].MetricA[model]` は要素プロパティ値を返す
 
 深い階層は `Children(...)` を連鎖して辿る。
 
@@ -172,6 +176,9 @@ var groupItems = groups[0].Children(model => model.Items);
 ```csharp
 var metric = items[1][1]?.MetricA;
 var state = items[1].GetState(1); // Missing / PresentNull / PresentValue
+
+dynamic root = result.Root!.AsDynamic();
+var objectState = root.Groups[0].Items[1].GetState(1); // Missing / PresentNull / PresentValue
 ```
 
 ## 5. Configuration Entry

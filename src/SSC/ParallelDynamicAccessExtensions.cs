@@ -30,6 +30,18 @@ internal sealed class DynamicParallelNodeView : DynamicObject
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
     {
+        if (binder.Name == nameof(IParallelNode.KeyText))
+        {
+            result = _node.KeyText;
+            return true;
+        }
+
+        if (binder.Name == nameof(IParallelNode.Count))
+        {
+            result = _node.Count;
+            return true;
+        }
+
         if (_internalNode.TryGetChildren(binder.Name, out var nodes))
         {
             result = new DynamicParallelListView(nodes);
@@ -46,6 +58,30 @@ internal sealed class DynamicParallelNodeView : DynamicObject
         }
 
         result = DynamicParallelValuePathView.FromMember(_node, property.Name);
+        return true;
+    }
+
+    public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+    {
+        if (binder.Name == nameof(IParallelNode.GetState) && args is { Length: 1 } && args[0] is int modelIndex)
+        {
+            result = _node.GetState(modelIndex);
+            return true;
+        }
+
+        result = null;
+        return false;
+    }
+
+    public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
+    {
+        if (indexes.Length != 1 || indexes[0] is not int modelIndex)
+        {
+            result = null;
+            return false;
+        }
+
+        result = _node.GetValue(modelIndex);
         return true;
     }
 }

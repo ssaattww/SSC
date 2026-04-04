@@ -39,10 +39,13 @@
 ```csharp
 dynamic root = result.Root!.AsDynamic();
 var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
+var leftItemAt100 = root.Groups[0].Items[0][0]; // Item object
 ```
 
 - 左側 `[]`: key union 後の list index
 - 右側 `[]`: model index
+- `root...Items[index][model]` は要素オブジェクト全体を返す
+- `root...Items[index].MetricA[model]` は要素プロパティ値を返す
 
 ## Test
 
@@ -54,6 +57,8 @@ var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
     - `root.Groups[0].Items[0].MetricA[1] == 10.0`
     - `root.Groups[0].Items[1].MetricA[1] == null`
     - `root.Groups[0].Items[1].MetricA.GetState(1) == Missing`
+    - `root.Groups[0].Items[0][0]` で `Item` オブジェクト全体を取得可能
+    - `root.Groups[0].Items[1].GetState(1) == Missing`
 
 ## Validation
 
