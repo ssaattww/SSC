@@ -2,11 +2,17 @@
 
 [![PR xUnit](https://github.com/ssaattww/SSC/actions/workflows/pr-xunit-tests.yml/badge.svg)](https://github.com/ssaattww/SSC/actions/workflows/pr-xunit-tests.yml)
 [![Publish NuGet](https://github.com/ssaattww/SSC/actions/workflows/publish-nuget.yml/badge.svg)](https://github.com/ssaattww/SSC/actions/workflows/publish-nuget.yml)
-[![NuGet Version](https://img.shields.io/nuget/v/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/ssaattww.SSC)](https://www.nuget.org/packages/ssaattww.SSC/)
-[![NuGet Version (Generators)](https://img.shields.io/nuget/v/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
-[![NuGet Downloads (Generators)](https://img.shields.io/nuget/dt/ssaattww.SSC.Generators)](https://www.nuget.org/packages/ssaattww.SSC.Generators/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ssaattww/SSC/blob/main/LICENSE)
+
+**Runtime Package**
+[![NuGet Version](https://img.shields.io/nuget/v/devo6.SSC)](https://www.nuget.org/packages/devo6.SSC/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/devo6.SSC)](https://www.nuget.org/packages/devo6.SSC/)
+
+---
+
+**Source Generator Package**
+[![NuGet Version](https://img.shields.io/nuget/v/devo6.SSC.Generators)](https://www.nuget.org/packages/devo6.SSC.Generators/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/devo6.SSC.Generators)](https://www.nuget.org/packages/devo6.SSC.Generators/)
 
 SSC is a .NET library for structural comparison of multiple models.
 
@@ -23,9 +29,9 @@ It compares object graphs by aligning member values into per-model slots, normal
 ## NuGet Packages
 
 - Runtime package:
-  - `ssaattww.SSC`
+  - `devo6.SSC`
 - Source Generator package:
-  - `ssaattww.SSC.Generators`
+  - `devo6.SSC.Generators`
 
 Install both packages when you want typed generated projection API (`AsGeneratedView()`).
 
