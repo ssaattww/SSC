@@ -16,6 +16,13 @@
 
 ## Done
 
+- T-068: GitHub Actions Node 24 対応版への更新
+  - Status: 完了（Node 20 廃止警告対象の `checkout/setup-dotnet` を `v5` へ更新）
+  - Output:
+    - `.github/workflows/pr-xunit-tests.yml`
+    - `.github/workflows/publish-nuget.yml`
+    - `reports/2026-04-05-github-actions-node24-readiness-update.md`
+
 - T-067: README Source Generator 例の構成・記法再調整
   - Status: 完了（`Dataset` 3件・`Group` 2件へ調整し、ID 参照を `[0] ?? [1] ?? [2]` の明示記法へ統一）
   - Output:

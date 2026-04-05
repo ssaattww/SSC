@@ -103,6 +103,7 @@
   - README の Source Generator Example を 3 groups 構成へ更新し、同値 `Items` の一致ケースも追記
   - README 掲載方針に合わせ、Source Generator Example を 3 datasets / 2 groups 構成へ再調整
   - Source Generator Example の ID 抽出・不一致抽出を `[0] ?? [1] ?? [2]` の明示記法へ統一
+  - GitHub Actions の Node 20 廃止警告に対応し、`actions/checkout` と `actions/setup-dotnet` を `v5` へ更新
 
 ## Phase 4: 検証・受け入れ
 
