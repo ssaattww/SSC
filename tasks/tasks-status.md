@@ -16,6 +16,12 @@
 
 ## Done
 
+- T-065: README Source Generator 例の Groups 構成拡張
+  - Status: 完了（`Groups` を 3 要素構成へ拡張し、一致する `Items` も追加）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-source-generator-example-three-groups.md`
+
 - T-064: README の可変ステータス表記を削除
   - Status: 完了（頻繁更新が必要な phase/test 件数を README から除外）
   - Output:

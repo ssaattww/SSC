@@ -171,6 +171,25 @@ Dataset[] models =
                     new Item { ItemId = 200, MetricA = 2.0 },
                 ],
             },
+            new Group
+            {
+                GroupId = 2,
+                Items =
+                [
+                    new Item { ItemId = 210, MetricA = 21.0 },
+                    new Item { ItemId = 211, MetricA = 21.1 },
+                    new Item { ItemId = 220, MetricA = 22.0 },
+                ],
+            },
+            new Group
+            {
+                GroupId = 3,
+                Items =
+                [
+                    new Item { ItemId = 310, MetricA = 31.0 },
+                    new Item { ItemId = 320, MetricA = 32.0 },
+                ],
+            },
         ],
     },
     new Dataset
@@ -184,6 +203,25 @@ Dataset[] models =
                 [
                     new Item { ItemId = 100, MetricA = 10.0 },
                     new Item { ItemId = 300, MetricA = 30.0 },
+                ],
+            },
+            new Group
+            {
+                GroupId = 2,
+                Items =
+                [
+                    new Item { ItemId = 210, MetricA = 21.0 },
+                    new Item { ItemId = 211, MetricA = 21.1 },
+                    new Item { ItemId = 230, MetricA = 23.0 },
+                ],
+            },
+            new Group
+            {
+                GroupId = 3,
+                Items =
+                [
+                    new Item { ItemId = 310, MetricA = 310.0 },
+                    new Item { ItemId = 320, MetricA = 32.0 },
                 ],
             },
         ],

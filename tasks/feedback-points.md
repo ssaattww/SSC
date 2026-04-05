@@ -334,3 +334,10 @@
 - 対応:
   - `README.md` の `Status` 節から current phase / latest test 件数の行を削除
   - 変更理由と結果を `reports/2026-04-05-readme-remove-volatile-status-lines.md` に記録
+- ユーザー指摘: README の Source Generator Example は `Groups` が3つある形にしたい。
+- 対応:
+  - Source Generator Example の入力データを 3 groups 構成へ更新
+  - 変更内容を `reports/2026-04-05-readme-source-generator-example-three-groups.md` に記録
+- ユーザー指摘: その上で一致する `Items` も入れたい。
+- 対応:
+  - 同値 `Items`（`ItemId=211`, `ItemId=320`）を両モデルへ追加し、一致ケースを明示

@@ -100,6 +100,7 @@
   - node/generated/dynamic の `GetState` 実装と E2E/Unit を更新し、`dotnet test SSC.sln --configuration Release` 成功（E2E 35件 / Unit 6件）
   - `doc/design/detail/09-ValueStateBehavior.md` を追加し、`GetState` 判定表と挙動仕様を設計書へ明文化
   - README から phase/test 件数などの可変ステータス表記を削除し、固定情報中心へ整理
+  - README の Source Generator Example を 3 groups 構成へ更新し、同値 `Items` の一致ケースも追記
 
 ## Phase 4: 検証・受け入れ
 
