@@ -356,3 +356,7 @@
 - 対応:
   - Source Generator Example を `Dataset` 3件 / `Group` 2件へ再調整
   - `groupIds` / `itemIds` / `mismatchedItemIds` を `[0] ?? [1] ?? [2]` ベースの明示記法へ統一
+- ユーザー指摘: GitHub Actions の Node.js 20 廃止警告（`checkout/setup-dotnet@v4`）が出ている。
+- 対応:
+  - `.github/workflows/pr-xunit-tests.yml` と `.github/workflows/publish-nuget.yml` の対象 action を `v5` へ更新
+  - 変更内容を `reports/2026-04-05-github-actions-node24-readiness-update.md` に記録
