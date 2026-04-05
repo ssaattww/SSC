@@ -51,7 +51,7 @@ public static class ParallelCompareApi
         var slots = new NodeSlot[models.Count];
         for (var index = 0; index < models.Count; index++)
         {
-            slots[index] = new NodeSlot(models[index], ValueState.PresentValue);
+            slots[index] = new NodeSlot(models[index], NodePresenceState.PresentValue);
         }
 
         var root = (ParallelNode<T>)BuildNode(typeof(T), slots, typeof(T).Name, context, keyText: null);
@@ -88,12 +88,12 @@ public static class ParallelCompareApi
     private static IParallelNode BuildNodeGeneric<TNode>(NodeSlot[] slots, string path, CompareContext context, string? keyText)
     {
         var typedValues = new TNode?[slots.Length];
-        var states = new ValueState[slots.Length];
+        var states = new NodePresenceState[slots.Length];
 
         for (var index = 0; index < slots.Length; index++)
         {
             states[index] = slots[index].State;
-            typedValues[index] = slots[index].State == ValueState.PresentValue
+            typedValues[index] = slots[index].State == NodePresenceState.PresentValue
                 ? (TNode?)slots[index].Value
                 : default;
         }
@@ -141,7 +141,7 @@ public static class ParallelCompareApi
         for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
         {
             maps[modelIndex] = new Dictionary<object, object?>(comparer);
-            if (parentSlots[modelIndex].State != ValueState.PresentValue || parentSlots[modelIndex].Value is null)
+            if (parentSlots[modelIndex].State != NodePresenceState.PresentValue || parentSlots[modelIndex].Value is null)
             {
                 continue;
             }
@@ -259,7 +259,7 @@ public static class ParallelCompareApi
         for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
         {
             maps[modelIndex] = new Dictionary<object, object?>(comparer);
-            if (parentSlots[modelIndex].State != ValueState.PresentValue || parentSlots[modelIndex].Value is null)
+            if (parentSlots[modelIndex].State != NodePresenceState.PresentValue || parentSlots[modelIndex].Value is null)
             {
                 continue;
             }
@@ -534,13 +534,13 @@ public static class ParallelCompareApi
         return existing;
     }
 
-    private readonly record struct NodeSlot(object? Value, ValueState State)
+    private readonly record struct NodeSlot(object? Value, NodePresenceState State)
     {
-        public static NodeSlot Missing => new(null, ValueState.Missing);
+        public static NodeSlot Missing => new(null, NodePresenceState.Missing);
 
-        public static NodeSlot PresentNull => new(null, ValueState.PresentNull);
+        public static NodeSlot PresentNull => new(null, NodePresenceState.PresentNull);
 
-        public static NodeSlot PresentValue(object value) => new(value, ValueState.PresentValue);
+        public static NodeSlot PresentValue(object value) => new(value, NodePresenceState.PresentValue);
     }
 
     private sealed class CompareContext

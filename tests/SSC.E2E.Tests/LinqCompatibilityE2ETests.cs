@@ -139,7 +139,7 @@ public sealed class LinqCompatibilityE2ETests
             .ToArray();
 
         int[] leftPresentItemIds = flattenedItems
-            .Where(item => item.ItemId.GetState(0) == ValueState.PresentValue)
+            .Where(item => item.ItemId.GetState(0) != ValueState.Missing)
             .Select(item => item.ItemId[0]!.Value)
             .OrderBy(id => id)
             .Take(4)

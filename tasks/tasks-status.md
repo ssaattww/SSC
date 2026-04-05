@@ -16,6 +16,33 @@
 
 ## Done
 
+- T-064: README の可変ステータス表記を削除
+  - Status: 完了（頻繁更新が必要な phase/test 件数を README から除外）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-remove-volatile-status-lines.md`
+
+- T-063: GetState の不一致状態 enum 拡張
+  - Status: 完了（`ValueState` を `Missing/Matched/Mismatched` の3状態へ整理）
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/NodePresenceState.cs`
+    - `src/SSC/ValueStateExtensions.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.E2E.Tests/LinqCompatibilityE2ETests.cs`
+    - `README.md`
+    - `doc/design/README.md`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/2026-04-05-getstate-mismatch-enum-extension.md`
+
 - T-062: generated list のモデル軸選択 API 追加
   - Status: 完了（`SelectModel(modelIndex)` でモデル別 list を取得可能化）
   - Output:

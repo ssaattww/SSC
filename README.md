@@ -21,10 +21,6 @@ It compares object graphs by aligning member values into per-model slots, normal
 ## Status
 
 - Target framework: .NET 8
-- Current phase: Phase 3 (implementation in progress)
-- Test status (latest):
-  - E2E: 33 passed
-  - Unit: 4 passed
 
 ## NuGet Packages
 
@@ -45,9 +41,9 @@ Install both packages when you want typed generated projection API (`AsGenerated
 - Slot model:
   - `Parallel<T>[modelIndex]` for value access
   - `GetState(modelIndex)` for slot state access
-  - `ValueState.Missing` : the slot does not exist in the target model
-  - `ValueState.PresentNull` : the slot exists but the value is `null`
-  - `ValueState.PresentValue` : the slot exists and has a non-null value
+  - `ValueState.Missing` : this slot is missing, or comparison target does not exist
+  - `ValueState.Matched` : there are comparison targets and all compared slots are equal
+  - `ValueState.Mismatched` : this slot exists and at least one compared slot is different (including target-side missing)
 
 ## Container Behavior
 
@@ -209,9 +205,7 @@ int[] itemIds = result.AsGeneratedView()!.Groups
 
 int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Where(item =>
-        item.MetricA.GetState(0) != item.MetricA.GetState(1)
-        || item.MetricA[0] != item.MetricA[1])
+    .Where(item => item.MetricA.GetState(0) == ValueState.Mismatched)
     .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
     .ToArray();
 ```

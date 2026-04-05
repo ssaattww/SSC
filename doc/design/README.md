@@ -15,6 +15,7 @@
 - `detail/06-ExecutionPipeline.md`
 - `detail/07-NonFunctional.md`
 - `detail/08-ImplementationChecklist.md`
+- `detail/09-ValueStateBehavior.md`
 
 ## Notes
 

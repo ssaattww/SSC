@@ -170,11 +170,13 @@ internal sealed class DynamicParallelListView : DynamicObject, IReadOnlyList<obj
 internal sealed class DynamicParallelValuePathView : DynamicObject
 {
     private readonly IParallelNode _node;
+    private readonly IParallelNodeInternal _internalNode;
     private readonly string[] _memberPath;
 
     private DynamicParallelValuePathView(IParallelNode node, string[] memberPath)
     {
         _node = node;
+        _internalNode = (IParallelNodeInternal)node;
         _memberPath = memberPath;
     }
 
@@ -185,8 +187,47 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
 
     public ValueState GetState(int modelIndex)
     {
-        _ = ResolveValue(modelIndex, out var state);
-        return state;
+        var selectedValue = ResolveValue(modelIndex, out var selectedPresence);
+        if (selectedPresence == NodePresenceState.Missing)
+        {
+            return ValueState.Missing;
+        }
+
+        if (_node.Count <= 1)
+        {
+            return ValueState.Missing;
+        }
+
+        var matched = true;
+        for (var index = 0; index < _node.Count; index++)
+        {
+            if (index == modelIndex)
+            {
+                continue;
+            }
+
+            var otherValue = ResolveValue(index, out var otherPresence);
+            if (otherPresence == NodePresenceState.Missing)
+            {
+                matched = false;
+                break;
+            }
+
+            if (otherPresence != selectedPresence)
+            {
+                matched = false;
+                break;
+            }
+
+            if (selectedPresence == NodePresenceState.PresentValue
+                && !Equals(selectedValue, otherValue))
+            {
+                matched = false;
+                break;
+            }
+        }
+
+        return ValueStateExtensions.ToComparisonState(hasComparisonTarget: true, matched);
     }
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
@@ -219,10 +260,10 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
         return true;
     }
 
-    private object? ResolveValue(int modelIndex, out ValueState state)
+    private object? ResolveValue(int modelIndex, out NodePresenceState state)
     {
-        state = _node.GetState(modelIndex);
-        if (state == ValueState.Missing)
+        state = _internalNode.GetPresenceState(modelIndex);
+        if (state == NodePresenceState.Missing)
         {
             return null;
         }
@@ -230,7 +271,7 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
         object? current = _node.GetValue(modelIndex);
         if (current is null)
         {
-            state = ValueState.PresentNull;
+            state = NodePresenceState.PresentNull;
             return null;
         }
 
@@ -247,12 +288,12 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
             current = property.GetValue(current);
             if (current is null)
             {
-                state = ValueState.PresentNull;
+                state = NodePresenceState.PresentNull;
                 return null;
             }
         }
 
-        state = ValueState.PresentValue;
+        state = NodePresenceState.PresentValue;
         return current;
     }
 }

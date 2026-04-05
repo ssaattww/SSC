@@ -315,3 +315,22 @@
 - 対応:
   - `git fetch origin --prune` を実施し、`origin/main` 取り込み後に作業する運用へ更新
   - 競合解消時は `rebase` 後に `dotnet test SSC.sln --configuration Release` を実行して整合を確認
+- ユーザー指摘: Issue #18 として、`GetState` で一致/不一致も扱いたい。
+- 対応:
+  - `ValueState` に `PresentNullMismatched` / `PresentValueMismatched` を追加
+  - node/generated/dynamic の `GetState` を更新し、不一致時にのみ `*Mismatched` を返す実装へ変更
+  - 対応内容を `reports/2026-04-05-getstate-mismatch-enum-extension.md` に記録
+- ユーザー指摘: 両側 `null` は一致扱いでよく、不一致時のみ特別状態にしたい。
+- 対応:
+  - 一致時は `PresentNull` / `PresentValue` を維持し、特別状態は不一致時のみ返す判定へ統一
+- ユーザー指摘: `PresentNull` / `PresentValue` を分けず、`Missing` 名で十分にしたい。
+- 対応:
+  - `ValueState` を `Missing/Matched/Mismatched` の3状態へ再定義
+  - `missing` 側は `Missing`、値が存在する不一致側は `Mismatched` を返す判定へ変更
+- ユーザー指摘: 最後に動作仕様を設計書として資料化すること。
+- 対応:
+  - `doc/design/detail/09-ValueStateBehavior.md` を新規追加し、判定ルールと例を明文化
+- ユーザー指摘: README の phase/test 件数のような可変情報は削除したい。
+- 対応:
+  - `README.md` の `Status` 節から current phase / latest test 件数の行を削除
+  - 変更理由と結果を `reports/2026-04-05-readme-remove-volatile-status-lines.md` に記録
