@@ -16,8 +16,14 @@
 
 ## Done
 
+- T-066: README Source Generator 例の汎用式可読性改善
+  - Status: 完了（モデル数非依存ロジックを維持しつつ、ID 解決・不一致判定をローカル関数へ分離）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-source-generator-example-three-groups.md`
+
 - T-065: README Source Generator 例の Groups 構成拡張
-  - Status: 完了（`Groups` を 3 要素構成へ拡張し、一致する `Items` も追加）
+  - Status: 完了（`Dataset` を 3 モデル入力へ拡張し、3モデル一致 `Items` とモデル数非依存の参照式を追加）
   - Output:
     - `README.md`
     - `reports/2026-04-05-readme-source-generator-example-three-groups.md`

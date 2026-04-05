@@ -340,4 +340,11 @@
   - 変更内容を `reports/2026-04-05-readme-source-generator-example-three-groups.md` に記録
 - ユーザー指摘: その上で一致する `Items` も入れたい。
 - 対応:
-  - 同値 `Items`（`ItemId=211`, `ItemId=320`）を両モデルへ追加し、一致ケースを明示
+  - 同値 `Items`（`ItemId=210`, `ItemId=211`, `ItemId=320`）を3モデルへ配置し、一致ケースを明示
+- ユーザー指摘: モデル数固定ではなく、汎用的な書き方にしたい。
+- 対応:
+  - `README.md` の Source Generator Example で `NodeMeta.Count` + `Enumerable.Range` によるモデル数非依存の参照式へ変更
+- ユーザー指摘: 汎用式は読みにくいので、可読性を上げたい。
+- 対応:
+  - `README.md` の Source Generator Example で複雑な式をローカル関数へ分離
+  - `ResolveFirstAvailableId(...)` と `IsMismatchedInAnyModel(...)` を追加し、`Select` / `Where` の記述を簡潔化

@@ -129,6 +129,7 @@ public sealed class ProductItem
 ## Source Generator Example
 
 ```csharp
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SSC;
@@ -226,25 +227,76 @@ Dataset[] models =
             },
         ],
     },
+    new Dataset
+    {
+        Groups =
+        [
+            new Group
+            {
+                GroupId = 1,
+                Items =
+                [
+                    new Item { ItemId = 100, MetricA = 100.0 },
+                    new Item { ItemId = 400, MetricA = 40.0 },
+                ],
+            },
+            new Group
+            {
+                GroupId = 2,
+                Items =
+                [
+                    new Item { ItemId = 210, MetricA = 21.0 },
+                    new Item { ItemId = 211, MetricA = 21.1 },
+                    new Item { ItemId = 240, MetricA = 24.0 },
+                ],
+            },
+            new Group
+            {
+                GroupId = 3,
+                Items =
+                [
+                    new Item { ItemId = 310, MetricA = 3100.0 },
+                    new Item { ItemId = 320, MetricA = 32.0 },
+                ],
+            },
+        ],
+    },
 };
 
 CompareResult<Dataset> result = ParallelCompareApi.Compare(models);
 double? leftMetricAt100 = result.AsGeneratedView()!.Groups[0].Items[0].MetricA[0];
 ValueState rightStateAt200 = result.AsGeneratedView()!.Groups[0].Items[1].MetricA.GetState(1);
 
+static int ResolveFirstAvailableId(IEnumerable<int?> candidates)
+{
+    return candidates.FirstOrDefault(candidate => candidate.HasValue) ?? -1;
+}
+
+static bool IsMismatchedInAnyModel(int modelCount, Func<int, ValueState> getState)
+{
+    return Enumerable.Range(0, modelCount)
+        .Any(modelIndex => getState(modelIndex) == ValueState.Mismatched);
+}
+
 int[] groupIds = result.AsGeneratedView()!.Groups
-    .Select(group => group.GroupId[0]!.Value)
+    .Select(group => ResolveFirstAvailableId(
+        Enumerable.Range(0, group.NodeMeta.Count)
+            .Select(modelIndex => group.GroupId[modelIndex])))
     .ToArray();
 
 int[] itemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .Select(item => ResolveFirstAvailableId(
+        Enumerable.Range(0, item.NodeMeta.Count)
+            .Select(modelIndex => item.ItemId[modelIndex])))
     .ToArray();
 
 int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Where(item => item.MetricA.GetState(0) == ValueState.Mismatched)
-    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .Where(item => IsMismatchedInAnyModel(item.NodeMeta.Count, item.MetricA.GetState))
+    .Select(item => ResolveFirstAvailableId(
+        Enumerable.Range(0, item.NodeMeta.Count)
+            .Select(modelIndex => item.ItemId[modelIndex])))
     .ToArray();
 ```
 
