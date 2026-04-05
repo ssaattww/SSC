@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-04-04
+- Updated: 2026-04-05
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -92,6 +92,9 @@
   - NuGet PackageId を `devo6.SSC` / `devo6.SSC.Generators` へ変更し、README の NuGet 導線を新IDへ更新
   - README の NuGet バッジ表示名に Runtime / Source Generator を明示し、パッケージ種別の判読性を改善
   - README 冒頭の NuGet バッジを runtime / source generator でレイアウト分離（水平線付き）
+  - generated projection list に `SelectModel(modelIndex)` を追加し、モデル別 list 選択を可能化
+  - generator 出力を更新し、モデル数を runtime list へ渡して model index 検証を空 list でも有効化
+  - generated projection E2E にモデル別 list 選択ケースを追加し、`dotnet test SSC.sln --configuration Release` 成功（E2E 34件 / Unit 4件）
 
 ## Phase 4: 検証・受け入れ
 

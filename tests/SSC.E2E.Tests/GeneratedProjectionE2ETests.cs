@@ -145,6 +145,90 @@ public sealed class GeneratedProjectionE2ETests
     }
 
     [Fact]
+    public void Compare_GeneratedProjection_ListCanBeSelectedByModelIndex()
+    {
+        // Intent: generated list から model 単位の list を選択し、要素 index でアクセスできる。
+        var models = new[]
+        {
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 100, MetricA = 1.0, Detail = new GeneratedDetail { Label = "l-100" } },
+                        ],
+                    },
+                    new GeneratedGroup
+                    {
+                        GroupId = 2,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 200, MetricA = 2.0, Detail = new GeneratedDetail { Label = "l-200" } },
+                        ],
+                    },
+                ],
+            },
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup
+                    {
+                        GroupId = 2,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 220, MetricA = 22.0, Detail = new GeneratedDetail { Label = "r-220" } },
+                        ],
+                    },
+                    new GeneratedGroup
+                    {
+                        GroupId = 3,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 300, MetricA = 30.0, Detail = new GeneratedDetail { Label = "r-300" } },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        var leftGroups = root.Groups.SelectModel(0);
+        var rightGroups = root.Groups.SelectModel(1);
+        int[] leftGroupIds = leftGroups.Select(group => group.GroupId[0]!.Value).ToArray();
+        int[] rightGroupIds = rightGroups.Select(group => group.GroupId[1]!.Value).ToArray();
+        int[] leftItemIds = leftGroups
+            .SelectMany(group => group.Items.SelectModel(0))
+            .Select(item => item.ItemId[0]!.Value)
+            .ToArray();
+        int[] rightItemIds = rightGroups
+            .SelectMany(group => group.Items.SelectModel(1))
+            .Select(item => item.ItemId[1]!.Value)
+            .ToArray();
+
+        Assert.Equal(new[] { 1, 2 }, leftGroupIds);
+        Assert.Equal(new[] { 2, 3 }, rightGroupIds);
+        Assert.Equal(new[] { 100, 200 }, leftItemIds);
+        Assert.Equal(new[] { 220, 300 }, rightItemIds);
+        Assert.Equal(1, leftGroups[0].GroupId[0]);
+        Assert.Equal(2, rightGroups[0].GroupId[1]);
+
+        var listException = Assert.Throws<CompareExecutionException>(() =>
+        {
+            var _ = rightGroups[99];
+        });
+        var modelException = Assert.Throws<CompareExecutionException>(() => root.Groups.SelectModel(2));
+
+        Assert.Equal(CompareIssueCode.ModelIndexOutOfRange, listException.Code);
+        Assert.Equal(CompareIssueCode.ModelIndexOutOfRange, modelException.Code);
+    }
+
+    [Fact]
     public void Compare_GeneratedProjection_ListIndexOutOfRange_ThrowsExecutionException()
     {
         // Intent: generated list index 範囲外アクセスは ModelIndexOutOfRange で失敗する。
