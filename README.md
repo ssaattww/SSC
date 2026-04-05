@@ -21,10 +21,6 @@ It compares object graphs by aligning member values into per-model slots, normal
 ## Status
 
 - Target framework: .NET 8
-- Current phase: Phase 3 (implementation in progress)
-- Test status (latest):
-  - E2E: 33 passed
-  - Unit: 4 passed
 
 ## NuGet Packages
 
@@ -45,9 +41,9 @@ Install both packages when you want typed generated projection API (`AsGenerated
 - Slot model:
   - `Parallel<T>[modelIndex]` for value access
   - `GetState(modelIndex)` for slot state access
-  - `ValueState.Missing` : the slot does not exist in the target model
-  - `ValueState.PresentNull` : the slot exists but the value is `null`
-  - `ValueState.PresentValue` : the slot exists and has a non-null value
+  - `ValueState.Missing` : this slot is missing, or comparison target does not exist
+  - `ValueState.Matched` : there are comparison targets and all compared slots are equal
+  - `ValueState.Mismatched` : this slot exists and at least one compared slot is different (including target-side missing)
 
 ## Container Behavior
 
@@ -175,6 +171,15 @@ Dataset[] models =
                     new Item { ItemId = 200, MetricA = 2.0 },
                 ],
             },
+            new Group
+            {
+                GroupId = 2,
+                Items =
+                [
+                    new Item { ItemId = 210, MetricA = 21.0 },
+                    new Item { ItemId = 220, MetricA = 22.0 },
+                ],
+            },
         ],
     },
     new Dataset
@@ -190,6 +195,39 @@ Dataset[] models =
                     new Item { ItemId = 300, MetricA = 30.0 },
                 ],
             },
+            new Group
+            {
+                GroupId = 2,
+                Items =
+                [
+                    new Item { ItemId = 210, MetricA = 21.0 },
+                    new Item { ItemId = 230, MetricA = 23.0 },
+                ],
+            },
+        ],
+    },
+    new Dataset
+    {
+        Groups =
+        [
+            new Group
+            {
+                GroupId = 1,
+                Items =
+                [
+                    new Item { ItemId = 100, MetricA = 100.0 },
+                    new Item { ItemId = 400, MetricA = 40.0 },
+                ],
+            },
+            new Group
+            {
+                GroupId = 2,
+                Items =
+                [
+                    new Item { ItemId = 210, MetricA = 21.0 },
+                    new Item { ItemId = 240, MetricA = 24.0 },
+                ],
+            },
         ],
     },
 };
@@ -199,20 +237,20 @@ double? leftMetricAt100 = result.AsGeneratedView()!.Groups[0].Items[0].MetricA[0
 ValueState rightStateAt200 = result.AsGeneratedView()!.Groups[0].Items[1].MetricA.GetState(1);
 
 int[] groupIds = result.AsGeneratedView()!.Groups
-    .Select(group => group.GroupId[0]!.Value)
+    .Select(group => group.GroupId[0] ?? group.GroupId[1] ?? group.GroupId[2] ?? -1)
     .ToArray();
 
 int[] itemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? item.ItemId[2] ?? -1)
     .ToArray();
 
 int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Where(item =>
-        item.MetricA.GetState(0) != item.MetricA.GetState(1)
-        || item.MetricA[0] != item.MetricA[1])
-    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? -1)
+    .Where(item => item.MetricA.GetState(0) == ValueState.Mismatched
+        || item.MetricA.GetState(1) == ValueState.Mismatched
+        || item.MetricA.GetState(2) == ValueState.Mismatched)
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? item.ItemId[2] ?? -1)
     .ToArray();
 ```
 

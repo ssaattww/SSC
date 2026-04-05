@@ -240,16 +240,19 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 ## 4.2 Nullability and State
 
 - `result.Root` は入力エラー時に `null` になり得る。
-- `node[modelIndex]` の値は `Missing` または `PresentNull` で `null` になり得る。
+- `node[modelIndex]` の値は、欠損または実値 `null` のどちらでも `null` になり得る。
 - index が有効な限り、`groups[i]` や `items[j]` のノード自体は通常 `null` ではない。
-- `null` の意味を区別する場合は `GetState(modelIndex)` を併用する。
+- 比較状態は `GetState(modelIndex)` で判定する。
+  - `Missing`: 当該 slot が欠損、または比較対象がない
+  - `Matched`: 当該 slot が存在し、比較対象と一致
+  - `Mismatched`: 当該 slot が存在し、比較対象と不一致（比較先欠損を含む）
 
 ```csharp
 var metric = items[1][1]?.MetricA;
-var state = items[1].GetState(1); // Missing / PresentNull / PresentValue
+var state = items[1].GetState(1); // Missing / Matched / Mismatched
 
 dynamic root = result.AsDynamic();
-var objectState = root.Groups[0].Items[1].GetState(1); // Missing / PresentNull / PresentValue
+var objectState = root.Groups[0].Items[1].GetState(1); // Missing / Matched / Mismatched
 ```
 
 ## 5. Configuration Entry

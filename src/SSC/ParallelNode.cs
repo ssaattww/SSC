@@ -3,10 +3,10 @@ namespace SSC;
 public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeInternal
 {
     private readonly T?[] _values;
-    private readonly ValueState[] _states;
+    private readonly NodePresenceState[] _states;
     private readonly Dictionary<string, IReadOnlyList<IParallelNode>> _children = new(StringComparer.Ordinal);
 
-    internal ParallelNode(T?[] values, ValueState[] states, string? keyText)
+    internal ParallelNode(T?[] values, NodePresenceState[] states, string? keyText)
     {
         _values = values;
         _states = states;
@@ -17,9 +17,9 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
 
     public int Count => _values.Length;
 
-    public bool AllPresent => _states.All(state => state == ValueState.PresentValue);
+    public bool AllPresent => _states.All(state => state == NodePresenceState.PresentValue);
 
-    public bool AnyPresent => _states.Any(state => state != ValueState.Missing);
+    public bool AnyPresent => _states.Any(state => state != NodePresenceState.Missing);
 
     public T? this[int modelIndex]
     {
@@ -41,18 +41,73 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
                 nameof(states));
         }
 
-        return new ParallelNode<T>(values.ToArray(), states.ToArray(), keyText);
+        var presenceStates = new NodePresenceState[states.Count];
+        for (var index = 0; index < states.Count; index++)
+        {
+            presenceStates[index] = states[index] == ValueState.Missing
+                ? NodePresenceState.Missing
+                : values[index] is null
+                    ? NodePresenceState.PresentNull
+                    : NodePresenceState.PresentValue;
+        }
+
+        return new ParallelNode<T>(values.ToArray(), presenceStates, keyText);
     }
 
     public ValueState GetState(int modelIndex)
     {
         ValidateIndex(modelIndex);
-        return _states[modelIndex];
+        var baseState = _states[modelIndex];
+        if (baseState == NodePresenceState.Missing)
+        {
+            return ValueState.Missing;
+        }
+
+        if (_states.Length <= 1)
+        {
+            return ValueState.Missing;
+        }
+
+        var matched = true;
+        for (var index = 0; index < _states.Length; index++)
+        {
+            if (index == modelIndex)
+            {
+                continue;
+            }
+
+            if (_states[index] == NodePresenceState.Missing)
+            {
+                matched = false;
+                break;
+            }
+
+            if (_states[index] != baseState)
+            {
+                matched = false;
+                break;
+            }
+
+            if (baseState == NodePresenceState.PresentValue
+                && !EqualityComparer<T?>.Default.Equals(_values[modelIndex], _values[index]))
+            {
+                matched = false;
+                break;
+            }
+        }
+
+        return ValueStateExtensions.ToComparisonState(hasComparisonTarget: true, matched);
     }
 
     public object? GetValue(int modelIndex)
     {
         return this[modelIndex];
+    }
+
+    internal NodePresenceState GetPresenceState(int modelIndex)
+    {
+        ValidateIndex(modelIndex);
+        return _states[modelIndex];
     }
 
     public IReadOnlyList<ParallelNode<TElement>> GetChildren<TElement>(string memberName)
@@ -70,6 +125,11 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     bool IParallelNodeInternal.TryGetChildren(string memberName, out IReadOnlyList<IParallelNode> nodes)
     {
         return _children.TryGetValue(memberName, out nodes!);
+    }
+
+    NodePresenceState IParallelNodeInternal.GetPresenceState(int modelIndex)
+    {
+        return GetPresenceState(modelIndex);
     }
 
     internal void SetChildren(string memberName, IReadOnlyList<IParallelNode> nodes)

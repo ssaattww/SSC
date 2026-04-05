@@ -111,7 +111,7 @@ public sealed class ParallelGeneratedModelList<TElement, TView> : IReadOnlyList<
         var selectedNodeIndexes = new List<int>(_nodes.Count);
         for (var index = 0; index < _nodes.Count; index++)
         {
-            if (_nodes[index].GetState(modelIndex) != ValueState.Missing)
+            if (_nodes[index].GetPresenceState(modelIndex) != NodePresenceState.Missing)
             {
                 selectedNodeIndexes.Add(index);
             }
@@ -171,8 +171,47 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
 
     public ValueState GetState(int modelIndex)
     {
-        _ = ResolveValue(modelIndex, out var state);
-        return state;
+        var selectedValue = ResolveValue(modelIndex, out var selectedPresence);
+        if (selectedPresence == NodePresenceState.Missing)
+        {
+            return ValueState.Missing;
+        }
+
+        if (_node.Count <= 1)
+        {
+            return ValueState.Missing;
+        }
+
+        var matched = true;
+        for (var index = 0; index < _node.Count; index++)
+        {
+            if (index == modelIndex)
+            {
+                continue;
+            }
+
+            var otherValue = ResolveValue(index, out var otherPresence);
+            if (otherPresence == NodePresenceState.Missing)
+            {
+                matched = false;
+                break;
+            }
+
+            if (otherPresence != selectedPresence)
+            {
+                matched = false;
+                break;
+            }
+
+            if (selectedPresence == NodePresenceState.PresentValue
+                && !EqualityComparer<TValue>.Default.Equals(selectedValue, otherValue))
+            {
+                matched = false;
+                break;
+            }
+        }
+
+        return ValueStateExtensions.ToComparisonState(hasComparisonTarget: true, matched);
     }
 
     public ParallelGeneratedValue<TModel, TNext> Select<TNext>(Func<TValue, TNext> selector)
@@ -193,10 +232,10 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
             });
     }
 
-    private TValue ResolveValue(int modelIndex, out ValueState state)
+    private TValue ResolveValue(int modelIndex, out NodePresenceState state)
     {
-        state = _node.GetState(modelIndex);
-        if (state == ValueState.Missing)
+        state = _node.GetPresenceState(modelIndex);
+        if (state == NodePresenceState.Missing)
         {
             return default!;
         }
@@ -204,18 +243,18 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
         var model = _node[modelIndex];
         if (model is null)
         {
-            state = ValueState.PresentNull;
+            state = NodePresenceState.PresentNull;
             return default!;
         }
 
         var value = _getter(model);
         if (value is null)
         {
-            state = ValueState.PresentNull;
+            state = NodePresenceState.PresentNull;
             return default!;
         }
 
-        state = ValueState.PresentValue;
+        state = NodePresenceState.PresentValue;
         return value;
     }
 }

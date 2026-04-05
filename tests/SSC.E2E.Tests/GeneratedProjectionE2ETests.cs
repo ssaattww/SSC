@@ -98,6 +98,55 @@ public sealed class GeneratedProjectionE2ETests
     }
 
     [Fact]
+    public void Compare_GeneratedProjection_GetState_IncludesMismatchStates()
+    {
+        // Intent: generated value path の GetState は Matched/Mismatched/Missing を返す。
+        var models = new[]
+        {
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 100, MetricA = 1.0, Detail = new GeneratedDetail { Label = "same" } },
+                            new GeneratedItem { ItemId = 200, MetricA = 2.0, Detail = new GeneratedDetail { Label = null } },
+                        ],
+                    },
+                ],
+            },
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup
+                    {
+                        GroupId = 1,
+                        Items =
+                        [
+                            new GeneratedItem { ItemId = 100, MetricA = 1.0, Detail = new GeneratedDetail { Label = "same" } },
+                            new GeneratedItem { ItemId = 200, MetricA = 20.0, Detail = new GeneratedDetail { Label = "present" } },
+                        ],
+                    },
+                ],
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        var matchedMetricState = root.Groups[0].Items[0].MetricA.GetState(0);
+        var mismatchedMetricState = root.Groups[0].Items[1].MetricA.GetState(0);
+        var mismatchedNullState = root.Groups[0].Items[1].Detail.Select(detail => detail.Label).GetState(0);
+
+        Assert.Equal(ValueState.Matched, matchedMetricState);
+        Assert.Equal(ValueState.Mismatched, mismatchedMetricState);
+        Assert.Equal(ValueState.Mismatched, mismatchedNullState);
+    }
+
+    [Fact]
     public void Compare_GeneratedProjection_ListSupportsLinqSelect()
     {
         // Intent: generated list は IEnumerable として LINQ Select を利用できる。

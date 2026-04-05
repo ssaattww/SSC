@@ -3,8 +3,8 @@ namespace SSC;
 public enum ValueState
 {
     Missing,
-    PresentNull,
-    PresentValue,
+    Matched,
+    Mismatched,
 }
 
 public enum CompareIssueLevel
@@ -82,4 +82,6 @@ internal interface IParallelNodeInternal
     Type ModelType { get; }
 
     bool TryGetChildren(string memberName, out IReadOnlyList<IParallelNode> nodes);
+
+    NodePresenceState GetPresenceState(int modelIndex);
 }

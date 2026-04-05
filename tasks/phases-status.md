@@ -95,6 +95,14 @@
   - generated projection list に `SelectModel(modelIndex)` を追加し、モデル別 list 選択を可能化
   - generator 出力を更新し、モデル数を runtime list へ渡して model index 検証を空 list でも有効化
   - generated projection E2E にモデル別 list 選択ケースを追加し、`dotnet test SSC.sln --configuration Release` 成功（E2E 34件 / Unit 4件）
+  - `ValueState` を `Missing/Matched/Mismatched` の3状態へ再定義し、`GetState` を比較指向へ簡素化
+  - 内部評価状態（`NodePresenceState`）を導入し、公開状態の単純化と `missing/null/value` 判定精度を両立
+  - node/generated/dynamic の `GetState` 実装と E2E/Unit を更新し、`dotnet test SSC.sln --configuration Release` 成功（E2E 35件 / Unit 6件）
+  - `doc/design/detail/09-ValueStateBehavior.md` を追加し、`GetState` 判定表と挙動仕様を設計書へ明文化
+  - README から phase/test 件数などの可変ステータス表記を削除し、固定情報中心へ整理
+  - README の Source Generator Example を 3 groups 構成へ更新し、同値 `Items` の一致ケースも追記
+  - README 掲載方針に合わせ、Source Generator Example を 3 datasets / 2 groups 構成へ再調整
+  - Source Generator Example の ID 抽出・不一致抽出を `[0] ?? [1] ?? [2]` の明示記法へ統一
 
 ## Phase 4: 検証・受け入れ
 

@@ -16,6 +16,51 @@
 
 ## Done
 
+- T-067: README Source Generator 例の構成・記法再調整
+  - Status: 完了（`Dataset` 3件・`Group` 2件へ調整し、ID 参照を `[0] ?? [1] ?? [2]` の明示記法へ統一）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-source-generator-example-three-datasets-two-groups.md`
+
+- T-066: README Source Generator 例の汎用式可読性改善
+  - Status: 完了（ID 解決・不一致判定のローカル関数分離を試行。最終的な README 記法は T-067 で再調整）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-source-generator-example-three-groups.md`
+
+- T-065: README Source Generator 例の Groups 構成拡張
+  - Status: 完了（`Dataset` を 3 モデル入力へ拡張し、3モデル一致 `Items` を追加）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-source-generator-example-three-groups.md`
+
+- T-064: README の可変ステータス表記を削除
+  - Status: 完了（頻繁更新が必要な phase/test 件数を README から除外）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-remove-volatile-status-lines.md`
+
+- T-063: GetState の不一致状態 enum 拡張
+  - Status: 完了（`ValueState` を `Missing/Matched/Mismatched` の3状態へ整理）
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/NodePresenceState.cs`
+    - `src/SSC/ValueStateExtensions.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.E2E.Tests/LinqCompatibilityE2ETests.cs`
+    - `README.md`
+    - `doc/design/README.md`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/2026-04-05-getstate-mismatch-enum-extension.md`
+
 - T-062: generated list のモデル軸選択 API 追加
   - Status: 完了（`SelectModel(modelIndex)` でモデル別 list を取得可能化）
   - Output:

@@ -107,13 +107,16 @@ public sealed class CompareIgnoreAttribute : Attribute
 public enum ValueState
 {
     Missing,
-    PresentNull,
-    PresentValue
+    Matched,
+    Mismatched
 }
 ```
 
-`this[int]` だけでは `Missing` と `PresentNull` を区別できないため、
-`GetState(modelIndex)` を併用する。
+`GetState(modelIndex)` は比較可否と一致/不一致を返す。
+
+- `Missing`: 比較対象が存在しない
+- `Matched`: slot が存在し、比較結果が一致
+- `Mismatched`: slot が存在し、比較結果が不一致（比較先欠損を含む）
 
 ## 5. Invariants
 

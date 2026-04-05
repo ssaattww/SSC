@@ -8,7 +8,7 @@ public sealed class ParallelNodeUnitTests
     public void Indexer_OutOfRange_ThrowsExecutionException()
     {
         // Intent: model slot の範囲外アクセスは必ず ModelIndexOutOfRange で失敗させる。
-        var node = ParallelNode<string>.CreateLeaf(["a", "b"], [ValueState.PresentValue, ValueState.PresentValue], keyText: "k");
+        var node = ParallelNode<string>.CreateLeaf(["a", "b"], [ValueState.Matched, ValueState.Matched], keyText: "k");
 
         var exception = Assert.Throws<CompareExecutionException>(() => _ = node[2]);
 
@@ -19,13 +19,36 @@ public sealed class ParallelNodeUnitTests
     public void PresenceFlags_FollowValueStates()
     {
         // Intent: AllPresent / AnyPresent / GetState が ValueState の定義通りに評価される。
-        var node = ParallelNode<string>.CreateLeaf(["x", null, null], [ValueState.PresentValue, ValueState.PresentNull, ValueState.Missing], keyText: "k");
+        var node = ParallelNode<string>.CreateLeaf(["x", null, null], [ValueState.Matched, ValueState.Matched, ValueState.Missing], keyText: "k");
 
         Assert.False(node.AllPresent);
         Assert.True(node.AnyPresent);
-        Assert.Equal(ValueState.PresentValue, node.GetState(0));
-        Assert.Equal(ValueState.PresentNull, node.GetState(1));
+        Assert.Equal(ValueState.Mismatched, node.GetState(0));
+        Assert.Equal(ValueState.Mismatched, node.GetState(1));
         Assert.Equal(ValueState.Missing, node.GetState(2));
+    }
+
+    [Fact]
+    public void GetState_WhenAllValuesMatch_ReturnsMatched()
+    {
+        // Intent: 比較対象があり、値が一致する場合は Matched を返す。
+        var valueNode = ParallelNode<int>.CreateLeaf([10, 10], [ValueState.Matched, ValueState.Matched], keyText: "k");
+        var nullNode = ParallelNode<string>.CreateLeaf([null, null], [ValueState.Matched, ValueState.Matched], keyText: "k");
+
+        Assert.Equal(ValueState.Matched, valueNode.GetState(0));
+        Assert.Equal(ValueState.Matched, valueNode.GetState(1));
+        Assert.Equal(ValueState.Matched, nullNode.GetState(0));
+        Assert.Equal(ValueState.Matched, nullNode.GetState(1));
+    }
+
+    [Fact]
+    public void GetState_WhenNoComparisonTarget_ReturnsMissing()
+    {
+        // Intent: 自身以外に比較対象が存在しない場合は Missing を返す。
+        var node = ParallelNode<string>.CreateLeaf([null, null], [ValueState.Missing, ValueState.Missing], keyText: "k");
+
+        Assert.Equal(ValueState.Missing, node.GetState(0));
+        Assert.Equal(ValueState.Missing, node.GetState(1));
     }
 
     [Fact]
@@ -33,7 +56,7 @@ public sealed class ParallelNodeUnitTests
     {
         // Intent: values/states 長が一致しない node は生成させない。
         var exception = Assert.Throws<ArgumentException>(
-            () => ParallelNode<string>.CreateLeaf(["a", "b"], [ValueState.PresentValue], keyText: "k"));
+            () => ParallelNode<string>.CreateLeaf(["a", "b"], [ValueState.Matched], keyText: "k"));
 
         Assert.Contains("must match", exception.Message, StringComparison.Ordinal);
     }

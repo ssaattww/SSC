@@ -233,10 +233,10 @@ public sealed class ContainerAndSelectManyE2ETests
         var rightPresentState = (ValueState)root.Items[1].Detail.Label.GetState(1);
 
         Assert.Null(leftLabel);
-        Assert.Equal(ValueState.PresentNull, leftLabelState);
+        Assert.Equal(ValueState.Mismatched, leftLabelState);
         Assert.Equal(ValueState.Missing, rightLabelState);
         Assert.Equal("present", rightLabel);
-        Assert.Equal(ValueState.PresentValue, rightPresentState);
+        Assert.Equal(ValueState.Mismatched, rightPresentState);
     }
 
     [Fact]
