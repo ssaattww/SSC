@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-04-04
+- Updated: 2026-04-05
 
 ## In Progress
 
@@ -15,6 +15,15 @@
     - 副作用 getter / 例外 getter モデルでの安全性テストを追加
 
 ## Done
+
+- T-062: generated list のモデル軸選択 API 追加
+  - Status: 完了（`SelectModel(modelIndex)` でモデル別 list を取得可能化）
+  - Output:
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `src/SSC.Generators/ParallelViewGenerator.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/2026-04-05-generated-list-model-axis-selection.md`
 
 - T-061: README バッジを runtime/generator で視覚分離
   - Status: 完了（水平線と見出しで NuGet バッジ群を2区画化）

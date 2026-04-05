@@ -156,7 +156,7 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
 
                 var elementTypeName = member.ElementType.ToDisplayString(TypeDisplayFormat);
                 source.AppendLine($"    public global::SSC.ParallelGeneratedList<{elementTypeName}, {childViewName}> {memberName} =>");
-                source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), static child => new {childViewName}(child));");
+                source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
                 source.AppendLine();
                 continue;
             }

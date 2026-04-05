@@ -1,6 +1,6 @@
 # Feedback Points
 
-- Updated: 2026-04-04
+- Updated: 2026-04-05
 
 ## 2026-04-03
 
@@ -303,3 +303,11 @@
   - `README.md` 冒頭を `Runtime Package` / `Source Generator Package` の2区画へ再レイアウト
   - 区画間に `---` を追加して視覚分離
   - 対応内容を `reports/2026-04-04-readme-badge-layout-separation.md` に記録
+
+## 2026-04-05
+
+- ユーザー指摘: Issue #16 の対応を実施したい。
+- 対応:
+  - generated projection list にモデル別抽出 API `SelectModel(modelIndex)` を追加
+  - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs` にモデル別 list 選択の E2E を追加
+  - 設計書へ API 契約を追記し、`reports/2026-04-05-generated-list-model-axis-selection.md` に調査・実装内容を記録
