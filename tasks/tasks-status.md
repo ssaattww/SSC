@@ -16,14 +16,20 @@
 
 ## Done
 
+- T-067: README Source Generator 例の構成・記法再調整
+  - Status: 完了（`Dataset` 3件・`Group` 2件へ調整し、ID 参照を `[0] ?? [1] ?? [2]` の明示記法へ統一）
+  - Output:
+    - `README.md`
+    - `reports/2026-04-05-readme-source-generator-example-three-datasets-two-groups.md`
+
 - T-066: README Source Generator 例の汎用式可読性改善
-  - Status: 完了（モデル数非依存ロジックを維持しつつ、ID 解決・不一致判定をローカル関数へ分離）
+  - Status: 完了（ID 解決・不一致判定のローカル関数分離を試行。最終的な README 記法は T-067 で再調整）
   - Output:
     - `README.md`
     - `reports/2026-04-05-readme-source-generator-example-three-groups.md`
 
 - T-065: README Source Generator 例の Groups 構成拡張
-  - Status: 完了（`Dataset` を 3 モデル入力へ拡張し、3モデル一致 `Items` とモデル数非依存の参照式を追加）
+  - Status: 完了（`Dataset` を 3 モデル入力へ拡張し、3モデル一致 `Items` を追加）
   - Output:
     - `README.md`
     - `reports/2026-04-05-readme-source-generator-example-three-groups.md`

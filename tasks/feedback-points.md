@@ -348,3 +348,11 @@
 - 対応:
   - `README.md` の Source Generator Example で複雑な式をローカル関数へ分離
   - `ResolveFirstAvailableId(...)` と `IsMismatchedInAnyModel(...)` を追加し、`Select` / `Where` の記述を簡潔化
+- ユーザー指摘: README では先の書き方（インライン式）の方が適している。
+- 対応:
+  - Source Generator Example のローカル関数分離を取り下げ、汎用式インライン記述へ戻す
+  - `NodeMeta.Count` ベースのモデル数非依存性は維持
+- ユーザー指摘: `??` を3つつなぐ書き方が最も見通しがよく、`Dataset` は3つ・`Group` は2つにしたい。
+- 対応:
+  - Source Generator Example を `Dataset` 3件 / `Group` 2件へ再調整
+  - `groupIds` / `itemIds` / `mismatchedItemIds` を `[0] ?? [1] ?? [2]` ベースの明示記法へ統一

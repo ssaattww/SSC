@@ -129,7 +129,6 @@ public sealed class ProductItem
 ## Source Generator Example
 
 ```csharp
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using SSC;
@@ -178,17 +177,7 @@ Dataset[] models =
                 Items =
                 [
                     new Item { ItemId = 210, MetricA = 21.0 },
-                    new Item { ItemId = 211, MetricA = 21.1 },
                     new Item { ItemId = 220, MetricA = 22.0 },
-                ],
-            },
-            new Group
-            {
-                GroupId = 3,
-                Items =
-                [
-                    new Item { ItemId = 310, MetricA = 31.0 },
-                    new Item { ItemId = 320, MetricA = 32.0 },
                 ],
             },
         ],
@@ -212,17 +201,7 @@ Dataset[] models =
                 Items =
                 [
                     new Item { ItemId = 210, MetricA = 21.0 },
-                    new Item { ItemId = 211, MetricA = 21.1 },
                     new Item { ItemId = 230, MetricA = 23.0 },
-                ],
-            },
-            new Group
-            {
-                GroupId = 3,
-                Items =
-                [
-                    new Item { ItemId = 310, MetricA = 310.0 },
-                    new Item { ItemId = 320, MetricA = 32.0 },
                 ],
             },
         ],
@@ -246,17 +225,7 @@ Dataset[] models =
                 Items =
                 [
                     new Item { ItemId = 210, MetricA = 21.0 },
-                    new Item { ItemId = 211, MetricA = 21.1 },
                     new Item { ItemId = 240, MetricA = 24.0 },
-                ],
-            },
-            new Group
-            {
-                GroupId = 3,
-                Items =
-                [
-                    new Item { ItemId = 310, MetricA = 3100.0 },
-                    new Item { ItemId = 320, MetricA = 32.0 },
                 ],
             },
         ],
@@ -267,36 +236,21 @@ CompareResult<Dataset> result = ParallelCompareApi.Compare(models);
 double? leftMetricAt100 = result.AsGeneratedView()!.Groups[0].Items[0].MetricA[0];
 ValueState rightStateAt200 = result.AsGeneratedView()!.Groups[0].Items[1].MetricA.GetState(1);
 
-static int ResolveFirstAvailableId(IEnumerable<int?> candidates)
-{
-    return candidates.FirstOrDefault(candidate => candidate.HasValue) ?? -1;
-}
-
-static bool IsMismatchedInAnyModel(int modelCount, Func<int, ValueState> getState)
-{
-    return Enumerable.Range(0, modelCount)
-        .Any(modelIndex => getState(modelIndex) == ValueState.Mismatched);
-}
-
 int[] groupIds = result.AsGeneratedView()!.Groups
-    .Select(group => ResolveFirstAvailableId(
-        Enumerable.Range(0, group.NodeMeta.Count)
-            .Select(modelIndex => group.GroupId[modelIndex])))
+    .Select(group => group.GroupId[0] ?? group.GroupId[1] ?? group.GroupId[2] ?? -1)
     .ToArray();
 
 int[] itemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Select(item => ResolveFirstAvailableId(
-        Enumerable.Range(0, item.NodeMeta.Count)
-            .Select(modelIndex => item.ItemId[modelIndex])))
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? item.ItemId[2] ?? -1)
     .ToArray();
 
 int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
     .SelectMany(group => group.Items)
-    .Where(item => IsMismatchedInAnyModel(item.NodeMeta.Count, item.MetricA.GetState))
-    .Select(item => ResolveFirstAvailableId(
-        Enumerable.Range(0, item.NodeMeta.Count)
-            .Select(modelIndex => item.ItemId[modelIndex])))
+    .Where(item => item.MetricA.GetState(0) == ValueState.Mismatched
+        || item.MetricA.GetState(1) == ValueState.Mismatched
+        || item.MetricA.GetState(2) == ValueState.Mismatched)
+    .Select(item => item.ItemId[0] ?? item.ItemId[1] ?? item.ItemId[2] ?? -1)
     .ToArray();
 ```
 
