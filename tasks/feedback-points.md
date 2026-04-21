@@ -4,18 +4,33 @@
 
 ## 2026-04-21
 
-- ユーザー指摘: 実装計画のような重要判断は、より高い推論品質で扱うこと。
+- ユーザー指摘: 実装計画のような重要な判断は、より高性能なモデルで確認すること。
 - 対応:
-  - 重要な計画判断や実装方針の確定時は、軽量な即断を避けて高 reasoning 前提で確認する運用へ更新
-- ユーザー指摘: 次回以降の実装はメインエージェントが担当し、review はルール通り sub-agent で行うこと。
+  - 今後、設計判断・実装計画・方針比較の初回調査には上位モデルを優先し、軽量モデルの結果は補助調査に限定する。
+  - 本件では `T-042` の mini 調査結果を暫定扱いに変更し、上位モデルで計画レビューを取り直す。
+  - 記録起点: ユーザー明示指摘
+  - 重複判定: 新規（既存 feedback に同趣旨なし）
+  - スキル化判断: 既存 skill 運用の強化で対応。現時点では新規 skill 不要
+  - 次アクション対応:
+    - `development-orchestrator` 実行時の重要判断で上位モデルを優先する運用へ切替
+    - 重要な計画判断や実装方針の確定時は、高 reasoning 前提で確認する
+- ユーザー指摘: 実装は main agent が担当し、review のみ sub-agent に委譲すること。
 - 対応:
-  - 実装・編集はメインエージェントが担当し、sub-agent は review 専用で運用する方針を再確認
+  - 以後、この repo では実装作業は main agent が担当し、review は `review-enforcer` に従って sub-agent に委譲する。
+  - `T-042` の実装 sub-agent は停止し、この時点から親側で実装を引き取る。
+  - 記録起点: ユーザー明示指摘
+  - 重複判定: 新規（既存 feedback に同趣旨なし）
+  - スキル化判断: 既存 skill 運用の切替で対応。新規 skill 不要
+  - 次アクション対応:
+    - 以後の実装・編集は main agent が担当し、review だけ sub-agent へ依頼する
 - ユーザー指摘: 明示的に停止指示がない限り、作業を途中で止めないこと。
 - 対応:
-  - 以後は明示停止・方針衝突・安全上の阻害がない限り、task 完了まで継続する
+  - 明示停止・方針衝突・安全上の阻害がない限り、task 完了まで継続する。
+  - 状況報告後も作業継続を既定とし、停止確認のためだけに手を止めない。
 - ユーザー指摘: `feedback-points.md` はユーザーからの開発プロセス指摘を継続的に記録すること。
 - 対応:
-  - process 指摘が出た当日に本ファイルへ追記し、tracking 更新から漏らさない運用を再徹底
+  - process 指摘が出た当日に本ファイルへ追記し、tracking 更新から漏らさない運用を再徹底する。
+  - task 完了報告前に `tasks/feedback-points.md` 追記漏れを確認する。
 
 ## 2026-04-03
 
@@ -371,3 +386,7 @@
 - 対応:
   - Source Generator Example を `Dataset` 3件 / `Group` 2件へ再調整
   - `groupIds` / `itemIds` / `mismatchedItemIds` を `[0] ?? [1] ?? [2]` ベースの明示記法へ統一
+- ユーザー指摘: GitHub Actions の Node.js 20 廃止警告（`checkout/setup-dotnet@v4`）が出ている。
+- 対応:
+  - `.github/workflows/pr-xunit-tests.yml` と `.github/workflows/publish-nuget.yml` の対象 action を `v5` へ更新
+  - 変更内容を `reports/2026-04-05-github-actions-node24-readiness-update.md` に記録

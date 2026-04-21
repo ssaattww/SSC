@@ -63,9 +63,9 @@ internal sealed class DynamicParallelNodeView : DynamicObject
         var property = _internalNode.ModelType.GetProperty(
             binder.Name,
             BindingFlags.Instance | BindingFlags.Public);
-        if (property is not null)
+        if (_internalNode.TryGetMemberNode(binder.Name, out var memberNode) || property is not null)
         {
-            result = DynamicParallelValuePathView.FromMember(_node, property.Name);
+            result = DynamicParallelValuePathView.FromMember(_node, binder.Name, memberNode);
             return true;
         }
 
@@ -169,37 +169,46 @@ internal sealed class DynamicParallelListView : DynamicObject, IReadOnlyList<obj
 
 internal sealed class DynamicParallelValuePathView : DynamicObject
 {
-    private readonly IParallelNode _node;
-    private readonly IParallelNodeInternal _internalNode;
+    private readonly IParallelNode _rootNode;
+    private readonly IParallelNodeInternal _rootInternalNode;
     private readonly string[] _memberPath;
+    private readonly IParallelNode? _materializedNode;
+    private readonly IParallelNodeInternal? _materializedInternalNode;
 
-    private DynamicParallelValuePathView(IParallelNode node, string[] memberPath)
+    private DynamicParallelValuePathView(IParallelNode rootNode, string[] memberPath, IParallelNode? materializedNode)
     {
-        _node = node;
-        _internalNode = (IParallelNodeInternal)node;
+        _rootNode = rootNode;
+        _rootInternalNode = (IParallelNodeInternal)rootNode;
         _memberPath = memberPath;
+        _materializedNode = materializedNode;
+        _materializedInternalNode = materializedNode as IParallelNodeInternal;
     }
 
-    public static DynamicParallelValuePathView FromMember(IParallelNode node, string memberName)
+    public static DynamicParallelValuePathView FromMember(IParallelNode rootNode, string memberName, IParallelNode? materializedNode = null)
     {
-        return new DynamicParallelValuePathView(node, [memberName]);
+        return new DynamicParallelValuePathView(rootNode, [memberName], materializedNode);
     }
 
     public ValueState GetState(int modelIndex)
     {
+        if (_materializedNode is not null)
+        {
+            return _materializedNode.GetState(modelIndex);
+        }
+
         var selectedValue = ResolveValue(modelIndex, out var selectedPresence);
         if (selectedPresence == NodePresenceState.Missing)
         {
             return ValueState.Missing;
         }
 
-        if (_node.Count <= 1)
+        if (_rootNode.Count <= 1)
         {
             return ValueState.Missing;
         }
 
         var matched = true;
-        for (var index = 0; index < _node.Count; index++)
+        for (var index = 0; index < _rootNode.Count; index++)
         {
             if (index == modelIndex)
             {
@@ -232,7 +241,46 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
     {
-        result = new DynamicParallelValuePathView(_node, [.. _memberPath, binder.Name]);
+        if (_materializedNode is not null)
+        {
+            if (binder.Name == "NodeKeyText")
+            {
+                result = _materializedNode.KeyText;
+                return true;
+            }
+
+            if (binder.Name == "NodeCount")
+            {
+                result = _materializedNode.Count;
+                return true;
+            }
+
+            if (_materializedInternalNode?.TryGetChildren(binder.Name, out var childNodes) == true)
+            {
+                result = new DynamicParallelListView(childNodes);
+                return true;
+            }
+
+            if (_materializedInternalNode?.TryGetMemberNode(binder.Name, out var nextMaterializedNode) == true)
+            {
+                result = new DynamicParallelValuePathView(_rootNode, [.. _memberPath, binder.Name], nextMaterializedNode);
+                return true;
+            }
+
+            if (binder.Name == nameof(IParallelNode.KeyText))
+            {
+                result = _materializedNode.KeyText;
+                return true;
+            }
+
+            if (binder.Name == nameof(IParallelNode.Count))
+            {
+                result = _materializedNode.Count;
+                return true;
+            }
+        }
+
+        result = new DynamicParallelValuePathView(_rootNode, [.. _memberPath, binder.Name], materializedNode: null);
         return true;
     }
 
@@ -262,13 +310,13 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
 
     private object? ResolveValue(int modelIndex, out NodePresenceState state)
     {
-        state = _internalNode.GetPresenceState(modelIndex);
+        state = _rootInternalNode.GetPresenceState(modelIndex);
         if (state == NodePresenceState.Missing)
         {
             return null;
         }
 
-        object? current = _node.GetValue(modelIndex);
+        object? current = _rootNode.GetValue(modelIndex);
         if (current is null)
         {
             state = NodePresenceState.PresentNull;

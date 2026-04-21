@@ -33,12 +33,27 @@ public enum ValueState
 4. 比較対象が全て存在し、値が全て等しいなら `Matched`
 5. それ以外は `Mismatched`
 
-### 3.2 Value Path Level (`generated` / `dynamic`)
+### 3.2 Value Path Level
 
-`Property` の最終値を比較対象として同じルールを適用する。
+#### 3.2.1 Dynamic
+
+`AsDynamic()` から辿る `Property` の最終値を比較対象として、node level と同じルールを適用する。
 
 - `null` 同士は一致
 - `null` と非 `null` は不一致
+- T-042 では dynamic value-path `GetState(modelIndex)` の state lookup を compare 時に materialize した member state に切り替える
+- そのため `GetState` 呼び出し中に member getter を再実行してはならない
+- 観測可能な timing change は比較実行時に限定し、getter の副作用や例外は compare / node construction 側へ前倒しされ得る
+- この non-invasive 保証は materialize 済み member に限定する
+- declared type に存在しない runtime-derived 追加メンバーは dynamic access 自体は継続利用できるが、`GetState` は legacy runtime reflection fallback を使うため T-042 の保証対象外とする
+
+#### 3.2.2 Generated
+
+generated projection でも公開 `ValueState` の意味は同じである。
+
+- `null` 同士は一致
+- `null` と非 `null` は不一致
+- ただし T-042 の設計変更範囲は dynamic value path に限定し、generated nested value path の non-invasive `GetState` 化は対象外とする
 
 ## 4. Examples
 
@@ -65,4 +80,3 @@ public enum ValueState
 
 - 公開 API の単純な3状態
 - 比較時の `missing/null/value` 判定精度
-

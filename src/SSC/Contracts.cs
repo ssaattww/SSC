@@ -83,5 +83,7 @@ internal interface IParallelNodeInternal
 
     bool TryGetChildren(string memberName, out IReadOnlyList<IParallelNode> nodes);
 
+    bool TryGetMemberNode(string memberName, out IParallelNode node);
+
     NodePresenceState GetPresenceState(int modelIndex);
 }

@@ -32,8 +32,9 @@
 
 - Status: In Progress
 - Notes:
-  - 現在の着手対象は T-069（compare 実行 trace ログ出力の追加）
+  - 直近の完了タスクは T-069（compare 実行 trace ログ出力の追加）
   - T-069 を完了し、trace callback で container 判定・runtime type・materialize 件数・compare key 解決結果を確認できるようにした
+  - T-042 を完了し、materialize 済み member の `GetState` 非侵襲化、indexer/runtime-derived fallback 契約、side-effect/exception getter 回帰テストを追加
   - 実装着手前に CI/CD 基盤（.github workflows）をリポジトリ構成へ適合化
   - 初版まではテスト workflow のみ有効、release publish は無効化
   - 最小実装スケルトンを基盤に E2E テストを拡張（StringComparison、3 model slot、Issue診断情報、IEnumerable 1回列挙）
@@ -105,6 +106,7 @@
   - README の Source Generator Example を 3 groups 構成へ更新し、同値 `Items` の一致ケースも追記
   - README 掲載方針に合わせ、Source Generator Example を 3 datasets / 2 groups 構成へ再調整
   - Source Generator Example の ID 抽出・不一致抽出を `[0] ?? [1] ?? [2]` の明示記法へ統一
+  - GitHub Actions の Node 20 廃止警告に対応し、`actions/checkout` と `actions/setup-dotnet` を `v5` へ更新
 
 ## Phase 4: 検証・受け入れ
 

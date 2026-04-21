@@ -179,6 +179,29 @@ var nodeCount = root.Groups[0].Items[0].NodeCount; // node slot count
 - `root...Items[index].MetricA[model]` は要素プロパティ値を返す
 - `root...Items[index].NodeCount` / `NodeKeyText` は node メタ情報を返す
 
+### 4.1.1 T-042 Dynamic Value-Path `GetState` Scope
+
+T-042 で設計対象にするのは、`AsDynamic()` から辿る value path の `GetState(modelIndex)` のみである。
+
+- 対象:
+  - `root.Groups[0].Items[0].MetricA.GetState(modelIndex)`
+  - `root.Groups[0].Items[0].Detail.Label.GetState(modelIndex)` のような dynamic nested value path
+- 対象外:
+  - node 自体の `GetState(modelIndex)`
+  - value の indexer 読み取り（`Property[modelIndex]`）
+  - generated projection の nested value path 実装
+
+T-042 の dynamic value-path `GetState` は、compare 時に materialize された member state を参照して判定する。
+そのため、`GetState` 呼び出し中に member getter を再実行してはならない。
+
+この変更で観測可能な差分は getter 評価タイミングに限定される。
+dynamic value-path `GetState` のために必要な getter 評価や例外発生は compare / node construction 時に前倒しされ得るが、
+`GetState` 呼び出し時に追加の getter 実行を発生させない。
+
+上記の non-invasive 保証は、compare 時に materialize 済みの member に適用する。
+declared type に存在しない runtime-derived 追加メンバーは dynamic access 自体は継続利用できるが、
+`GetState` 判定は legacy の runtime reflection fallback を使うため T-042 の保証対象外とする。
+
 深い階層は `Children(...)` を連鎖して辿る。
 
 ```csharp
@@ -211,11 +234,12 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 ```
 
 - generated view は `CompareResult<T>` の compare result node に対してのみ有効
-- generated view で取得する値と state の意味は `AsDynamic()` と同一
+- generated view で取得する公開 `ValueState` の意味は `AsDynamic()` と同一
 - 投影切替の入口は `CompareResult` 拡張に統一する
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
 - Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
 - `SelectModel(modelIndex)` は指定 model で `Missing` でない要素のみを返し、順序は key union 順を維持する
+- T-042 の non-invasive `GetState` 対応は dynamic value path に限定し、generated nested value path の parity はこの task の対象外とする
 
 ## 4.4 Generated Projection Scope (Initial)
 
@@ -246,6 +270,10 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
   - `Missing`: 当該 slot が欠損、または比較対象がない
   - `Matched`: 当該 slot が存在し、比較対象と一致
   - `Mismatched`: 当該 slot が存在し、比較対象と不一致（比較先欠損を含む）
+- T-042 の dynamic value-path `GetState` は compare 時に保持した member state を参照し、状態判定のために getter を再実行しない
+- その結果、dynamic value path で観測される getter の副作用や例外は compare / node construction 時に前倒しされ得る
+- ただし、この non-invasive 保証は materialize 済み member に限定され、runtime-derived 追加メンバーは legacy reflection fallback を利用する
+- generated projection の nested value path は T-042 の対象外であり、この timing 制約は直ちには適用しない
 
 ```csharp
 var metric = items[1][1]?.MetricA;
