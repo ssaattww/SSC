@@ -119,10 +119,59 @@ public static class ParallelCompareApi
             {
                 var children = BuildSequenceChildren(slots, property, elementType, propertyPath, context);
                 node.SetChildren(property.Name, children);
+                continue;
             }
+
+            var memberSlots = BuildMemberSlots(slots, property, propertyPath, context);
+            var memberNode = BuildNode(property.PropertyType, memberSlots, propertyPath, context, keyText: null);
+            node.SetMemberNode(property.Name, memberNode);
         }
 
         return node;
+    }
+
+    private static NodeSlot[] BuildMemberSlots(
+        NodeSlot[] parentSlots,
+        PropertyInfo property,
+        string path,
+        CompareContext context)
+    {
+        var slots = new NodeSlot[parentSlots.Length];
+        for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
+        {
+            if (parentSlots[modelIndex].State == NodePresenceState.Missing)
+            {
+                slots[modelIndex] = NodeSlot.Missing;
+                continue;
+            }
+
+            if (parentSlots[modelIndex].State == NodePresenceState.PresentNull || parentSlots[modelIndex].Value is null)
+            {
+                slots[modelIndex] = NodeSlot.PresentNull;
+                continue;
+            }
+
+            object? value;
+            try
+            {
+                value = property.GetValue(parentSlots[modelIndex].Value);
+            }
+            catch (Exception ex)
+            {
+                context.RecordExecutionError(
+                    CompareIssueCode.ReflectionMetadataBuildFailed,
+                    path,
+                    modelIndex,
+                    null,
+                    $"failed to get property '{property.Name}': {ex.Message}");
+                slots[modelIndex] = NodeSlot.Missing;
+                continue;
+            }
+
+            slots[modelIndex] = value is null ? NodeSlot.PresentNull : NodeSlot.PresentValue(value);
+        }
+
+        return slots;
     }
 
     private static IReadOnlyList<IParallelNode> BuildDictionaryChildren(

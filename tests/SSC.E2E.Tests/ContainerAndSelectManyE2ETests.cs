@@ -240,6 +240,166 @@ public sealed class ContainerAndSelectManyE2ETests
     }
 
     [Fact]
+    public void Compare_DynamicProjection_NestedValuePathGetState_DoesNotInvokeGetterDuringCall()
+    {
+        // Intent: dynamic nested value path の GetState は state lookup 中に getter を再実行しない。
+        var leftCounter = new GetterInvocationCounter();
+        var rightCounter = new GetterInvocationCounter();
+        var models = new[]
+        {
+            new SideEffectDataset
+            {
+                Items =
+                [
+                    new SideEffectItem
+                    {
+                        ItemId = 100,
+                        Detail = new SideEffectDetail(leftCounter, "left"),
+                    },
+                ],
+            },
+            new SideEffectDataset
+            {
+                Items =
+                [
+                    new SideEffectItem
+                    {
+                        ItemId = 100,
+                        Detail = new SideEffectDetail(rightCounter, "right"),
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.AsDynamic()!;
+        var invocationCountBeforeGetState = leftCounter.Count + rightCounter.Count;
+
+        var state = (ValueState)root.Items[0].Detail.Label.GetState(0);
+
+        Assert.Equal(ValueState.Mismatched, state);
+        Assert.Equal(invocationCountBeforeGetState, leftCounter.Count + rightCounter.Count);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_NestedValuePathGetState_DoesNotRethrowGetterException()
+    {
+        // Intent: getter 例外は compare 側へ閉じ込め、GetState 呼び出しで再送出しない。
+        var models = new[]
+        {
+            new ExceptionDataset
+            {
+                Items =
+                [
+                    new ExceptionItem
+                    {
+                        ItemId = 100,
+                        Detail = new ExceptionDetail("boom-left"),
+                    },
+                ],
+            },
+            new ExceptionDataset
+            {
+                Items =
+                [
+                    new ExceptionItem
+                    {
+                        ItemId = 100,
+                        Detail = new ExceptionDetail("boom-right"),
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.AsDynamic()!;
+
+        var exception = Record.Exception(() => _ = (ValueState)root.Items[0].Detail.Label.GetState(0));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_NestedValuePathIndexer_StillInvokesGetterOnAccess()
+    {
+        // Intent: value indexer 読み取りは T-042 の対象外であり、アクセス時に getter を評価する。
+        var leftCounter = new GetterInvocationCounter();
+        var rightCounter = new GetterInvocationCounter();
+        var models = new[]
+        {
+            new SideEffectDataset
+            {
+                Items =
+                [
+                    new SideEffectItem
+                    {
+                        ItemId = 100,
+                        Detail = new SideEffectDetail(leftCounter, "left"),
+                    },
+                ],
+            },
+            new SideEffectDataset
+            {
+                Items =
+                [
+                    new SideEffectItem
+                    {
+                        ItemId = 100,
+                        Detail = new SideEffectDetail(rightCounter, "right"),
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.AsDynamic()!;
+        var invocationCountBeforeAccess = leftCounter.Count + rightCounter.Count;
+
+        var value = (string?)root.Items[0].Detail.Label[0];
+
+        Assert.Equal("left", value);
+        Assert.True(leftCounter.Count + rightCounter.Count > invocationCountBeforeAccess);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_NestedValuePath_AllowsRuntimeDerivedMemberAccess()
+    {
+        // Intent: declared type に無い runtime member でも dynamic nested access は継続利用できる。
+        var models = new[]
+        {
+            new DerivedDetailDataset
+            {
+                Items =
+                [
+                    new DerivedDetailItem
+                    {
+                        ItemId = 100,
+                        Detail = new DerivedDetailLeaf { Label = "left" },
+                    },
+                ],
+            },
+            new DerivedDetailDataset
+            {
+                Items =
+                [
+                    new DerivedDetailItem
+                    {
+                        ItemId = 100,
+                        Detail = new DerivedDetailLeaf { Label = "right" },
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.AsDynamic()!;
+
+        var state = (ValueState)root.Items[0].Detail.Label.GetState(0);
+
+        Assert.Equal(ValueState.Mismatched, state);
+    }
+
+    [Fact]
     public void Compare_DynamicProjection_PrefersModelMember_WhenNameCollidesWithNodeMeta()
     {
         // Intent: モデル側に Count/KeyText がある場合は、そちらの値アクセスを優先する。
@@ -607,6 +767,73 @@ public sealed class ContainerAndSelectManyE2ETests
     }
 
     public sealed class NullableDetail
+    {
+        public string? Label { get; init; }
+    }
+
+    public sealed class SideEffectDataset
+    {
+        public List<SideEffectItem> Items { get; init; } = [];
+    }
+
+    public sealed class SideEffectItem
+    {
+        [CompareKey]
+        public int ItemId { get; init; }
+
+        public SideEffectDetail Detail { get; init; } = null!;
+    }
+
+    public sealed class SideEffectDetail(GetterInvocationCounter counter, string? label)
+    {
+        public string? Label => counter.Record(label);
+    }
+
+    public sealed class ExceptionDataset
+    {
+        public List<ExceptionItem> Items { get; init; } = [];
+    }
+
+    public sealed class ExceptionItem
+    {
+        [CompareKey]
+        public int ItemId { get; init; }
+
+        public ExceptionDetail Detail { get; init; } = null!;
+    }
+
+    public sealed class ExceptionDetail(string message)
+    {
+        public string? Label => throw new InvalidOperationException(message);
+    }
+
+    public sealed class GetterInvocationCounter
+    {
+        public int Count { get; private set; }
+
+        public string? Record(string? value)
+        {
+            Count++;
+            return value;
+        }
+    }
+
+    public sealed class DerivedDetailDataset
+    {
+        public List<DerivedDetailItem> Items { get; init; } = [];
+    }
+
+    public sealed class DerivedDetailItem
+    {
+        [CompareKey]
+        public int ItemId { get; init; }
+
+        public DetailBase Detail { get; init; } = null!;
+    }
+
+    public abstract class DetailBase;
+
+    public sealed class DerivedDetailLeaf : DetailBase
     {
         public string? Label { get; init; }
     }

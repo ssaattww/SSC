@@ -51,6 +51,13 @@
 - Scalar: slot 配列作成
 - Object: 子ノードを再帰構築
 - Container: phase4 へ委譲
+- T-042 では dynamic value-path `GetState` 用に、comparable な non-container member も internal member node として materialize できるようにする
+
+補足:
+
+- 上記 member node のための getter 評価は compare / node construction 中に発生し得る
+- T-042 の設計では、dynamic value-path `GetState` は materialize 済み member state を読むだけにし、state lookup 中に getter を再実行しない
+- generated projection の nested value path を同じ経路へ統一する作業は T-042 の対象外
 
 出力: `Parallel<T>`
 
