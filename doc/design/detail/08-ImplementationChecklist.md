@@ -58,3 +58,9 @@
 33. `AsDynamic()` の既存挙動が回帰していないか
 34. 複数 namespace / nested type / internal type で生成コードがコンパイルできるか
 35. `Count/KeyText` 衝突系と nullable value-path 系で dynamic 回帰がないか
+
+## 9. Difference Traversal
+
+36. `HasDifferences()` が leaf/object/container の各 node で subtree 差分を正しく判定するか
+37. `GetDirectChildren()` が scalar/object member を `Nodes.Count == 1`、container member を正規化済み child 集合として返すか
+38. `GetDirectChildren()` の `ParallelChildSet` 順序と `Nodes` 順序が既存 property / key union 契約を崩していないか

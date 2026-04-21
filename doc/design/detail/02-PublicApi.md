@@ -31,6 +31,30 @@ public interface Parallel<T>
 ```
 
 ```csharp
+public interface IParallelNode
+{
+    int Count { get; }
+    bool AllPresent { get; }
+    bool AnyPresent { get; }
+    string? KeyText { get; }
+    object? GetValue(int modelIndex);
+    ValueState GetState(int modelIndex);
+    bool HasDifferences();
+    IReadOnlyList<ParallelChildSet> GetDirectChildren();
+}
+
+public readonly struct ParallelChildSet
+{
+    public string Name { get; }
+    public IReadOnlyList<IParallelNode> Nodes { get; }
+    public bool HasDifferences { get; }
+}
+```
+
+- `IParallelNode` は既存の公開 interface であり、T-070 の `HasDifferences()` / `GetDirectChildren()` 追加は外部実装者に対する breaking change となる
+- 上記 breaking change は `Design/BreakingChanges.md` に記録する
+
+```csharp
 public interface ParallelDataset : Parallel<Dataset>
 {
     IEnumerable<ParallelGroup> Groups { get; }
@@ -76,8 +100,39 @@ internal static class DatasetGeneratedViewExtensions
 - generated list index の範囲外アクセスも `ModelIndexOutOfRange`
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
+- `HasDifferences()` は current node 自体、または配下 subtree のいずれかに差分があれば `true`
+- `GetDirectChildren()` は current node の直下 property を `ParallelChildSet` 単位で返す
 
-## 4.0 Source Dataset Example
+### 4.0 Direct Child Traversal Contract
+
+`GetDirectChildren()` は「ユーザーが自前で再帰を書くための最小探索プリミティブ」として定義する。
+
+- 返却順:
+  - `ParallelChildSet` の順序は comparable property の順序に従う
+  - 各 `ParallelChildSet.Nodes` の順序は既存 child access の順序に従う
+  - container member では key union / 正規化済み要素順を維持する
+- 返却形:
+  - scalar/object member は `Nodes.Count == 1`
+  - `List` / `Array` / `IEnumerable` / `Dictionary` は正規化済み要素 node 群を `Nodes` に格納する
+- `HasDifferences` はその property 自体または `Nodes` 配下に差分がある場合に `true`
+- `Name` は source model の property 名そのものを使う
+- child を持たない node は空配列を返す
+- 親参照は公開しない。必要な再帰・path 組み立てはユーザー側で `Name` と `IParallelNode` を使って行う
+- `Name` だけでは container member 配下の複数 child を一意化できないため、path 表現が必要な場合は `childSet.Name` に child 側の識別子を付けて segment を作る
+- container member の segment は `child.KeyText` がある場合はそれを優先し、無い場合だけ同一 `ParallelChildSet.Nodes` 内の ordinal index を fallback とする
+- 推奨表現は `Items[100]` / `Items[A]` / `Items[#0]` のような `Name[discriminator]` 形式とする
+
+`HasDifferences()` は単なる object slot の参照等価には依存しない独立プリミティブとする。
+
+- leaf/value node では各 model slot の比較結果を使う
+- object/container node では direct member node と normalized child node を再帰的に調べる
+- object/container node 自身については object 参照等価を使わず、各 model slot の presence category（`Missing` / `PresentNull` / `PresentValue`）だけを比較する
+- object/container node は「自身の presence category が model 間で揃っていない」または「いずれかの子孫 node が差分あり」のどちらかで `true`
+- 判定基準は「self presence mismatch または subtree 内のいずれかの node に `ValueState.Mismatched` が存在するか」とする
+- `Missing` のみで構成された subtree は差分ありとはみなさない
+- 1 model 入力では比較対象がないため `false`
+
+## 4.1 Source Dataset Example
 
 `Children(...)` のアクセス例がどの入力データを前提にしているかを明示するため、
 比較前の元データセット例を以下に示す。
@@ -139,7 +194,7 @@ var models = new[]
 
 この入力では `GroupId=1` が対応し、`Items` は `ItemId` の union（`100, 200, 300`）で揃う。
 
-## 4.1 Container Member Access Pattern (Current API)
+## 4.2 Container Member Access Pattern (Current API)
 
 現行 API では、コンテナ要素は型付き selector の `Children(...)` で取得できる。
 既存の `GetChildren<TElement>(memberName)` も後方互換として利用可能。
@@ -179,7 +234,49 @@ var nodeCount = root.Groups[0].Items[0].NodeCount; // node slot count
 - `root...Items[index].MetricA[model]` は要素プロパティ値を返す
 - `root...Items[index].NodeCount` / `NodeKeyText` は node メタ情報を返す
 
-### 4.1.1 T-042 Dynamic Value-Path `GetState` Scope
+### 4.2.1 Direct Child Traversal Example
+
+`GetDirectChildren()` は通常の node 型で直下 member を辿るための共通面として使う。
+
+```csharp
+IParallelNode rootNode = (IParallelNode)Assert.IsType<ParallelNode<Dataset>>(result.Root);
+
+var diffChildren = rootNode
+    .GetDirectChildren()
+    .Where(child => child.HasDifferences)
+    .ToList();
+```
+
+```csharp
+static IEnumerable<(string Path, IParallelNode Node)> Walk(IParallelNode node, string path)
+{
+    foreach (ParallelChildSet childSet in node.GetDirectChildren())
+    {
+        for (var childIndex = 0; childIndex < childSet.Nodes.Count; childIndex++)
+        {
+            IParallelNode child = childSet.Nodes[childIndex];
+            var segment = childSet.Nodes.Count == 1
+                ? childSet.Name
+                : $"{childSet.Name}[{child.KeyText ?? $"#{childIndex}"}]";
+            var childPath = string.IsNullOrEmpty(path) ? segment : $"{path}.{segment}";
+            yield return (childPath, child);
+
+            foreach (var descendant in Walk(child, childPath))
+            {
+                yield return descendant;
+            }
+        }
+    }
+}
+```
+
+- ライブラリは再帰 API を持たず、ユーザー側が `yield return` や LINQ で探索を組み立てる
+- 探索対象 node は通常アクセスと同じ `IParallelNode` で統一する
+- empty container のように `Nodes.Count == 0` でも property 差分があり得るため、direct traversal の一次判定には `ParallelChildSet.HasDifferences` を使う
+- scalar/object member は `Name` だけで一意化し、container member は `Name[discriminator]` で一意化する
+- container child の discriminator は `KeyText` 優先、`KeyText == null` のときだけ `#<ordinal>` fallback を使う
+
+### 4.2.2 T-042 Dynamic Value-Path `GetState` Scope
 
 T-042 で設計対象にするのは、`AsDynamic()` から辿る value path の `GetState(modelIndex)` のみである。
 

@@ -102,8 +102,9 @@ public static class ParallelCompareApi
                 : default;
         }
 
-        var node = new ParallelNode<TNode>(typedValues, states, keyText);
-        if (IsScalarType(typeof(TNode)))
+        var isScalarNode = IsScalarType(typeof(TNode));
+        var node = new ParallelNode<TNode>(typedValues, states, keyText, isScalarNode);
+        if (isScalarNode)
         {
             if (context.IsTraceEnabled)
             {
@@ -129,14 +130,16 @@ public static class ParallelCompareApi
                     ("container", GetContainerCategory(property.PropertyType)));
             }
 
+            var memberSlots = BuildMemberSlots(slots, property, propertyPath, context);
+
             if (TryGetDictionaryTypes(property.PropertyType, out var keyType, out var elementType))
             {
                 if (context.IsTraceEnabled)
                 {
                     context.Trace("metadata", propertyPath, ("keyType", keyType), ("valueType", elementType));
                 }
-                var children = BuildDictionaryChildren(slots, property, keyType, elementType, propertyPath, context);
-                node.SetChildren(property.Name, children);
+                var children = BuildDictionaryChildren(memberSlots, keyType, elementType, propertyPath, context);
+                node.SetChildren(property.Name, children, memberSlots.Select(slot => slot.State).ToArray());
                 continue;
             }
 
@@ -146,12 +149,11 @@ public static class ParallelCompareApi
                 {
                     context.Trace("metadata", propertyPath, ("elementType", elementType));
                 }
-                var children = BuildSequenceChildren(slots, property, elementType, propertyPath, context);
-                node.SetChildren(property.Name, children);
+                var children = BuildSequenceChildren(memberSlots, property.PropertyType, elementType, propertyPath, context);
+                node.SetChildren(property.Name, children, memberSlots.Select(slot => slot.State).ToArray());
                 continue;
             }
 
-            var memberSlots = BuildMemberSlots(slots, property, propertyPath, context);
             var memberNode = BuildNode(property.PropertyType, memberSlots, propertyPath, context, keyText: null);
             node.SetMemberNode(property.Name, memberNode);
         }
@@ -204,41 +206,26 @@ public static class ParallelCompareApi
     }
 
     private static IReadOnlyList<IParallelNode> BuildDictionaryChildren(
-        NodeSlot[] parentSlots,
-        PropertyInfo property,
+        NodeSlot[] containerSlots,
         Type keyType,
         Type elementType,
         string path,
         CompareContext context)
     {
         var comparer = new KeyComparer(keyType, context.Configuration.StringKeyComparison);
-        var maps = new Dictionary<object, object?>[parentSlots.Length];
+        var maps = new Dictionary<object, object?>[containerSlots.Length];
         var union = new HashSet<object>(comparer);
         var keyTexts = new Dictionary<object, string>(comparer);
 
-        for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
+        for (var modelIndex = 0; modelIndex < containerSlots.Length; modelIndex++)
         {
             maps[modelIndex] = new Dictionary<object, object?>(comparer);
-            if (parentSlots[modelIndex].State != NodePresenceState.PresentValue || parentSlots[modelIndex].Value is null)
+            if (containerSlots[modelIndex].State != NodePresenceState.PresentValue || containerSlots[modelIndex].Value is null)
             {
                 continue;
             }
 
-            object? rawContainer;
-            try
-            {
-                rawContainer = property.GetValue(parentSlots[modelIndex].Value);
-            }
-            catch (Exception ex)
-            {
-                context.RecordExecutionError(
-                    CompareIssueCode.ReflectionMetadataBuildFailed,
-                    path,
-                    modelIndex,
-                    null,
-                    $"failed to get dictionary property '{property.Name}': {ex.Message}");
-                continue;
-            }
+            var rawContainer = containerSlots[modelIndex].Value;
 
             if (rawContainer is null)
             {
@@ -301,8 +288,8 @@ public static class ParallelCompareApi
         var children = new List<IParallelNode>(orderedKeys.Length);
         foreach (var key in orderedKeys)
         {
-            var slots = new NodeSlot[parentSlots.Length];
-            for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
+            var slots = new NodeSlot[containerSlots.Length];
+            for (var modelIndex = 0; modelIndex < containerSlots.Length; modelIndex++)
             {
                 if (!maps[modelIndex].TryGetValue(key, out var value))
                 {
@@ -326,8 +313,8 @@ public static class ParallelCompareApi
     }
 
     private static IReadOnlyList<IParallelNode> BuildSequenceChildren(
-        NodeSlot[] parentSlots,
-        PropertyInfo property,
+        NodeSlot[] containerSlots,
+        Type containerType,
         Type elementType,
         string path,
         CompareContext context)
@@ -344,7 +331,7 @@ public static class ParallelCompareApi
             return Array.Empty<IParallelNode>();
         }
 
-        var containerCategory = GetContainerCategory(property.PropertyType);
+        var containerCategory = GetContainerCategory(containerType);
         if (context.IsTraceEnabled)
         {
             context.Trace(
@@ -357,33 +344,19 @@ public static class ParallelCompareApi
 
         var keyType = compareKeyProperty.PropertyType;
         var comparer = new KeyComparer(keyType, context.Configuration.StringKeyComparison);
-        var maps = new Dictionary<object, object?>[parentSlots.Length];
+        var maps = new Dictionary<object, object?>[containerSlots.Length];
         var union = new HashSet<object>(comparer);
         var keyTexts = new Dictionary<object, string>(comparer);
 
-        for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
+        for (var modelIndex = 0; modelIndex < containerSlots.Length; modelIndex++)
         {
             maps[modelIndex] = new Dictionary<object, object?>(comparer);
-            if (parentSlots[modelIndex].State != NodePresenceState.PresentValue || parentSlots[modelIndex].Value is null)
+            if (containerSlots[modelIndex].State != NodePresenceState.PresentValue || containerSlots[modelIndex].Value is null)
             {
                 continue;
             }
 
-            object? rawContainer;
-            try
-            {
-                rawContainer = property.GetValue(parentSlots[modelIndex].Value);
-            }
-            catch (Exception ex)
-            {
-                context.RecordExecutionError(
-                    CompareIssueCode.ReflectionMetadataBuildFailed,
-                    path,
-                    modelIndex,
-                    null,
-                    $"failed to get sequence property '{property.Name}': {ex.Message}");
-                continue;
-            }
+            var rawContainer = containerSlots[modelIndex].Value;
 
             if (rawContainer is null)
             {
@@ -489,8 +462,8 @@ public static class ParallelCompareApi
         var children = new List<IParallelNode>(orderedKeys.Length);
         foreach (var key in orderedKeys)
         {
-            var slots = new NodeSlot[parentSlots.Length];
-            for (var modelIndex = 0; modelIndex < parentSlots.Length; modelIndex++)
+            var slots = new NodeSlot[containerSlots.Length];
+            for (var modelIndex = 0; modelIndex < containerSlots.Length; modelIndex++)
             {
                 if (!maps[modelIndex].TryGetValue(key, out var value))
                 {

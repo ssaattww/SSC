@@ -4,13 +4,17 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
 {
     private readonly T?[] _values;
     private readonly NodePresenceState[] _states;
+    private readonly bool _isScalarNode;
     private readonly Dictionary<string, IReadOnlyList<IParallelNode>> _children = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, NodePresenceState[]> _containerPresenceStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IParallelNode> _memberNodes = new(StringComparer.Ordinal);
+    private readonly List<string> _directChildOrder = [];
 
-    internal ParallelNode(T?[] values, NodePresenceState[] states, string? keyText)
+    internal ParallelNode(T?[] values, NodePresenceState[] states, string? keyText, bool isScalarNode = false)
     {
         _values = values;
         _states = states;
+        _isScalarNode = isScalarNode;
         KeyText = keyText;
     }
 
@@ -52,7 +56,7 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
                     : NodePresenceState.PresentValue;
         }
 
-        return new ParallelNode<T>(values.ToArray(), presenceStates, keyText);
+        return new ParallelNode<T>(values.ToArray(), presenceStates, keyText, isScalarNode: true);
     }
 
     public ValueState GetState(int modelIndex)
@@ -106,6 +110,87 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         return _states[modelIndex] == NodePresenceState.PresentValue ? _values[modelIndex] : null;
     }
 
+    public bool HasDifferences()
+    {
+        if (_states.Length <= 1)
+        {
+            return false;
+        }
+
+        if (_isScalarNode)
+        {
+            for (var modelIndex = 0; modelIndex < _states.Length; modelIndex++)
+            {
+                if (GetState(modelIndex) == ValueState.Mismatched)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (HasPresenceMismatch(_states))
+        {
+            return true;
+        }
+
+        foreach (var containerPresenceStates in _containerPresenceStates.Values)
+        {
+            if (HasPresenceMismatch(containerPresenceStates))
+            {
+                return true;
+            }
+        }
+
+        foreach (var memberNode in _memberNodes.Values)
+        {
+            if (memberNode.HasDifferences())
+            {
+                return true;
+            }
+        }
+
+        foreach (var childNodes in _children.Values)
+        {
+            foreach (var childNode in childNodes)
+            {
+                if (childNode.HasDifferences())
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public IReadOnlyList<ParallelChildSet> GetDirectChildren()
+    {
+        if (_directChildOrder.Count == 0)
+        {
+            return Array.Empty<ParallelChildSet>();
+        }
+
+        var childSets = new ParallelChildSet[_directChildOrder.Count];
+        for (var index = 0; index < _directChildOrder.Count; index++)
+        {
+            var memberName = _directChildOrder[index];
+            if (_memberNodes.TryGetValue(memberName, out var memberNode))
+            {
+                childSets[index] = new ParallelChildSet(memberName, [memberNode], memberNode.HasDifferences());
+                continue;
+            }
+
+            var childNodes = _children[memberName];
+            var hasDifferences = HasPresenceMismatch(_containerPresenceStates[memberName])
+                || childNodes.Any(node => node.HasDifferences());
+            childSets[index] = new ParallelChildSet(memberName, childNodes, hasDifferences);
+        }
+
+        return childSets;
+    }
+
     internal NodePresenceState GetPresenceState(int modelIndex)
     {
         ValidateIndex(modelIndex);
@@ -139,14 +224,44 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         return GetPresenceState(modelIndex);
     }
 
-    internal void SetChildren(string memberName, IReadOnlyList<IParallelNode> nodes)
+    internal void SetChildren(string memberName, IReadOnlyList<IParallelNode> nodes, IReadOnlyList<NodePresenceState> presenceStates)
     {
+        RegisterDirectChild(memberName);
         _children[memberName] = nodes;
+        _containerPresenceStates[memberName] = [.. presenceStates];
     }
 
     internal void SetMemberNode(string memberName, IParallelNode node)
     {
+        RegisterDirectChild(memberName);
         _memberNodes[memberName] = node;
+    }
+
+    private void RegisterDirectChild(string memberName)
+    {
+        if (!_directChildOrder.Contains(memberName, StringComparer.Ordinal))
+        {
+            _directChildOrder.Add(memberName);
+        }
+    }
+
+    private static bool HasPresenceMismatch(IReadOnlyList<NodePresenceState> states)
+    {
+        if (states.Count <= 1)
+        {
+            return false;
+        }
+
+        var firstState = states[0];
+        for (var index = 1; index < states.Count; index++)
+        {
+            if (states[index] != firstState)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void ValidateIndex(int modelIndex)

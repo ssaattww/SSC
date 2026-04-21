@@ -12,6 +12,35 @@
 
 ## Done
 
+- T-071: 差分子要素探索 API の core 実装
+  - Status: 完了（traversal API 実装、empty container 差分の childSet discoverability 対応、verification/review 完了）
+  - Depends on:
+    - T-070 差分のある直下子要素を特定する探索 API 追加
+  - Estimate: M
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-071-tdd-failing-tests-20260421184218.md`
+    - `reports/task-t-071-implementation-20260421184629.md`
+    - `reports/task-t-071-verification-20260421184629.md`
+    - `reports/task-t-071-review-20260421184629.md`
+
+- T-070: 差分のある直下子要素を特定する探索 API 追加
+  - Status: 完了（設計反映と review 指摘対応を完了し、breaking change / self-diff / path 識別契約を確定）
+  - Estimate: S
+  - Output:
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-070-design-update-20260421171940.md`
+    - `reports/task-t-070-review-20260421182948.md`
+
 - T-069: compare 実行 trace ログ出力の追加
   - Status: 完了（trace callback で container 判定と内部進行を確認可能化）
   - Output:

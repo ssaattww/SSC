@@ -447,6 +447,145 @@ public sealed class CompareApiE2ETests
         Assert.Equal(300, items[2][1]?.Value);
     }
 
+    [Fact]
+    public void Compare_WithObjectAndContainerMembers_GetDirectChildrenPreservesPropertyOrderAndShapes()
+    {
+        // Intent: GetDirectChildren は property 順を維持し、object member と container member を既存アクセス形に沿って返す。
+        var models = new[]
+        {
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 1 },
+                Items =
+                [
+                    new KeyedItem { Id = 2, Value = 20 },
+                ],
+            },
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 1 },
+                Items =
+                [
+                    new KeyedItem { Id = 1, Value = 10 },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+
+        var childSets = root.GetDirectChildren();
+
+        Assert.Equal(["Detail", "Items"], childSets.Select(child => child.Name).ToArray());
+        Assert.False(childSets[0].HasDifferences);
+        Assert.True(childSets[1].HasDifferences);
+        Assert.Single(childSets[0].Nodes);
+        Assert.Equal(["1", "2"], childSets[1].Nodes.Select(node => node.KeyText).ToArray());
+    }
+
+    [Fact]
+    public void Compare_WithEmptyObjectMissingOnOneSide_HasDifferencesTreatsPresenceMismatchAsDifference()
+    {
+        // Intent: 子要素を持たない object member でも、片側 Missing は self presence mismatch として差分扱いにする。
+        var models = new[]
+        {
+            new OptionalObjectRoot { Detail = new EmptyDetail() },
+            new OptionalObjectRoot { Detail = null },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+
+        var detailChild = Assert.Single(root.GetDirectChildren());
+        var detailNode = Assert.Single(detailChild.Nodes);
+
+        Assert.True(detailChild.HasDifferences);
+        Assert.True(detailNode.HasDifferences());
+        Assert.True(root.HasDifferences());
+        Assert.Empty(detailNode.GetDirectChildren());
+    }
+
+    [Fact]
+    public void Compare_WithNestedLeafMismatch_HasDifferencesPropagatesToAncestorNodes()
+    {
+        // Intent: leaf の不一致は member node を経由して ancestor node まで伝播する。
+        var models = new[]
+        {
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 1 },
+            },
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 9 },
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+
+        var detailNode = Assert.Single(root.GetDirectChildren().Single(child => child.Name == nameof(TraversalRoot.Detail)).Nodes);
+        var valueNode = Assert.Single(detailNode.GetDirectChildren().Single(child => child.Name == nameof(TraversalDetail.Value)).Nodes);
+
+        Assert.True(valueNode.HasDifferences());
+        Assert.True(detailNode.HasDifferences());
+        Assert.True(root.HasDifferences());
+    }
+
+    [Fact]
+    public void Compare_WithEmptyContainerMissingOnOneSide_HasDifferencesUsesContainerPresenceMismatch()
+    {
+        // Intent: child 要素が 0 件でも、container member 自体の presence mismatch は親 node 差分として検出する。
+        var models = new[]
+        {
+            new OptionalContainerRoot
+            {
+                Items = [],
+            },
+            new OptionalContainerRoot
+            {
+                Items = null,
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+
+        var itemsChild = Assert.Single(root.GetDirectChildren());
+
+        Assert.Equal(nameof(OptionalContainerRoot.Items), itemsChild.Name);
+        Assert.True(itemsChild.HasDifferences);
+        Assert.Empty(itemsChild.Nodes);
+        Assert.True(root.HasDifferences());
+    }
+
+    [Fact]
+    public void Compare_WithEmptyDictionaryMissingOnOneSide_HasDifferencesUsesChildSetSignal()
+    {
+        // Intent: dictionary 系でも empty container 差分を childSet 側の HasDifferences で観測できる。
+        var models = new[]
+        {
+            new OptionalDictionaryRoot
+            {
+                Scores = [],
+            },
+            new OptionalDictionaryRoot
+            {
+                Scores = null,
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+
+        var scoresChild = Assert.Single(root.GetDirectChildren());
+
+        Assert.Equal(nameof(OptionalDictionaryRoot.Scores), scoresChild.Name);
+        Assert.True(scoresChild.HasDifferences);
+        Assert.Empty(scoresChild.Nodes);
+        Assert.True(root.HasDifferences());
+    }
+
     public sealed class SimpleRoot
     {
         public int Value { get; init; }
@@ -495,6 +634,28 @@ public sealed class CompareApiE2ETests
         public List<NullableKeyedItem> Items { get; init; } = [];
     }
 
+    public sealed class TraversalRoot
+    {
+        public TraversalDetail? Detail { get; init; }
+
+        public List<KeyedItem> Items { get; init; } = [];
+    }
+
+    public sealed class OptionalObjectRoot
+    {
+        public EmptyDetail? Detail { get; init; }
+    }
+
+    public sealed class OptionalContainerRoot
+    {
+        public List<KeyedItem>? Items { get; init; }
+    }
+
+    public sealed class OptionalDictionaryRoot
+    {
+        public Dictionary<string, int>? Scores { get; init; }
+    }
+
     public sealed class NonKeyedItem
     {
         public int Value { get; init; }
@@ -522,6 +683,15 @@ public sealed class CompareApiE2ETests
         public string? Id { get; init; }
 
         public int Value { get; init; }
+    }
+
+    public sealed class TraversalDetail
+    {
+        public int Value { get; init; }
+    }
+
+    public sealed class EmptyDetail
+    {
     }
 
     private sealed class CountingEnumerable<T>(IReadOnlyList<T> items) : IEnumerable<T>
