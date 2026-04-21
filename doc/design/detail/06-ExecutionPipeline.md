@@ -33,7 +33,7 @@
 - container 種別判定
 - CompareKey 抽出ルール構築
 - `CompareIgnore` 付与メンバーを除外
-- trace 有効時は property ごとの declared type と container category を記録
+- trace 有効時は property ごとのプロパティ宣言型と container category を記録
 
 反射対象ポリシー:
 
@@ -52,13 +52,14 @@
 - Scalar: slot 配列作成
 - Object: 子ノードを再帰構築
 - Container: phase4 へ委譲
-- T-042 では dynamic value-path `GetState` 用に、comparable な non-container member も internal member node として materialize できるようにする
+- dynamic value-path `GetState` 用に、比較可能な non-container member も internal member node として compare 時に事前構築できるようにする
 
 補足:
 
 - 上記 member node のための getter 評価は compare / node construction 中に発生し得る
-- T-042 の設計では、dynamic value-path `GetState` は materialize 済み member state を読むだけにし、state lookup 中に getter を再実行しない
-- generated projection の nested value path を同じ経路へ統一する作業は T-042 の対象外
+- dynamic value-path `GetState` は、事前構築済み member については保存済み member state を読むだけにし、state lookup 中に getter を再実行しない
+- プロパティ宣言型に無い実行時専用メンバーは、この事前構築の対象外であり、必要時は呼び出し時の反射による代替解決を使う
+- generated projection の nested value path を同じ経路へ統一する作業は、この設計範囲に含めない
 
 trace 有効時は path 単位で次を記録する。
 
@@ -74,13 +75,13 @@ trace 有効時は path 単位で次を記録する。
 
 1. Dictionary
 2. List/Array
-3. IEnumerable（1回 materialize 後に再判定）
+3. IEnumerable（1回実体化した後に再判定）
 
 trace 有効時は次も記録する。
 
-- declared type 上の分類結果
+- プロパティ宣言型上の分類結果
 - runtime type
-- `IEnumerable` materialize 件数
+- `IEnumerable` 実体化件数
 - compare key 解決結果
 - issue 記録や skip 判定
 

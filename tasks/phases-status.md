@@ -32,7 +32,8 @@
 
 - Status: In Progress
 - Notes:
-  - 現在タスクはなし（T-073 完了、次タスク未選定）
+  - 現在タスクはなし（T-074 完了、次タスク未選定）
+  - T-074 を完了し、dynamic `GetState` の保証範囲を issue/task 番号に依存しない日本語で説明し、runtime-only member/container の例を追記した
   - T-073 を完了し、`AsDynamic()` で runtime-derived な `List` member が `DynamicParallelValuePathView` へ落ちる経路を修正した
   - T-072 を完了し、class object の child/member が一致しているのに node-level `GetState` が `Mismatched` になる誤判定を修正した
   - T-070 は設計タスクとして完了し、`IParallelNode` 追加 API の breaking change / self-diff / path 識別契約を確定した
