@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-04-05
+- Updated: 2026-04-21
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -32,6 +32,8 @@
 
 - Status: In Progress
 - Notes:
+  - 現在の着手対象は T-069（compare 実行 trace ログ出力の追加）
+  - T-069 を完了し、trace callback で container 判定・runtime type・materialize 件数・compare key 解決結果を確認できるようにした
   - 実装着手前に CI/CD 基盤（.github workflows）をリポジトリ構成へ適合化
   - 初版まではテスト workflow のみ有効、release publish は無効化
   - 最小実装スケルトンを基盤に E2E テストを拡張（StringComparison、3 model slot、Issue診断情報、IEnumerable 1回列挙）

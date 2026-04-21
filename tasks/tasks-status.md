@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-04-05
+- Updated: 2026-04-21
 
 ## In Progress
 
@@ -15,6 +15,20 @@
     - 副作用 getter / 例外 getter モデルでの安全性テストを追加
 
 ## Done
+
+- T-069: compare 実行 trace ログ出力の追加
+  - Status: 完了（trace callback で container 判定と内部進行を確認可能化）
+  - Output:
+    - `src/SSC/CompareConfiguration.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `README.md`
+    - `reports/task-t-069-implementation-20260421111613.md`
+    - `reports/task-t-069-review-20260421111652.md`
+    - `reports/task-t-069-review-rerun-20260421112615.md`
 
 - T-067: README Source Generator 例の構成・記法再調整
   - Status: 完了（`Dataset` 3件・`Group` 2件へ調整し、ID 参照を `[0] ?? [1] ?? [2]` の明示記法へ統一）

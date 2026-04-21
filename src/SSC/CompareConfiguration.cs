@@ -11,6 +11,8 @@ public sealed class CompareConfiguration
     public MissingCompareKeyListPolicy MissingCompareKeyListPolicy { get; init; } = MissingCompareKeyListPolicy.SkipAndRecordError;
 
     public DuplicateKeyPolicy DuplicateKeyPolicy { get; init; } = DuplicateKeyPolicy.RecordError;
+
+    public Action<string>? TraceLog { get; init; }
 }
 
 public enum NullKeyPolicy

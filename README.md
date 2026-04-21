@@ -63,6 +63,30 @@ Install both packages when you want typed generated projection API (`AsGenerated
   - `CompareInputException` for input errors
   - `CompareExecutionException` for execution errors
 
+## Trace Logging
+
+- `CompareConfiguration.TraceLog` に callback を渡すと、compare 実行中の内部 trace を受け取れます
+- 特に container 判定では `path`, `declaredType`, `container`, `runtimeType`, `materializedCount`, `compareKey` などが出力されます
+
+```csharp
+List<string> traceLines = [];
+
+CompareConfiguration configuration = new()
+{
+    TraceLog = traceLines.Add,
+};
+
+CompareResult<ProductModel> result = ParallelCompareApi.Compare(models, configuration);
+```
+
+trace 例:
+
+```text
+phase=metadata path=ProductModel.Items declaredType=System.Collections.Generic.List`1[ProductItem] container=List
+phase=container path=ProductModel.Items container=List elementType=ProductItem compareKey=Id
+phase=container path=ProductModel.Items modelIndex=0 container=List runtimeType=System.Collections.Generic.List`1[ProductItem] materializedCount=2
+```
+
 ## String Key Policy
 
 - Default string key comparison is `StringComparison.Ordinal`

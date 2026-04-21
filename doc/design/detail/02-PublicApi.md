@@ -267,8 +267,28 @@ public sealed class CompareConfiguration
         MissingCompareKeyListPolicy.SkipAndRecordError;
     public DuplicateKeyPolicy DuplicateKeyPolicy { get; init; } =
         DuplicateKeyPolicy.RecordError;
+    public Action<string>? TraceLog { get; init; }
 }
 ```
+
+`TraceLog` を指定した場合、`Compare(...)` 実行中に内部 trace 行を同期的に受け取れる。
+
+- 用途:
+  - container 判定の確認
+  - `List` / `Array` / `IEnumerable` / `Dictionary` の分類経路の確認
+  - path 単位の metadata / normalization / issue 発生確認
+- 非用途:
+  - `CompareResult` への永続保存
+  - 構造化ログ基盤の代替
+
+trace 行は人間確認を主目的とし、少なくとも次を含む。
+
+- phase
+- path
+- declared type
+- container category（`Dictionary` / `List` / `Array` / `IEnumerable` / `ScalarOrObject`）
+- runtime type（判明時）
+- 追加情報（element type、key type、materialized count、compare key 名、issue code など）
 
 ## 6. Result Entry
 

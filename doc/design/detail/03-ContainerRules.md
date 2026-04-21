@@ -29,6 +29,7 @@ E0=[80,90], E1=[70,null], E2=[null,60]
 - `CompareKey` 無し: `Skip + CompareKeyNotFoundOnSequenceElement`
 - 重複キー: `DuplicateCompareKeyDetected`
 - strict モードでは上記を例外化
+- trace 有効時は declared type に対して `List` / `Array` のどちらで扱ったかを記録する
 
 例:
 
@@ -47,11 +48,23 @@ E2=[null,(3,30)]
 - Compare 開始時に `List<T>` へ 1 回マテリアライズ
 - 再列挙しない
 - 実行時型が未対応コンテナの場合 `UnsupportedContainerType`
+- trace 有効時は declared type と runtime type、materialize 件数、再判定結果を記録する
 
 ## 5. Unsupported Containers
 
 - `IAsyncEnumerable<T>`
 - one-shot 列挙体（再実行不能）
+
+## 5.1 Trace Expectations
+
+trace 有効時、container 判定では少なくとも次のような行が出力される。
+
+```text
+phase=metadata path=Dataset.Items declaredType=System.Collections.Generic.List<Item> container=List elementType=Item
+phase=container path=Dataset.Items modelIndex=0 runtimeType=System.Collections.Generic.List<Item> materializedCount=3 compareKey=Id
+```
+
+`IEnumerable<T>` 宣言プロパティでは、`container=IEnumerable` と runtime 側の実体型を分けて記録する。
 
 ## 6. Key Order Rule
 

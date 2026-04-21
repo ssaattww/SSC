@@ -105,6 +105,154 @@ public sealed class CompareApiE2ETests
     }
 
     [Fact]
+    public void Compare_WhenTraceLogEnabled_EmitsListContainerClassification()
+    {
+        // Intent: List 宣言プロパティは trace から List 分類と CompareKey 解決を確認できる。
+        var logs = new List<string>();
+        var models = new[]
+        {
+            new KeyedRoot
+            {
+                Items =
+                [
+                    new KeyedItem { Id = 1, Value = 10 },
+                ],
+            },
+            new KeyedRoot
+            {
+                Items =
+                [
+                    new KeyedItem { Id = 1, Value = 20 },
+                ],
+            },
+        };
+
+        var configuration = new CompareConfiguration { TraceLog = logs.Add };
+
+        _ = ParallelCompareApi.Compare(models, configuration);
+
+        Assert.Contains(logs, line =>
+            line.Contains("path=KeyedRoot.Items", StringComparison.Ordinal)
+            && line.Contains("container=List", StringComparison.Ordinal)
+            && line.Contains("declaredType=System.Collections.Generic.List", StringComparison.Ordinal));
+        Assert.Contains(logs, line =>
+            line.Contains("path=KeyedRoot.Items", StringComparison.Ordinal)
+            && line.Contains("compareKey=Id", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Compare_WhenTraceLogEnabled_EmitsEnumerableMaterializationDetail()
+    {
+        // Intent: IEnumerable 宣言プロパティは runtime type と materialize 件数を trace で確認できる。
+        var logs = new List<string>();
+        var left = new CountingEnumerable<KeyedItem>(
+        [
+            new KeyedItem { Id = 1, Value = 10 },
+            new KeyedItem { Id = 2, Value = 20 },
+        ]);
+        var right = new CountingEnumerable<KeyedItem>(
+        [
+            new KeyedItem { Id = 1, Value = 30 },
+        ]);
+        var models = new[]
+        {
+            new EnumerableRoot { Items = left },
+            new EnumerableRoot { Items = right },
+        };
+
+        var configuration = new CompareConfiguration { TraceLog = logs.Add };
+
+        _ = ParallelCompareApi.Compare(models, configuration);
+
+        Assert.Contains(logs, line =>
+            line.Contains("path=EnumerableRoot.Items", StringComparison.Ordinal)
+            && line.Contains("container=IEnumerable", StringComparison.Ordinal)
+            && line.Contains("runtimeType=", StringComparison.Ordinal)
+            && line.Contains("CountingEnumerable", StringComparison.Ordinal));
+        Assert.Contains(logs, line =>
+            line.Contains("path=EnumerableRoot.Items", StringComparison.Ordinal)
+            && line.Contains("materializedCount=2", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Compare_WhenTraceLogEnabled_EmitsArrayContainerClassification()
+    {
+        // Intent: 配列宣言プロパティは trace から Array 分類と runtime type を確認できる。
+        var logs = new List<string>();
+        var models = new[]
+        {
+            new ArrayRoot
+            {
+                Items =
+                [
+                    new KeyedItem { Id = 1, Value = 10 },
+                    new KeyedItem { Id = 2, Value = 20 },
+                ],
+            },
+            new ArrayRoot
+            {
+                Items =
+                [
+                    new KeyedItem { Id = 1, Value = 30 },
+                ],
+            },
+        };
+
+        var configuration = new CompareConfiguration { TraceLog = logs.Add };
+
+        _ = ParallelCompareApi.Compare(models, configuration);
+
+        Assert.Contains(logs, line =>
+            line.Contains("path=ArrayRoot.Items", StringComparison.Ordinal)
+            && line.Contains("container=Array", StringComparison.Ordinal)
+            && line.Contains("declaredType=", StringComparison.Ordinal)
+            && line.Contains("KeyedItem[]", StringComparison.Ordinal));
+        Assert.Contains(logs, line =>
+            line.Contains("path=ArrayRoot.Items", StringComparison.Ordinal)
+            && line.Contains("runtimeType=", StringComparison.Ordinal)
+            && line.Contains("KeyedItem[]", StringComparison.Ordinal)
+            && line.Contains("materializedCount=2", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Compare_WhenTraceLogEnabled_EmitsDictionaryContainerClassification()
+    {
+        // Intent: Dictionary 宣言プロパティは trace から Dictionary 分類と key/value 型を確認できる。
+        var logs = new List<string>();
+        var models = new[]
+        {
+            new DictionaryRoot
+            {
+                Scores = new Dictionary<string, int>
+                {
+                    ["A"] = 10,
+                },
+            },
+            new DictionaryRoot
+            {
+                Scores = new Dictionary<string, int>
+                {
+                    ["A"] = 12,
+                    ["B"] = 20,
+                },
+            },
+        };
+
+        var configuration = new CompareConfiguration { TraceLog = logs.Add };
+
+        _ = ParallelCompareApi.Compare(models, configuration);
+
+        Assert.Contains(logs, line =>
+            line.Contains("path=DictionaryRoot.Scores", StringComparison.Ordinal)
+            && line.Contains("container=Dictionary", StringComparison.Ordinal)
+            && line.Contains("keyType=System.String", StringComparison.Ordinal)
+            && line.Contains("valueType=System.Int32", StringComparison.Ordinal));
+        Assert.Contains(logs, line =>
+            line.Contains("path=DictionaryRoot.Scores", StringComparison.Ordinal)
+            && line.Contains("runtimeType=System.Collections.Generic.Dictionary", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Compare_WhenDuplicateSequenceKeyDetected_ThrowsExecutionExceptionInStrictMode()
     {
         // Intent: 同一 model 内で CompareKey 重複時は strict=true で実行例外を送出する。
@@ -330,6 +478,16 @@ public sealed class CompareApiE2ETests
     public sealed class StringKeyRoot
     {
         public List<StringKeyedItem> Items { get; init; } = [];
+    }
+
+    public sealed class ArrayRoot
+    {
+        public KeyedItem[] Items { get; init; } = [];
+    }
+
+    public sealed class DictionaryRoot
+    {
+        public Dictionary<string, int> Scores { get; init; } = [];
     }
 
     public sealed class NullableKeyRoot
