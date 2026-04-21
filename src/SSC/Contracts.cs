@@ -47,6 +47,8 @@ public sealed class CompareResult<T>
     public IReadOnlyList<CompareIssue> Issues { get; init; } = Array.Empty<CompareIssue>();
 
     public bool HasError { get; init; }
+
+    internal CompareConfiguration Configuration { get; init; } = new();
 }
 
 public interface Parallel<T>

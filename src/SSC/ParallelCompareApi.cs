@@ -29,7 +29,7 @@ public static class ParallelCompareApi
                 null,
                 "models must contain at least one element.");
 
-            return BuildResult<T>(root: null, context.Issues);
+            return BuildResult<T>(root: null, context.Issues, config);
         }
 
         for (var modelIndex = 0; modelIndex < models.Count; modelIndex++)
@@ -49,7 +49,7 @@ public static class ParallelCompareApi
 
         if (context.HasErrors)
         {
-            return BuildResult<T>(root: null, context.Issues);
+            return BuildResult<T>(root: null, context.Issues, config);
         }
 
         var slots = new NodeSlot[models.Count];
@@ -59,16 +59,17 @@ public static class ParallelCompareApi
         }
 
         var root = (ParallelNode<T>)BuildNode(typeof(T), slots, typeof(T).Name, context, keyText: null);
-        return BuildResult(root, context.Issues);
+        return BuildResult(root, context.Issues, config);
     }
 
-    private static CompareResult<T> BuildResult<T>(Parallel<T>? root, IReadOnlyList<CompareIssue> issues)
+    private static CompareResult<T> BuildResult<T>(Parallel<T>? root, IReadOnlyList<CompareIssue> issues, CompareConfiguration configuration)
     {
         return new CompareResult<T>
         {
             Root = root,
             Issues = issues,
             HasError = issues.Any(issue => issue.Level == CompareIssueLevel.Error),
+            Configuration = configuration,
         };
     }
 
@@ -617,6 +618,64 @@ public static class ParallelCompareApi
             || actual == typeof(DateTimeOffset)
             || actual == typeof(Guid)
             || actual == typeof(TimeSpan);
+    }
+
+    internal static bool IsContainerType(Type type)
+    {
+        return TryGetDictionaryTypes(type, out _, out _)
+            || TryGetSequenceElementType(type, out _);
+    }
+
+    internal static bool TryBuildDynamicContainerChildren(
+        Type containerType,
+        object?[] values,
+        NodePresenceState[] states,
+        string path,
+        CompareConfiguration configuration,
+        out IReadOnlyList<IParallelNode> children)
+    {
+        var slots = new NodeSlot[values.Length];
+        for (var index = 0; index < values.Length; index++)
+        {
+            slots[index] = states[index] switch
+            {
+                NodePresenceState.Missing => NodeSlot.Missing,
+                NodePresenceState.PresentNull => NodeSlot.PresentNull,
+                _ => values[index] is object value ? NodeSlot.PresentValue(value) : NodeSlot.PresentNull,
+            };
+        }
+
+        var context = new CompareContext(configuration);
+        if (TryGetDictionaryTypes(containerType, out var keyType, out var valueType))
+        {
+            children = BuildDictionaryChildren(slots, keyType, valueType, path, context);
+            if (context.HasErrors)
+            {
+                ThrowDynamicContainerAccessError(context.Issues);
+            }
+
+            return true;
+        }
+
+        if (TryGetSequenceElementType(containerType, out var elementType))
+        {
+            children = BuildSequenceChildren(slots, containerType, elementType, path, context);
+            if (context.HasErrors)
+            {
+                ThrowDynamicContainerAccessError(context.Issues);
+            }
+
+            return true;
+        }
+
+        children = Array.Empty<IParallelNode>();
+        return false;
+    }
+
+    private static void ThrowDynamicContainerAccessError(IReadOnlyList<CompareIssue> issues)
+    {
+        var issue = issues.FirstOrDefault(issue => issue.Level == CompareIssueLevel.Error) ?? issues.First();
+        throw new CompareExecutionException(issue.Code, issue.Message);
     }
 
     private static object NormalizeKey(object key)

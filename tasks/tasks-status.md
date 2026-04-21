@@ -12,6 +12,33 @@
 
 ## Done
 
+- T-073: dynamic runtime-derived container member access 修正
+  - Status: 完了（runtime-derived な container member を `AsDynamic()` から list view として access 可能化し、error path も silent failure させない）
+  - Phase: Phase 3
+  - Estimate: M
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/task-t-073-implementation-20260421200537.md`
+    - `reports/task-t-073-verification-20260421200537.md`
+    - `reports/task-t-073-review-20260421200537.md`
+
+- T-072: object node の `GetState` 誤判定修正
+  - Status: 完了（object node は参照差ではなく self presence / subtree 差分で `GetState` 判定）
+  - Phase: Phase 3
+  - Estimate: S
+  - Output:
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/task-t-072-implementation-20260421193906.md`
+    - `reports/task-t-072-verification-20260421193906.md`
+    - `reports/task-t-072-review-20260421193906.md`
+
 - T-071: 差分子要素探索 API の core 実装
   - Status: 完了（traversal API 実装、empty container 差分の childSet discoverability 対応、verification/review 完了）
   - Depends on:
