@@ -73,6 +73,34 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
             return ValueState.Missing;
         }
 
+        if (!_isScalarNode)
+        {
+            if (HasPresenceMismatch(_states))
+            {
+                return ValueState.Mismatched;
+            }
+
+            foreach (var containerPresenceStates in _containerPresenceStates.Values)
+            {
+                if (HasPresenceMismatch(containerPresenceStates))
+                {
+                    return ValueState.Mismatched;
+                }
+            }
+
+            if (_memberNodes.Values.Any(node => node.HasDifferences()))
+            {
+                return ValueState.Mismatched;
+            }
+
+            if (_children.Values.SelectMany(nodes => nodes).Any(node => node.HasDifferences()))
+            {
+                return ValueState.Mismatched;
+            }
+
+            return ValueState.Matched;
+        }
+
         var matched = true;
         for (var index = 0; index < _states.Length; index++)
         {

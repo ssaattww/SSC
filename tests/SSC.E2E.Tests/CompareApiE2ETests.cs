@@ -533,6 +533,54 @@ public sealed class CompareApiE2ETests
     }
 
     [Fact]
+    public void Compare_WithEquivalentObjectMembers_NodeLevelGetStateReturnsMatched()
+    {
+        // Intent: child/member がすべて一致する object node は、参照差ではなく構造一致として Matched を返す。
+        var models = new[]
+        {
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 1 },
+            },
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 1 },
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+        var detailNode = Assert.Single(root.GetDirectChildren().Single(child => child.Name == nameof(TraversalRoot.Detail)).Nodes);
+
+        Assert.Equal(ValueState.Matched, detailNode.GetState(0));
+        Assert.Equal(ValueState.Matched, detailNode.GetState(1));
+    }
+
+    [Fact]
+    public void Compare_WithDifferentObjectMembers_NodeLevelGetStateReturnsMismatched()
+    {
+        // Intent: object node の child/member に差分がある場合は node-level GetState も Mismatched を返す。
+        var models = new[]
+        {
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 1 },
+            },
+            new TraversalRoot
+            {
+                Detail = new TraversalDetail { Value = 9 },
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsAssignableFrom<IParallelNode>(result.Root);
+        var detailNode = Assert.Single(root.GetDirectChildren().Single(child => child.Name == nameof(TraversalRoot.Detail)).Nodes);
+
+        Assert.Equal(ValueState.Mismatched, detailNode.GetState(0));
+        Assert.Equal(ValueState.Mismatched, detailNode.GetState(1));
+    }
+
+    [Fact]
     public void Compare_WithEmptyContainerMissingOnOneSide_HasDifferencesUsesContainerPresenceMismatch()
     {
         // Intent: child 要素が 0 件でも、container member 自体の presence mismatch は親 node 差分として検出する。
