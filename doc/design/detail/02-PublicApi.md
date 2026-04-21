@@ -391,6 +391,92 @@ foreach (dynamic child in root.Items[0].Detail.Children)
 - これは `a.b.c.d` の `d` が実行時専用 `List` でも `foreach` / index access できる、という意味である
 - ただし container 正規化の前提（例: sequence element に `[CompareKey]` が必要）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す
 
+### 4.2.3 実行時専用メンバーで `GetState` が判定される仕組み
+
+この節では、`root.Items[0].Detail.Label.GetState(0)` のような dynamic value path が、
+保存済み state を読む通常経路と、呼び出し時に反射で値を辿る代替経路のどちらへ入るかを説明する。
+
+実行時専用メンバーとは、プロパティ宣言型には無いが、実行時オブジェクトには存在するメンバーである。
+
+```csharp
+public abstract class DetailBase
+{
+}
+
+public sealed class DetailLeaf : DetailBase
+{
+    public string? Label { get; init; }
+}
+
+public sealed class Item
+{
+    public DetailBase Detail { get; init; } = null!;
+}
+```
+
+この例では、`Detail` のプロパティ宣言型は `DetailBase` であり、`Label` は `DetailBase` には無い。
+そのため `Detail.Label` は、比較時に常に内部 node として作られるとは限らない。
+
+dynamic value path の `GetState` は、内部的には次の情報を持つ。
+
+- 比較結果 root node
+- `Detail.Label` のような member path
+- その path に対応する保存済み node があれば、その参照
+
+判定手順は次の 2 経路に分かれる。
+
+1. 保存済み state を読む通常経路
+   - 比較時にその member path が内部 node として作られていれば、その保存済み node を使う
+   - `GetState(modelIndex)` はその node の `GetState` をそのまま返す
+   - この経路では、`GetState` 呼び出し中に getter を再実行しない
+
+2. 呼び出し時に反射で値を辿る代替経路
+   - 保存済み node が無い場合、`GetState(modelIndex)` はその場で root model object から member path を辿る
+   - 具体的には、各段で現在の実行時型に対して public property を反射で探し、値を取得する
+   - 対象 model slot が欠損なら `Missing`
+   - 比較相手 model が 1 つも無い場合も `Missing`
+   - 対象 model slot に値があり、比較相手 slot のどれかが欠損なら `Mismatched`
+   - 双方に値があり、presence が同じで `Equals` が一致すれば `Matched`
+   - 双方に値があり、presence が違うか `Equals` が不一致なら `Mismatched`
+
+代替経路の擬似フロー:
+
+```text
+GetState(modelIndex)
+  -> 保存済み node があるか?
+     -> Yes: 保存済み node の GetState を返す
+     -> No:
+        -> 指定 model の root 値を取得
+        -> member path を各段で反射して辿る
+        -> 途中の property が見つからなければ MissingMemberException
+        -> 比較相手 model が無ければ Missing
+        -> 他 model に対しても同じ path を反射して辿る
+        -> presence / Equals で Matched/Mismatched/Missing を決める
+```
+
+この代替経路で起こり得ること:
+
+1. `GetState` は呼べることがある
+   - 実行時オブジェクトに対象メンバーがあれば、保存済み node が無くても判定自体はできる
+
+2. `GetState` は失敗することがある
+   - 対象 model でも比較相手 model でも、member path の途中で property を見つけられないと `MissingMemberException` になる
+   - getter 自体が例外を投げる場合、その例外は `GetState` 呼び出し側へそのまま伝播する
+
+3. 「getter を再実行しない」保証は無い
+   - 判定のために、その場で property getter を呼んで値を取得するからである
+   - したがって、副作用や例外発生は compare 時ではなく `GetState` 呼び出し時に起き得る
+
+実行時専用メンバーが container の場合は、この代替経路に入る前に member access 側で container 判定を行う。
+
+- 実行時オブジェクト上の `Children` が `List<T>` なら、`root.Items[0].Detail.Children` は list view へ切り替える
+- その結果、`foreach` や `[index]` は継続利用できる
+- ただし container 正規化の前提を満たさない場合は `CompareExecutionException` で失敗する
+
+つまり、実行時専用メンバーの `GetState` は「常に使えない」のではない。
+ただし、保存済み state を読む通常経路ではなく、呼び出し時に反射で値を辿る代替経路へ入ることがあり、
+その場合は getter 再実行・`MissingMemberException`・getter 例外伝播を許容する。
+
 深い階層は `Children(...)` を連鎖して辿る。
 
 ```csharp

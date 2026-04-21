@@ -61,6 +61,17 @@
 - プロパティ宣言型に無い実行時専用メンバーは、この事前構築の対象外であり、必要時は呼び出し時の反射による代替解決を使う
 - generated projection の nested value path を同じ経路へ統一する作業は、この設計範囲に含めない
 
+dynamic value-path `GetState` の lookup 経路:
+
+1. value path が対応する保存済み member node を持つか確認する
+2. 持つ場合は、その member node の保存済み state を返す
+3. 持たない場合は、対象 model の root value から member path を反射で辿る
+4. 対象 model が欠損なら `Missing`、比較相手 model が 1 つも無い場合も `Missing` を返す
+5. 比較相手がある場合は、他 model についても同じ path を反射で辿り、presence / 値一致で `ValueState` を決める
+6. 対象 model でも他 model でも、反射途中で property が見つからなければ `MissingMemberException`
+7. getter が例外を投げれば、その例外は呼び出し側へ伝播する
+8. 実行時専用メンバーが container の場合は、member access 側で container view へ切り替える処理を先に試みる
+
 trace 有効時は path 単位で次を記録する。
 
 - scalar / object / container のどの経路へ入ったか

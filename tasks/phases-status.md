@@ -32,7 +32,8 @@
 
 - Status: In Progress
 - Notes:
-  - 現在タスクはなし（T-074 完了、次タスク未選定）
+  - T-075 を完了し、`AsDynamic()` の value path が保存済み state を読む通常経路と、実行時反射で値を辿る代替経路へどう分岐するかを設計書へ追加した
+  - T-075 では、single-model `Missing` 分岐、`MissingMemberException` が対象 model / 他 model のどちらでも起こり得る条件、runtime-only container の特例も追記した
   - T-074 を完了し、dynamic `GetState` の保証範囲を issue/task 番号に依存しない日本語で説明し、runtime-only member/container の例を追記した
   - T-073 を完了し、`AsDynamic()` で runtime-derived な `List` member が `DynamicParallelValuePathView` へ落ちる経路を修正した
   - T-072 を完了し、class object の child/member が一致しているのに node-level `GetState` が `Mismatched` になる誤判定を修正した
