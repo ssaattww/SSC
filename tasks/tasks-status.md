@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-04-05
+- Updated: 2026-04-21
 
 ## In Progress
 
@@ -8,13 +8,31 @@
 
 ## Backlog
 
-- T-042: dynamic 値パス `GetState` の非侵襲化
-  - Status: 未着手（残留リスク）
-  - Scope:
-    - `GetState` 呼び出し時に getter 実行へ依存しない状態判定方式を設計
-    - 副作用 getter / 例外 getter モデルでの安全性テストを追加
+- （なし）
 
 ## Done
+
+- T-042: dynamic 値パス `GetState` の非侵襲化
+  - Status: 完了（materialize 済み member の `GetState` を非侵襲化し、indexer/runtime-derived fallback の契約を整理）
+  - Depends on:
+    - T-041 dynamic projection 差分のサブエージェントコードレビュー指摘対応
+    - T-063 GetState の不一致状態 enum 拡張
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/task-t-042-getstate-noninvasive-investigation-20260421100902.md`
+    - `reports/task-t-042-implementation-plan-review-20260421101328.md`
+    - `reports/task-t-042-design-update-20260421102220.md`
+    - `reports/task-t-042-tdd-failing-tests-20260421102611.md`
+    - `reports/task-t-042-implementation-20260421103059.md`
+    - `reports/task-t-042-verification-rerun-20260421105216.md`
+    - `reports/task-t-042-review-final-20260421110011.md`
 
 - T-068: GitHub Actions Node 24 対応版への更新
   - Status: 完了（Node 20 廃止警告対象の `checkout/setup-dotnet` を `v5` へ更新）

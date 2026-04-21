@@ -5,6 +5,7 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     private readonly T?[] _values;
     private readonly NodePresenceState[] _states;
     private readonly Dictionary<string, IReadOnlyList<IParallelNode>> _children = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IParallelNode> _memberNodes = new(StringComparer.Ordinal);
 
     internal ParallelNode(T?[] values, NodePresenceState[] states, string? keyText)
     {
@@ -101,7 +102,8 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
 
     public object? GetValue(int modelIndex)
     {
-        return this[modelIndex];
+        ValidateIndex(modelIndex);
+        return _states[modelIndex] == NodePresenceState.PresentValue ? _values[modelIndex] : null;
     }
 
     internal NodePresenceState GetPresenceState(int modelIndex)
@@ -127,6 +129,11 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         return _children.TryGetValue(memberName, out nodes!);
     }
 
+    bool IParallelNodeInternal.TryGetMemberNode(string memberName, out IParallelNode node)
+    {
+        return _memberNodes.TryGetValue(memberName, out node!);
+    }
+
     NodePresenceState IParallelNodeInternal.GetPresenceState(int modelIndex)
     {
         return GetPresenceState(modelIndex);
@@ -135,6 +142,11 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     internal void SetChildren(string memberName, IReadOnlyList<IParallelNode> nodes)
     {
         _children[memberName] = nodes;
+    }
+
+    internal void SetMemberNode(string memberName, IParallelNode node)
+    {
+        _memberNodes[memberName] = node;
     }
 
     private void ValidateIndex(int modelIndex)
