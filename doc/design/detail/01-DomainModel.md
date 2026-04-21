@@ -71,11 +71,13 @@ public readonly struct ParallelChildSet
 {
     public string Name { get; }
     public IReadOnlyList<IParallelNode> Nodes { get; }
+    public bool HasDifferences { get; }
 }
 ```
 
 - `HasDifferences()` は current node またはその配下 subtree のどこかに差分があれば `true`
 - `GetDirectChildren()` は current node の直下 member を property 単位で返す
+- `ParallelChildSet.HasDifferences` は、その property 自体または配下 child node 群に差分があるかを返す
 - 返却される探索対象 node は通常アクセス時と同じ `IParallelNode` / `ParallelNode<T>` 系であり、探索専用の別 node 型は導入しない
 - 親参照（`Parent` など）は T-070 の対象外とし、上方向の経路復元は公開契約に含めない
 

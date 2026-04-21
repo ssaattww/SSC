@@ -75,6 +75,28 @@ public interface IParallelNode
     object? GetValue(int modelIndex);
 
     ValueState GetState(int modelIndex);
+
+    bool HasDifferences();
+
+    IReadOnlyList<ParallelChildSet> GetDirectChildren();
+}
+
+public readonly struct ParallelChildSet
+{
+    public ParallelChildSet(string name, IReadOnlyList<IParallelNode> nodes, bool hasDifferences)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(nodes);
+        Name = name;
+        Nodes = nodes;
+        HasDifferences = hasDifferences;
+    }
+
+    public string Name { get; }
+
+    public IReadOnlyList<IParallelNode> Nodes { get; }
+
+    public bool HasDifferences { get; }
 }
 
 internal interface IParallelNodeInternal

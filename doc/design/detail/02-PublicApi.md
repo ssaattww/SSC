@@ -47,8 +47,12 @@ public readonly struct ParallelChildSet
 {
     public string Name { get; }
     public IReadOnlyList<IParallelNode> Nodes { get; }
+    public bool HasDifferences { get; }
 }
 ```
+
+- `IParallelNode` は既存の公開 interface であり、T-070 の `HasDifferences()` / `GetDirectChildren()` 追加は外部実装者に対する breaking change となる
+- 上記 breaking change は `Design/BreakingChanges.md` に記録する
 
 ```csharp
 public interface ParallelDataset : Parallel<Dataset>
@@ -110,15 +114,21 @@ internal static class DatasetGeneratedViewExtensions
 - 返却形:
   - scalar/object member は `Nodes.Count == 1`
   - `List` / `Array` / `IEnumerable` / `Dictionary` は正規化済み要素 node 群を `Nodes` に格納する
+- `HasDifferences` はその property 自体または `Nodes` 配下に差分がある場合に `true`
 - `Name` は source model の property 名そのものを使う
 - child を持たない node は空配列を返す
 - 親参照は公開しない。必要な再帰・path 組み立てはユーザー側で `Name` と `IParallelNode` を使って行う
+- `Name` だけでは container member 配下の複数 child を一意化できないため、path 表現が必要な場合は `childSet.Name` に child 側の識別子を付けて segment を作る
+- container member の segment は `child.KeyText` がある場合はそれを優先し、無い場合だけ同一 `ParallelChildSet.Nodes` 内の ordinal index を fallback とする
+- 推奨表現は `Items[100]` / `Items[A]` / `Items[#0]` のような `Name[discriminator]` 形式とする
 
 `HasDifferences()` は単なる object slot の参照等価には依存しない独立プリミティブとする。
 
 - leaf/value node では各 model slot の比較結果を使う
 - object/container node では direct member node と normalized child node を再帰的に調べる
-- 判定基準は「subtree 内のいずれかの node に `ValueState.Mismatched` が存在するか」とする
+- object/container node 自身については object 参照等価を使わず、各 model slot の presence category（`Missing` / `PresentNull` / `PresentValue`）だけを比較する
+- object/container node は「自身の presence category が model 間で揃っていない」または「いずれかの子孫 node が差分あり」のどちらかで `true`
+- 判定基準は「self presence mismatch または subtree 内のいずれかの node に `ValueState.Mismatched` が存在するか」とする
 - `Missing` のみで構成された subtree は差分ありとはみなさない
 - 1 model 入力では比較対象がないため `false`
 
@@ -233,7 +243,7 @@ IParallelNode rootNode = (IParallelNode)Assert.IsType<ParallelNode<Dataset>>(res
 
 var diffChildren = rootNode
     .GetDirectChildren()
-    .Where(child => child.Nodes.Any(node => node.HasDifferences()))
+    .Where(child => child.HasDifferences)
     .ToList();
 ```
 
@@ -242,9 +252,13 @@ static IEnumerable<(string Path, IParallelNode Node)> Walk(IParallelNode node, s
 {
     foreach (ParallelChildSet childSet in node.GetDirectChildren())
     {
-        foreach (IParallelNode child in childSet.Nodes)
+        for (var childIndex = 0; childIndex < childSet.Nodes.Count; childIndex++)
         {
-            var childPath = string.IsNullOrEmpty(path) ? childSet.Name : $"{path}.{childSet.Name}";
+            IParallelNode child = childSet.Nodes[childIndex];
+            var segment = childSet.Nodes.Count == 1
+                ? childSet.Name
+                : $"{childSet.Name}[{child.KeyText ?? $"#{childIndex}"}]";
+            var childPath = string.IsNullOrEmpty(path) ? segment : $"{path}.{segment}";
             yield return (childPath, child);
 
             foreach (var descendant in Walk(child, childPath))
@@ -258,7 +272,9 @@ static IEnumerable<(string Path, IParallelNode Node)> Walk(IParallelNode node, s
 
 - ライブラリは再帰 API を持たず、ユーザー側が `yield return` や LINQ で探索を組み立てる
 - 探索対象 node は通常アクセスと同じ `IParallelNode` で統一する
-- container child の index / key 由来情報は必要に応じて `KeyText` で補う
+- empty container のように `Nodes.Count == 0` でも property 差分があり得るため、direct traversal の一次判定には `ParallelChildSet.HasDifferences` を使う
+- scalar/object member は `Name` だけで一意化し、container member は `Name[discriminator]` で一意化する
+- container child の discriminator は `KeyText` 優先、`KeyText == null` のときだけ `#<ordinal>` fallback を使う
 
 ### 4.2.2 T-042 Dynamic Value-Path `GetState` Scope
 

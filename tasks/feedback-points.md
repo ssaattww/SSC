@@ -23,6 +23,15 @@
   - スキル化判断: 既存 skill 運用の切替で対応。新規 skill 不要
   - 次アクション対応:
     - 以後の実装・編集は main agent が担当し、review だけ sub-agent へ依頼する
+- ユーザー指摘: review 以外は sub-agent を使わないこと。
+- 対応:
+  - 以後、この repo では verification / investigation / planning を含め、review 以外の sub-agent 利用を行わない。
+  - review が必要な場合のみ、ユーザー指定どおり `gpt-5.4 / high` の sub-agent を使う。
+  - 記録起点: ユーザー明示指摘
+  - 重複判定: 2026-04-21 の「実装は main agent / review は sub-agent」を強化する追記
+  - スキル化判断: 既存 skill 運用の上書きで対応。新規 skill 不要
+  - 次アクション対応:
+    - 今後は test verification も main agent が実行し、review だけ sub-agent へ委譲する
 - ユーザー指摘: 明示的に停止指示がない限り、作業を途中で止めないこと。
 - 対応:
   - 明示停止・方針衝突・安全上の阻害がない限り、task 完了まで継続する。
