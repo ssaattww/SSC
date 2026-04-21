@@ -33,6 +33,7 @@
 - container 種別判定
 - CompareKey 抽出ルール構築
 - `CompareIgnore` 付与メンバーを除外
+- trace 有効時は property ごとの declared type と container category を記録
 
 反射対象ポリシー:
 
@@ -59,6 +60,12 @@
 - T-042 の設計では、dynamic value-path `GetState` は materialize 済み member state を読むだけにし、state lookup 中に getter を再実行しない
 - generated projection の nested value path を同じ経路へ統一する作業は T-042 の対象外
 
+trace 有効時は path 単位で次を記録する。
+
+- scalar / object / container のどの経路へ入ったか
+- member getter 評価失敗時の issue 化
+- child node / member node の構築結果
+
 出力: `Parallel<T>`
 
 ## 5. Container Normalization
@@ -68,6 +75,14 @@
 1. Dictionary
 2. List/Array
 3. IEnumerable（1回 materialize 後に再判定）
+
+trace 有効時は次も記録する。
+
+- declared type 上の分類結果
+- runtime type
+- `IEnumerable` materialize 件数
+- compare key 解決結果
+- issue 記録や skip 判定
 
 出力: `IEnumerable<Parallel<TElement>>`
 

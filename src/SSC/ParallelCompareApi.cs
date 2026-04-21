@@ -15,6 +15,10 @@ public static class ParallelCompareApi
     {
         var config = configuration ?? new CompareConfiguration();
         var context = new CompareContext(config);
+        if (context.IsTraceEnabled)
+        {
+            context.Trace("start", typeof(T).Name, ("rootType", typeof(T)), ("modelCount", models?.Count), ("strictMode", config.StrictMode));
+        }
 
         if (models is null || models.Count == 0)
         {
@@ -101,15 +105,36 @@ public static class ParallelCompareApi
         var node = new ParallelNode<TNode>(typedValues, states, keyText);
         if (IsScalarType(typeof(TNode)))
         {
+            if (context.IsTraceEnabled)
+            {
+                context.Trace("node", path, ("nodeType", typeof(TNode)), ("nodeKind", "Scalar"), ("keyText", keyText));
+            }
             return node;
+        }
+
+        if (context.IsTraceEnabled)
+        {
+            context.Trace("node", path, ("nodeType", typeof(TNode)), ("nodeKind", "Object"), ("keyText", keyText));
         }
 
         foreach (var property in TypeMetadataResolver.GetComparableProperties(typeof(TNode)))
         {
             var propertyPath = $"{path}.{property.Name}";
+            if (context.IsTraceEnabled)
+            {
+                context.Trace(
+                    "metadata",
+                    propertyPath,
+                    ("declaredType", property.PropertyType),
+                    ("container", GetContainerCategory(property.PropertyType)));
+            }
 
             if (TryGetDictionaryTypes(property.PropertyType, out var keyType, out var elementType))
             {
+                if (context.IsTraceEnabled)
+                {
+                    context.Trace("metadata", propertyPath, ("keyType", keyType), ("valueType", elementType));
+                }
                 var children = BuildDictionaryChildren(slots, property, keyType, elementType, propertyPath, context);
                 node.SetChildren(property.Name, children);
                 continue;
@@ -117,6 +142,10 @@ public static class ParallelCompareApi
 
             if (TryGetSequenceElementType(property.PropertyType, out elementType))
             {
+                if (context.IsTraceEnabled)
+                {
+                    context.Trace("metadata", propertyPath, ("elementType", elementType));
+                }
                 var children = BuildSequenceChildren(slots, property, elementType, propertyPath, context);
                 node.SetChildren(property.Name, children);
                 continue;
@@ -213,7 +242,23 @@ public static class ParallelCompareApi
 
             if (rawContainer is null)
             {
+                if (context.IsTraceEnabled)
+                {
+                    context.Trace("container", path, ("modelIndex", modelIndex), ("container", "Dictionary"), ("runtimeType", "<null>"), ("materializedCount", 0));
+                }
                 continue;
+            }
+
+            if (context.IsTraceEnabled)
+            {
+                context.Trace(
+                    "container",
+                    path,
+                    ("modelIndex", modelIndex),
+                    ("container", "Dictionary"),
+                    ("runtimeType", rawContainer.GetType()),
+                    ("keyType", keyType),
+                    ("valueType", elementType));
             }
 
             foreach (var (entryKey, entryValue) in EnumerateDictionary(rawContainer))
@@ -299,6 +344,17 @@ public static class ParallelCompareApi
             return Array.Empty<IParallelNode>();
         }
 
+        var containerCategory = GetContainerCategory(property.PropertyType);
+        if (context.IsTraceEnabled)
+        {
+            context.Trace(
+                "container",
+                path,
+                ("container", containerCategory),
+                ("elementType", elementType),
+                ("compareKey", compareKeyProperty.Name));
+        }
+
         var keyType = compareKeyProperty.PropertyType;
         var comparer = new KeyComparer(keyType, context.Configuration.StringKeyComparison);
         var maps = new Dictionary<object, object?>[parentSlots.Length];
@@ -331,6 +387,16 @@ public static class ParallelCompareApi
 
             if (rawContainer is null)
             {
+                if (context.IsTraceEnabled)
+                {
+                    context.Trace(
+                        "container",
+                        path,
+                        ("modelIndex", modelIndex),
+                        ("container", containerCategory),
+                        ("runtimeType", "<null>"),
+                        ("materializedCount", 0));
+                }
                 continue;
             }
 
@@ -346,6 +412,16 @@ public static class ParallelCompareApi
             }
 
             var materialized = enumerable.Cast<object?>().ToList();
+            if (context.IsTraceEnabled)
+            {
+                context.Trace(
+                    "container",
+                    path,
+                    ("modelIndex", modelIndex),
+                    ("container", containerCategory),
+                    ("runtimeType", rawContainer.GetType()),
+                    ("materializedCount", materialized.Count));
+            }
             foreach (var element in materialized)
             {
                 if (element is null)
@@ -528,6 +604,33 @@ public static class ParallelCompareApi
         return match is not null;
     }
 
+    private static string GetContainerCategory(Type type)
+    {
+        if (TryGetDictionaryTypes(type, out _, out _))
+        {
+            return "Dictionary";
+        }
+
+        if (type.IsArray)
+        {
+            return "Array";
+        }
+
+        if (type != typeof(string)
+            && (TryGetGenericInterface(type, typeof(IList<>), out _)
+                || TryGetGenericInterface(type, typeof(IReadOnlyList<>), out _)))
+        {
+            return "List";
+        }
+
+        if (type != typeof(string) && TryGetGenericInterface(type, typeof(IEnumerable<>), out _))
+        {
+            return "IEnumerable";
+        }
+
+        return "ScalarOrObject";
+    }
+
     private static bool IsScalarType(Type type)
     {
         var nullableUnderlying = Nullable.GetUnderlyingType(type);
@@ -607,10 +710,16 @@ public static class ParallelCompareApi
 
         public bool HasErrors => _issues.Any(issue => issue.Level == CompareIssueLevel.Error);
 
+        public bool IsTraceEnabled => Configuration.TraceLog is not null;
+
         public void RecordInputError(CompareIssueCode code, string path, int? modelIndex, string? keyText, string message)
         {
             var issue = CreateIssue(code, path, modelIndex, keyText, message);
             _issues.Add(issue);
+            if (IsTraceEnabled)
+            {
+                Trace("issue", path, ("level", CompareIssueLevel.Error), ("code", code), ("modelIndex", modelIndex), ("keyText", keyText), ("message", message));
+            }
 
             if (Configuration.StrictMode)
             {
@@ -622,6 +731,10 @@ public static class ParallelCompareApi
         {
             var issue = CreateIssue(code, path, modelIndex, keyText, message);
             _issues.Add(issue);
+            if (IsTraceEnabled)
+            {
+                Trace("issue", path, ("level", CompareIssueLevel.Error), ("code", code), ("modelIndex", modelIndex), ("keyText", keyText), ("message", message));
+            }
 
             if (Configuration.StrictMode)
             {
@@ -640,6 +753,45 @@ public static class ParallelCompareApi
                 KeyText = keyText,
                 Message = message,
             };
+        }
+
+        public void Trace(string phase, string path, params (string Key, object? Value)[] fields)
+        {
+            if (Configuration.TraceLog is null)
+            {
+                return;
+            }
+
+            var parts = new List<string>
+            {
+                $"phase={FormatTraceValue(phase)}",
+                $"path={FormatTraceValue(path)}",
+            };
+
+            foreach (var (key, value) in fields)
+            {
+                parts.Add($"{key}={FormatTraceValue(value)}");
+            }
+
+            Configuration.TraceLog(string.Join(" ", parts));
+        }
+
+        private static string FormatTraceValue(object? value)
+        {
+            if (value is null)
+            {
+                return "<null>";
+            }
+
+            var text = value switch
+            {
+                Type type => type.ToString(),
+                bool flag => flag ? "true" : "false",
+                Enum enumValue => enumValue.ToString(),
+                _ => value.ToString() ?? string.Empty,
+            };
+
+            return text.Any(char.IsWhiteSpace) ? $"\"{text}\"" : text;
         }
     }
 

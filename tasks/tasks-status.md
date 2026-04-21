@@ -12,6 +12,20 @@
 
 ## Done
 
+- T-069: compare 実行 trace ログ出力の追加
+  - Status: 完了（trace callback で container 判定と内部進行を確認可能化）
+  - Output:
+    - `src/SSC/CompareConfiguration.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `README.md`
+    - `reports/task-t-069-implementation-20260421111613.md`
+    - `reports/task-t-069-review-20260421111652.md`
+    - `reports/task-t-069-review-rerun-20260421112615.md`
+
 - T-042: dynamic 値パス `GetState` の非侵襲化
   - Status: 完了（materialize 済み member の `GetState` を非侵襲化し、indexer/runtime-derived fallback の契約を整理）
   - Depends on:
@@ -33,7 +47,6 @@
     - `reports/task-t-042-implementation-20260421103059.md`
     - `reports/task-t-042-verification-rerun-20260421105216.md`
     - `reports/task-t-042-review-final-20260421110011.md`
-
 - T-068: GitHub Actions Node 24 対応版への更新
   - Status: 完了（Node 20 廃止警告対象の `checkout/setup-dotnet` を `v5` へ更新）
   - Output:
