@@ -119,7 +119,7 @@ internal static class DatasetGeneratedViewExtensions
 - child を持たない node は空配列を返す
 - 親参照は公開しない。必要な再帰・path 組み立てはユーザー側で `Name` と `IParallelNode` を使って行う
 - `Name` だけでは container member 配下の複数 child を一意化できないため、path 表現が必要な場合は `childSet.Name` に child 側の識別子を付けて segment を作る
-- container member の segment は `child.KeyText` がある場合はそれを優先し、無い場合だけ同一 `ParallelChildSet.Nodes` 内の ordinal index を fallback とする
+- container member の segment は `child.KeyText` がある場合はそれを優先し、無い場合だけ同一 `ParallelChildSet.Nodes` 内の ordinal index を代替識別子として使う
 - 推奨表現は `Items[100]` / `Items[A]` / `Items[#0]` のような `Name[discriminator]` 形式とする
 
 `HasDifferences()` は単なる object slot の参照等価には依存しない独立プリミティブとする。
@@ -274,11 +274,11 @@ static IEnumerable<(string Path, IParallelNode Node)> Walk(IParallelNode node, s
 - 探索対象 node は通常アクセスと同じ `IParallelNode` で統一する
 - empty container のように `Nodes.Count == 0` でも property 差分があり得るため、direct traversal の一次判定には `ParallelChildSet.HasDifferences` を使う
 - scalar/object member は `Name` だけで一意化し、container member は `Name[discriminator]` で一意化する
-- container child の discriminator は `KeyText` 優先、`KeyText == null` のときだけ `#<ordinal>` fallback を使う
+- container child の discriminator は `KeyText` を優先し、`KeyText == null` のときだけ `#<ordinal>` を代替識別子として使う
 
-### 4.2.2 T-042 Dynamic Value-Path `GetState` Scope
+### 4.2.2 Dynamic `GetState` の保証範囲
 
-T-042 で設計対象にするのは、`AsDynamic()` から辿る value path の `GetState(modelIndex)` のみである。
+この節で扱うのは、`AsDynamic()` から辿る値経路の `GetState(modelIndex)` である。
 
 - 対象:
   - `root.Groups[0].Items[0].MetricA.GetState(modelIndex)`
@@ -288,18 +288,194 @@ T-042 で設計対象にするのは、`AsDynamic()` から辿る value path の
   - value の indexer 読み取り（`Property[modelIndex]`）
   - generated projection の nested value path 実装
 
-T-042 の dynamic value-path `GetState` は、compare 時に materialize された member state を参照して判定する。
-そのため、`GetState` 呼び出し中に member getter を再実行してはならない。
+ここで使う用語:
 
-この変更で観測可能な差分は getter 評価タイミングに限定される。
-dynamic value-path `GetState` のために必要な getter 評価や例外発生は compare / node construction 時に前倒しされ得るが、
-`GetState` 呼び出し時に追加の getter 実行を発生させない。
+- プロパティ宣言型:
+  - モデルのプロパティ宣言に書かれている型。
+  - 例: `public DetailBase Detail { get; init; }` の `Detail` のプロパティ宣言型は `DetailBase`。
+- 比較時に事前構築済みのメンバー:
+  - `Compare(...)` 実行中に、ライブラリが内部 node / state として先に作っておいたメンバー。
+  - 典型例は、プロパティ宣言型からそのまま辿れるメンバー。
+- 呼び出し時の反射による代替解決:
+  - 比較時に事前構築済みの node が無いため、`GetState(...)` を呼んだ瞬間に実行時オブジェクトを反射で辿って値を読む経路。
+  - ここでいう「代替」は、「事前構築済み state を読む本来経路の代わりに、その場で値を辿る経路」を指す。
 
-上記の non-invasive 保証は、compare 時に materialize 済みの member に適用する。
-declared type に存在しない runtime-derived 追加メンバーは dynamic access 自体は継続利用できるが、
-`GetState` 判定は legacy の runtime reflection fallback を使うため T-042 の保証対象外とする。
-ただし runtime-derived 追加メンバーが container の場合、`AsDynamic()` からの member access は `foreach` / index access 可能な list view として継続利用できる。
-runtime-derived container の正規化前提（例: sequence element の `[CompareKey]`）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す。
+比較時に事前構築済みのメンバーでは、`GetState(modelIndex)` は保存済みの state を参照して判定する。
+そのため、`GetState` 呼び出し中に member getter を再実行しないことを保証する。
+
+この保証は、getter の副作用や例外発生タイミングを比較実行時へ寄せるためのものである。
+`GetState` のために必要な getter 評価や例外発生は compare / node construction 時に前倒しされ得るが、
+`GetState` 呼び出し時に追加の getter 実行は発生させない。
+
+ただし、この保証は比較時に事前構築済みのメンバーに限る。
+プロパティ宣言型に存在しない実行時専用メンバーは dynamic access 自体は継続利用できるが、
+`GetState` は「呼び出し時の反射による代替解決」で判定する。
+そのため、`GetState` 自体が常に使えないわけではないが、
+「getter を再実行しない」「比較時に保存済み state だけを見る」という保証は適用しない。
+
+実行時専用メンバーの `GetState` が呼べる例:
+
+```csharp
+public abstract class DetailBase
+{
+}
+
+public sealed class DetailLeaf : DetailBase
+{
+    public string? Label { get; init; }
+}
+
+public sealed class Item
+{
+    public DetailBase Detail { get; init; } = null!;
+}
+
+dynamic root = result.AsDynamic();
+ValueState state = root.Items[0].Detail.Label.GetState(0);
+```
+
+- `DetailBase` には `Label` が無いが、実行時オブジェクトが `DetailLeaf` なら access 自体は継続できる
+- この `GetState` は比較時に保存済みの `Label` state を読むのではなく、呼び出し時に実行時オブジェクトを反射で辿って判定する
+
+実行時専用メンバーの `GetState` が失敗し得る例:
+
+```csharp
+public abstract class DetailBase
+{
+}
+
+public sealed class DetailLeaf : DetailBase
+{
+    public string? Label { get; init; }
+}
+
+public sealed class DetailWithoutLabel : DetailBase
+{
+}
+
+// left は DetailLeaf、right は DetailWithoutLabel
+dynamic root = result.AsDynamic();
+ValueState state = root.Items[0].Detail.Label.GetState(0);
+```
+
+- 片側の実行時オブジェクトに `Label` が無いので、`GetState` は `MissingMemberException` で失敗し得る
+- これは「プロパティ宣言型に無い実行時専用メンバー」を、呼び出し時に反射で辿っているため
+
+一方、実行時専用メンバーが container の場合は、member access 自体を list view として継続利用できる。
+
+```csharp
+public abstract class DetailBase
+{
+}
+
+public sealed class DetailWithChildren : DetailBase
+{
+    public List<Child> Children { get; init; } = [];
+}
+
+public sealed class Child
+{
+    [CompareKey]
+    public int ChildId { get; init; }
+
+    public string? Label { get; init; }
+}
+
+dynamic root = result.AsDynamic();
+foreach (dynamic child in root.Items[0].Detail.Children)
+{
+    string? label = child.Label[0];
+}
+```
+
+- これは `a.b.c.d` の `d` が実行時専用 `List` でも `foreach` / index access できる、という意味である
+- ただし container 正規化の前提（例: sequence element に `[CompareKey]` が必要）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す
+
+### 4.2.3 実行時専用メンバーで `GetState` が判定される仕組み
+
+この節では、`root.Items[0].Detail.Label.GetState(0)` のような dynamic value path が、
+保存済み state を読む通常経路と、呼び出し時に反射で値を辿る代替経路のどちらへ入るかを説明する。
+
+実行時専用メンバーとは、プロパティ宣言型には無いが、実行時オブジェクトには存在するメンバーである。
+
+```csharp
+public abstract class DetailBase
+{
+}
+
+public sealed class DetailLeaf : DetailBase
+{
+    public string? Label { get; init; }
+}
+
+public sealed class Item
+{
+    public DetailBase Detail { get; init; } = null!;
+}
+```
+
+この例では、`Detail` のプロパティ宣言型は `DetailBase` であり、`Label` は `DetailBase` には無い。
+そのため `Detail.Label` は、比較時に常に内部 node として作られるとは限らない。
+
+dynamic value path の `GetState` は、内部的には次の情報を持つ。
+
+- 比較結果 root node
+- `Detail.Label` のような member path
+- その path に対応する保存済み node があれば、その参照
+
+判定手順は次の 2 経路に分かれる。
+
+1. 保存済み state を読む通常経路
+   - 比較時にその member path が内部 node として作られていれば、その保存済み node を使う
+   - `GetState(modelIndex)` はその node の `GetState` をそのまま返す
+   - この経路では、`GetState` 呼び出し中に getter を再実行しない
+
+2. 呼び出し時に反射で値を辿る代替経路
+   - 保存済み node が無い場合、`GetState(modelIndex)` はその場で root model object から member path を辿る
+   - 具体的には、各段で現在の実行時型に対して public property を反射で探し、値を取得する
+   - 対象 model slot が欠損なら `Missing`
+   - 比較相手 model が 1 つも無い場合も `Missing`
+   - 対象 model slot に値があり、比較相手 slot のどれかが欠損なら `Mismatched`
+   - 双方に値があり、presence が同じで `Equals` が一致すれば `Matched`
+   - 双方に値があり、presence が違うか `Equals` が不一致なら `Mismatched`
+
+代替経路の擬似フロー:
+
+```text
+GetState(modelIndex)
+  -> 保存済み node があるか?
+     -> Yes: 保存済み node の GetState を返す
+     -> No:
+        -> 指定 model の root 値を取得
+        -> member path を各段で反射して辿る
+        -> 途中の property が見つからなければ MissingMemberException
+        -> 比較相手 model が無ければ Missing
+        -> 他 model に対しても同じ path を反射して辿る
+        -> presence / Equals で Matched/Mismatched/Missing を決める
+```
+
+この代替経路で起こり得ること:
+
+1. `GetState` は呼べることがある
+   - 実行時オブジェクトに対象メンバーがあれば、保存済み node が無くても判定自体はできる
+
+2. `GetState` は失敗することがある
+   - 対象 model でも比較相手 model でも、member path の途中で property を見つけられないと `MissingMemberException` になる
+   - getter 自体が例外を投げる場合、その例外は `GetState` 呼び出し側へそのまま伝播する
+
+3. 「getter を再実行しない」保証は無い
+   - 判定のために、その場で property getter を呼んで値を取得するからである
+   - したがって、副作用や例外発生は compare 時ではなく `GetState` 呼び出し時に起き得る
+
+実行時専用メンバーが container の場合は、この代替経路に入る前に member access 側で container 判定を行う。
+
+- 実行時オブジェクト上の `Children` が `List<T>` なら、`root.Items[0].Detail.Children` は list view へ切り替える
+- その結果、`foreach` や `[index]` は継続利用できる
+- ただし container 正規化の前提を満たさない場合は `CompareExecutionException` で失敗する
+
+つまり、実行時専用メンバーの `GetState` は「常に使えない」のではない。
+ただし、保存済み state を読む通常経路ではなく、呼び出し時に反射で値を辿る代替経路へ入ることがあり、
+その場合は getter 再実行・`MissingMemberException`・getter 例外伝播を許容する。
 
 深い階層は `Children(...)` を連鎖して辿る。
 
@@ -338,7 +514,7 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
 - Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
 - `SelectModel(modelIndex)` は指定 model で `Missing` でない要素のみを返し、順序は key union 順を維持する
-- T-042 の non-invasive `GetState` 対応は dynamic value path に限定し、generated nested value path の parity はこの task の対象外とする
+- getter を再実行しない `GetState` 保証は dynamic value path に限定し、generated nested value path の parity はこの設計範囲に含めない
 
 ## 4.4 Generated Projection Scope (Initial)
 
@@ -369,10 +545,10 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
   - `Missing`: 当該 slot が欠損、または比較対象がない
   - `Matched`: 当該 slot が存在し、比較対象と一致
   - `Mismatched`: 当該 slot が存在し、比較対象と不一致（比較先欠損を含む）
-- T-042 の dynamic value-path `GetState` は compare 時に保持した member state を参照し、状態判定のために getter を再実行しない
+- dynamic value-path `GetState` は、比較時に事前構築済みのメンバーについては compare 時に保持した member state を参照し、状態判定のために getter を再実行しない
 - その結果、dynamic value path で観測される getter の副作用や例外は compare / node construction 時に前倒しされ得る
-- ただし、この non-invasive 保証は materialize 済み member に限定され、runtime-derived 追加メンバーは legacy reflection fallback を利用する
-- generated projection の nested value path は T-042 の対象外であり、この timing 制約は直ちには適用しない
+- ただし、この保証は比較時に事前構築済みのメンバーに限定され、プロパティ宣言型に無い実行時専用メンバーは呼び出し時の反射による代替解決を利用する
+- generated projection の nested value path には、この timing 制約を直ちには適用しない
 
 ```csharp
 var metric = items[1][1]?.MetricA;
@@ -412,10 +588,10 @@ trace 行は人間確認を主目的とし、少なくとも次を含む。
 
 - phase
 - path
-- declared type
+- プロパティ宣言型
 - container category（`Dictionary` / `List` / `Array` / `IEnumerable` / `ScalarOrObject`）
 - runtime type（判明時）
-- 追加情報（element type、key type、materialized count、compare key 名、issue code など）
+- 追加情報（element type、key type、実体化件数、compare key 名、issue code など）
 
 ## 6. Result Entry
 

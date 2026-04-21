@@ -12,6 +12,30 @@
 
 ## Done
 
+- T-075: dynamic `GetState` の実行時専用メンバー判定フロー明文化
+  - Status: 完了（保存済み state 参照経路と呼び出し時の反射による代替解決経路の分岐、single-model `Missing`、`MissingMemberException` 条件、container 特例を設計書へ反映）
+  - Phase: Phase 2
+  - Estimate: S
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/task-t-075-implementation-20260421213844.md`
+    - `reports/task-t-075-verification-20260421213844.md`
+    - `reports/task-t-075-review-20260421213844.md`
+
+- T-074: dynamic `GetState` 契約説明の明確化
+  - Status: 完了（task 番号依存の説明を外し、用語・保証範囲・例外条件を日本語で明確化）
+  - Phase: Phase 2
+  - Estimate: S
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/06-ExecutionPipeline.md`
+    - `doc/design/detail/09-ValueStateBehavior.md`
+    - `reports/task-t-074-implementation-20260421204344.md`
+    - `reports/task-t-074-verification-20260421204344.md`
+    - `reports/task-t-074-review-20260421204344.md`
+
 - T-073: dynamic runtime-derived container member access 修正
   - Status: 完了（runtime-derived な container member を `AsDynamic()` から list view として access 可能化し、error path も silent failure させない）
   - Phase: Phase 3
