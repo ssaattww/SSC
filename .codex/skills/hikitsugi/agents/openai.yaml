@@ -1,4 +1,0 @@
-interface:
-  display_name: "Hikitsugi"
-  short_description: "次回作業への引き継ぎ情報を整理し記録するためのスキル"
-  default_prompt: "$hikitsugi を使って、今回の作業内容を次回作業向けの引き継ぎ資料に整理してください。"
