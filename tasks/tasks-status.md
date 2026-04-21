@@ -4,7 +4,14 @@
 
 ## In Progress
 
-- （なし）
+- T-070: 差分のある直下子要素を特定する探索 API 追加
+  - Status: 進行中（`HasDifferences()` と `GetDirectChildren()` の公開契約を詳細設計へ反映中）
+  - Phase: Phase 3
+  - Exit Criteria:
+    - `IParallelNode.HasDifferences()` の判定範囲が設計書で明確化されている
+    - `IParallelNode.GetDirectChildren()` と `ParallelChildSet` の公開シグネチャが設計書で明確化されている
+    - 直下 member の順序契約と container child の順序契約が設計書で明確化されている
+    - 実装時に固定すべきテスト観点が checklist に追加されている
 
 ## Backlog
 

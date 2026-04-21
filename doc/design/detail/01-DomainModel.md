@@ -46,12 +46,38 @@ internal sealed class ParallelNode<T> : Parallel<T>
 {
     T?[] Values;
     Dictionary<string, IReadOnlyList<IParallelNode>> Children;
+    Dictionary<string, IParallelNode> MemberNodes;
 }
 ```
 
 - `Values[modelIndex]` が model slot
-- `Children` は構築中内部表現
+- `Children` は container member の正規化済み child 集合
+- `MemberNodes` は scalar/object member を node として materialize した内部表現
 - 公開面では `Children(...)` / `AsDynamic()` / generated projection により階層アクセスへ投影される
+- T-070 では上記内部表現を `IParallelNode.GetDirectChildren()` へ束ねて公開し、ユーザーが通常 node 型のまま探索を組み立てられるようにする
+
+## 3.1 Direct Child Traversal (Public Concept)
+
+差分探索の共通面は `IParallelNode` に寄せる。
+
+```csharp
+public interface IParallelNode
+{
+    bool HasDifferences();
+    IReadOnlyList<ParallelChildSet> GetDirectChildren();
+}
+
+public readonly struct ParallelChildSet
+{
+    public string Name { get; }
+    public IReadOnlyList<IParallelNode> Nodes { get; }
+}
+```
+
+- `HasDifferences()` は current node またはその配下 subtree のどこかに差分があれば `true`
+- `GetDirectChildren()` は current node の直下 member を property 単位で返す
+- 返却される探索対象 node は通常アクセス時と同じ `IParallelNode` / `ParallelNode<T>` 系であり、探索専用の別 node 型は導入しない
+- 親参照（`Parent` など）は T-070 の対象外とし、上方向の経路復元は公開契約に含めない
 
 ## 3.2 Dynamic Projection Access (Public)
 
@@ -86,8 +112,9 @@ var keyText = typedRoot.Groups[0].Items[0].NodeMeta.KeyText;
 - list index 範囲外は `ModelIndexOutOfRange`
 - node メタ情報は `NodeMeta` 配下（`NodeMeta.Count` / `NodeMeta.KeyText`）で参照する
 - 投影切替の入口は `CompareResult` 拡張（`AsDynamic()` / `AsGeneratedView()`）に統一する
+- 直下 child 探索は generated 専用型ではなく `IParallelNode` 共通面で扱う
 
-## 3.1 CompareIgnore Attribute
+## 3.4 CompareIgnore Attribute
 
 比較対象に入れたくないメンバーは `CompareIgnore` 属性で除外する。
 

@@ -32,6 +32,8 @@
 
 - Status: In Progress
 - Notes:
+  - 現在タスクは T-070（差分のある直下子要素を特定する探索 API 追加）の設計反映
+  - T-070 では `IParallelNode` 共通面に `HasDifferences()` と `GetDirectChildren()` を追加し、ユーザー側で再帰探索を組み立てられる契約を先に確定する
   - 直近の完了タスクは T-069（compare 実行 trace ログ出力の追加）
   - T-069 を完了し、trace callback で container 判定・runtime type・materialize 件数・compare key 解決結果を確認できるようにした
   - T-042 を完了し、materialize 済み member の `GetState` 非侵襲化、indexer/runtime-derived fallback 契約、side-effect/exception getter 回帰テストを追加
