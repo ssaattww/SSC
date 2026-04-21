@@ -298,6 +298,8 @@ dynamic value-path `GetState` のために必要な getter 評価や例外発生
 上記の non-invasive 保証は、compare 時に materialize 済みの member に適用する。
 declared type に存在しない runtime-derived 追加メンバーは dynamic access 自体は継続利用できるが、
 `GetState` 判定は legacy の runtime reflection fallback を使うため T-042 の保証対象外とする。
+ただし runtime-derived 追加メンバーが container の場合、`AsDynamic()` からの member access は `foreach` / index access 可能な list view として継続利用できる。
+runtime-derived container の正規化前提（例: sequence element の `[CompareKey]`）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す。
 
 深い階層は `Children(...)` を連鎖して辿る。
 

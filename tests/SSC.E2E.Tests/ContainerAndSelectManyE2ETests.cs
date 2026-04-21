@@ -400,6 +400,113 @@ public sealed class ContainerAndSelectManyE2ETests
     }
 
     [Fact]
+    public void Compare_DynamicProjection_RuntimeDerivedContainerMember_AllowsForeachAndIndexAccess()
+    {
+        // Intent: declared type に無い runtime-derived container member でも dynamic list view として辿れる。
+        var models = new[]
+        {
+            new DerivedDetailDataset
+            {
+                Items =
+                [
+                    new DerivedDetailItem
+                    {
+                        ItemId = 100,
+                        Detail = new DerivedDetailWithChildren
+                        {
+                            Children =
+                            [
+                                new DerivedRuntimeChild { ChildId = 1, Label = "left-1" },
+                                new DerivedRuntimeChild { ChildId = 2, Label = "left-2" },
+                            ],
+                        },
+                    },
+                ],
+            },
+            new DerivedDetailDataset
+            {
+                Items =
+                [
+                    new DerivedDetailItem
+                    {
+                        ItemId = 100,
+                        Detail = new DerivedDetailWithChildren
+                        {
+                            Children =
+                            [
+                                new DerivedRuntimeChild { ChildId = 1, Label = "right-1" },
+                                new DerivedRuntimeChild { ChildId = 2, Label = "right-2" },
+                            ],
+                        },
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.AsDynamic()!;
+
+        var children = ((IEnumerable<object?>)root.Items[0].Detail.Children).Cast<dynamic>().ToArray();
+        dynamic first = root.Items[0].Detail.Children[0];
+
+        Assert.Equal(2, children.Length);
+        Assert.Equal(1, (int)first.ChildId[0]);
+        Assert.Equal("left-1", (string?)children[0].Label[0]);
+        Assert.Equal("right-2", (string?)children[1].Label[1]);
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_RuntimeDerivedContainerMember_ThrowsWhenSequenceElementHasNoCompareKey()
+    {
+        // Intent: runtime-derived container の正規化前提を満たさない場合は silent に握り潰さず例外で可視化する。
+        var models = new[]
+        {
+            new DerivedDetailDataset
+            {
+                Items =
+                [
+                    new DerivedDetailItem
+                    {
+                        ItemId = 100,
+                        Detail = new DerivedDetailWithNonKeyedChildren
+                        {
+                            Children =
+                            [
+                                new DerivedRuntimeChildWithoutKey { Label = "left-1" },
+                            ],
+                        },
+                    },
+                ],
+            },
+            new DerivedDetailDataset
+            {
+                Items =
+                [
+                    new DerivedDetailItem
+                    {
+                        ItemId = 100,
+                        Detail = new DerivedDetailWithNonKeyedChildren
+                        {
+                            Children =
+                            [
+                                new DerivedRuntimeChildWithoutKey { Label = "right-1" },
+                            ],
+                        },
+                    },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        dynamic root = result.AsDynamic()!;
+
+        var exception = Assert.Throws<CompareExecutionException>(
+            () => _ = ((IEnumerable<object?>)root.Items[0].Detail.Children).Cast<dynamic>().ToArray());
+
+        Assert.Equal(CompareIssueCode.CompareKeyNotFoundOnSequenceElement, exception.Code);
+    }
+
+    [Fact]
     public void Compare_DynamicProjection_PrefersModelMember_WhenNameCollidesWithNodeMeta()
     {
         // Intent: モデル側に Count/KeyText がある場合は、そちらの値アクセスを優先する。
@@ -834,6 +941,29 @@ public sealed class ContainerAndSelectManyE2ETests
     public abstract class DetailBase;
 
     public sealed class DerivedDetailLeaf : DetailBase
+    {
+        public string? Label { get; init; }
+    }
+
+    public sealed class DerivedDetailWithChildren : DetailBase
+    {
+        public List<DerivedRuntimeChild> Children { get; init; } = [];
+    }
+
+    public sealed class DerivedDetailWithNonKeyedChildren : DetailBase
+    {
+        public List<DerivedRuntimeChildWithoutKey> Children { get; init; } = [];
+    }
+
+    public sealed class DerivedRuntimeChild
+    {
+        [CompareKey]
+        public int ChildId { get; init; }
+
+        public string? Label { get; init; }
+    }
+
+    public sealed class DerivedRuntimeChildWithoutKey
     {
         public string? Label { get; init; }
     }
