@@ -8,29 +8,28 @@
 
 ## Backlog
 
+- なし
+
+## Done
+
 - T-082: T-076 系 API の統合検証と PR 仕上げ
-  - Status: 未着手
+  - Status: 完了（full validation と最終レビューをサブエージェントで実施し、PR body / tracking を最終同期）
   - Phase: Phase 4
   - Estimate: S
   - Depends on:
     - T-081 README 利用例と public API ドキュメントの同期
-  - Execution Policy:
-    - 検証実行はサブエージェントへ委譲する
-    - 最終レビューはサブエージェントへ委譲する
-    - 最終レビューサブエージェントは `gpt-5.5 high` を使う
-    - 1 task / 1 commit / 1 push で完結させる
-  - Scope:
-    - `dotnet test SSC.sln --configuration Release`
-    - PR body の validation / risk / report references 更新
-    - task / phase tracking の最終同期
-  - Exit Criteria:
-    - full test が成功している
-    - PR body が最新の変更、検証、残リスクを反映している
-    - T-076 系 task の完了状態が tracking に反映されている
-    - サブエージェント verification report とサブエージェント final review report がある
-    - final tracking commit/push 済み
-
-## Done
+  - Output:
+    - `reports/task-t-082-verification-20260623101834.md`
+    - `reports/task-t-082-final-review-20260623101834.md`
+    - `tasks/tasks-status.md`
+    - `tasks/phases-status.md`
+    - PR #32 body
+  - Verification:
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit tests 29 件、E2E tests 61 件）
+    - `git diff --check` 成功
+    - `gh pr view 32 --json body --jq .body` 成功
+    - 最終レビュー指摘なし
+    - Markdown 検査はユーザー指示により未実施
 
 - T-081: README 利用例と public API ドキュメントの同期
   - Status: 完了（README に XPath-like path access / diff entry 利用例を追加し、public API 設計書を実装 API と同期、レビュー P2 指摘 2 件を修正して最終レビュー指摘なし）

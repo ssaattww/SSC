@@ -31,8 +31,9 @@
 
 ## Phase 3: 実装
 
-- Status: In Progress
+- Status: Done
 - Notes:
+  - T-076 系の XPath-like path access / diff entry helper 実装は T-077 から T-081 まで完了した
   - T-081 を完了し、README に XPath-like path access / diff entry の最小利用例を追加し、public API 設計書を実装後 API 名・契約・表示例と同期した
   - T-081 では docs review の P2 指摘 2 件を修正し、最終再レビューで指摘なしを確認した。Markdown 検査はユーザー指示により未実施
   - T-080 を完了し、child node を持たない empty list / dictionary の container presence mismatch を `Kind == ContainerPresence` entry として列挙できるようにした
@@ -132,4 +133,8 @@
 
 ## Phase 4: 検証・受け入れ
 
-- Status: Not Started
+- Status: Done
+- Notes:
+  - T-082 を完了し、`dotnet test SSC.sln --configuration Release` が成功した（Unit tests 29 件、E2E tests 61 件）
+  - T-082 では `git diff --check`、PR #32 body 確認、最終レビューを実施し、最終レビュー指摘なしを確認した
+  - Markdown 検査はユーザー指示により未実施
