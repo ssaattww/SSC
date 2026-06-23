@@ -8,29 +8,6 @@
 
 ## Backlog
 
-- T-081: README 利用例と public API ドキュメントの同期
-  - Status: 未着手
-  - Phase: Phase 3
-  - Estimate: S
-  - Depends on:
-    - T-080 empty container 差分の `ContainerPresence` entry 追加
-  - Execution Policy:
-    - ドキュメント更新はサブエージェントへ委譲する
-    - ドキュメント更新サブエージェントは `gpt-5.5 medium` を使う
-    - レビューはサブエージェントへ委譲する
-    - レビューサブエージェントは `gpt-5.5 high` を使う
-    - 1 task / 1 commit / 1 push で完結させる
-  - Scope:
-    - README の利用例
-    - public API 設計書と実装後 API 名の同期
-    - 必要に応じた package readme 同期
-  - Exit Criteria:
-    - XPath-like path access と diff entry の最小利用例が README にある
-    - 設計書と実装 API の命名・例外・表示例が一致している
-    - Markdown 検査はユーザー指示がない限り実施しない
-    - サブエージェント実装 report とサブエージェント review report がある
-    - docs-only commit/push 済み
-
 - T-082: T-076 系 API の統合検証と PR 仕上げ
   - Status: 未着手
   - Phase: Phase 4
@@ -54,6 +31,22 @@
     - final tracking commit/push 済み
 
 ## Done
+
+- T-081: README 利用例と public API ドキュメントの同期
+  - Status: 完了（README に XPath-like path access / diff entry 利用例を追加し、public API 設計書を実装 API と同期、レビュー P2 指摘 2 件を修正して最終レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-080 empty container 差分の `ContainerPresence` entry 追加
+  - Output:
+    - `README.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/task-t-081-implementation-20260623100427.md`
+    - `reports/task-t-081-review-20260623100427.md`
+  - Verification:
+    - `rg -n "PackageReadmeFile|README.md" src/SSC/SSC.csproj src/SSC.Generators/SSC.Generators.csproj` 成功
+    - `git diff --check` 成功
+    - Markdown 検査はユーザー指示により未実施
 
 - T-080: empty container 差分の `ContainerPresence` entry 追加
   - Status: 完了（empty list / dictionary の child node を持たない container presence mismatch を `ContainerPresence` entry として TDD で追加し、レビュー指摘なし）

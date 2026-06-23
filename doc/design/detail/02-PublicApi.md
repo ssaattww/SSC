@@ -340,18 +340,18 @@ XML XPath の完全実装ではなく、SSC の object member / container node /
 
 #### 4.2.2.1 Public API Contract
 
-`GetNodeByPath(path)` は、XPath-like path に一致する `IParallelNode` を返す。
+`GetNodeByPath<T>(this CompareResult<T> result, string path)` は、XPath-like path に一致する `IParallelNode` を返す。
 path が解決できない場合は `null` を返す。
 
-`GetValueByPath(path, modelIndex)` は、`GetNodeByPath(path)` で取得した node の `GetValue(modelIndex)` を返す。
+`GetValueByPath<T>(this CompareResult<T> result, string path, int modelIndex)` は、`GetNodeByPath(path)` で取得した node の `GetValue(modelIndex)` を返す。
 path が解決できない場合は `null` を返す。
 model index が範囲外の場合は、既存 node indexer と同じく `ModelIndexOutOfRange` の `CompareExecutionException` を返す。
 
-`GetStateByPath(path, modelIndex)` は、`GetNodeByPath(path)` で取得した node の `GetState(modelIndex)` を返す。
+`GetStateByPath<T>(this CompareResult<T> result, string path, int modelIndex)` は、`GetNodeByPath(path)` で取得した node の `GetState(modelIndex)` を返す。
 path が解決できない場合は `Missing` を返す。
 model index が範囲外の場合は、既存 node indexer と同じく `ModelIndexOutOfRange` の `CompareExecutionException` を返す。
 
-`GetDiffEntries()` は、差分のある node を leaf/value path 単位で列挙する。
+`GetDiffEntries<T>(this CompareResult<T> result)` は、差分のある node を leaf/value path 単位で列挙し、child node を持たない container presence mismatch を container member path で列挙する。
 返却値は構造化データとし、表示専用 string API にはしない。
 ただし `ParallelDiffEntry` と `ParallelDiffValue` は人間確認用の `ToString()` を必ず実装する。
 
@@ -487,6 +487,7 @@ object/container node で child 側に差分があるだけの場合は、親 no
 ```text
 Groups[1].Items[100].MetricA: [0]=1(Mismatched), [1]=10(Mismatched)
 Groups[1].Items[200].Name: [0]="left"(Mismatched), [1]=<missing>(Missing)
+Items: [0]=null(Mismatched), [1]=<missing>(Missing)
 ```
 
 `ParallelDiffValue.ToString()` は `[modelIndex]=value(state)` 形式を返す。

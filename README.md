@@ -150,6 +150,64 @@ public sealed class ProductItem
 }
 ```
 
+## XPath-like Path Access and Diff Entries
+
+Use XPath-like paths when you want to read a node, value, or state without using dynamic or generated projections.
+Paths are root-relative by default, and a root type prefix is optional.
+
+```csharp
+IParallelNode? priceNode = result.GetNodeByPath("Items[2].Price");
+
+object? leftPrice = result.GetValueByPath("ProductModel.Items[2].Price", 0); // 200
+object? rightPrice = result.GetValueByPath("Items[2].Price", 1);             // 250
+ValueState rightState = result.GetStateByPath("Items[1].Price", 1);          // Missing
+```
+
+`GetDiffEntries()` returns structured diff entries with path, kind, node, and per-model values.
+For `ParallelDiffEntryKind.Node`, `GetNodeByPath(entry.Path)` resolves the same node.
+
+```csharp
+IReadOnlyList<ParallelDiffEntry> entries = result.GetDiffEntries();
+
+ParallelDiffEntry priceDiff = entries.Single(entry => entry.Path == "Items[2].Price");
+
+IParallelNode? sameNode = result.GetNodeByPath(priceDiff.Path);
+bool resolvesSameNode = ReferenceEquals(priceDiff.Node, sameNode); // true
+
+foreach (ParallelDiffValue value in priceDiff.Values)
+{
+    Console.WriteLine(value);
+}
+
+Console.WriteLine(priceDiff);
+// Items[2].Price: [0]=200(Mismatched), [1]=250(Mismatched)
+```
+
+For `ParallelDiffEntryKind.ContainerPresence`, `Node` is `null`; the path identifies the container member for display, but `GetNodeByPath(entry.Path)` is not guaranteed to resolve a node.
+`ValueState` distinguishes a missing slot from an actual `null` value.
+
+```csharp
+CompareResult<OptionalProductModel> emptyContainerResult = ParallelCompareApi.Compare(
+[
+    new OptionalProductModel { Items = [] },
+    new OptionalProductModel { Items = null },
+]);
+
+IReadOnlyList<ParallelDiffEntry> containerEntries = emptyContainerResult.GetDiffEntries();
+ParallelDiffEntry containerDiff = containerEntries.Single(entry =>
+    entry.Kind == ParallelDiffEntryKind.ContainerPresence);
+
+IParallelNode? unresolved = emptyContainerResult.GetNodeByPath(containerDiff.Path); // null
+
+Console.WriteLine(containerDiff);
+// Items: [0]=null(Mismatched), [1]=null(Mismatched)
+
+public sealed class OptionalProductModel
+{
+    public List<ProductItem>? Items { get; init; }
+}
+```
+
 ## Source Generator Example
 
 ```csharp

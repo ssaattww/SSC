@@ -33,6 +33,8 @@
 
 - Status: In Progress
 - Notes:
+  - T-081 を完了し、README に XPath-like path access / diff entry の最小利用例を追加し、public API 設計書を実装後 API 名・契約・表示例と同期した
+  - T-081 では docs review の P2 指摘 2 件を修正し、最終再レビューで指摘なしを確認した。Markdown 検査はユーザー指示により未実施
   - T-080 を完了し、child node を持たない empty list / dictionary の container presence mismatch を `Kind == ContainerPresence` entry として列挙できるようにした
   - T-080 では `Node == null`、container member path、`Values` / `ToString()` による Missing と null の区別、`GetNodeByPath(Path)` 非保証を検証し、レビュー指摘なしを確認した
   - T-079 を完了し、`GetDiffEntries<T>()` で `Kind == Node` の通常 node 差分を structured entry として列挙できるようにした
