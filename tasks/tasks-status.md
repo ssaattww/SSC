@@ -4,48 +4,9 @@
 
 ## In Progress
 
-- T-076: XPath-like path access と差分表示 helper の設計
-  - Status: 設計更新済み（実装単位を T-077 から T-082 へ分解中）
-  - Phase: Phase 2
-  - Estimate: M
-  - Execution Policy:
-    - コード実装とコードレビューはサブエージェントへ委譲する
-    - コード実装は TDD で進め、先に test target と failing test または newly required test を確定する
-    - 実装サブエージェントは `gpt-5.5 medium` を使う
-    - レビューサブエージェントは `gpt-5.5 high` を使う
-    - 親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する
-  - Exit Criteria:
-    - XPath-like path grammar が `doc/design/detail/02-PublicApi.md` に詳細化されている
-    - `CompareIssue.Path` と差分 helper の path 表現の違いが設計上区別されている
-    - 差分 helper は構造化データを返し、返却型が `ToString()` を実装する契約になっている
-    - 1 task / 1 push の実装タスクへ分解されている
+- （なし）
 
 ## Backlog
-
-- T-077: XPath-like path parser と public result 型の追加
-  - Status: 未着手
-  - Phase: Phase 3
-  - Estimate: S
-  - Depends on:
-    - T-076 XPath-like path access と差分表示 helper の設計
-  - Execution Policy:
-    - TDD で進め、先に parser / `ToString()` の test target を確定する
-    - コード実装はサブエージェントへ委譲する
-    - 実装サブエージェントは `gpt-5.5 medium` を使う
-    - コードレビューはサブエージェントへ委譲する
-    - レビューサブエージェントは `gpt-5.5 high` を使う
-    - 1 task / 1 commit / 1 push で完結させる
-  - Scope:
-    - `ParallelDiffEntry`
-    - `ParallelDiffEntryKind`
-    - `ParallelDiffValue`
-    - XPath-like path parser の internal 実装
-  - Exit Criteria:
-    - grammar、root prefix、selector、escape の unit test がある
-    - public result 型に `ToString()` 契約が実装されている
-    - node 解決や差分列挙には踏み込まない
-    - サブエージェント実装 report とサブエージェント review report がある
-    - focused test が成功し、commit/push 済み
 
 - T-078: XPath-like path による node/value/state 解決 API の追加
   - Status: 未着手
@@ -170,6 +131,37 @@
     - final tracking commit/push 済み
 
 ## Done
+
+- T-077: XPath-like path parser と public result 型の追加
+  - Status: 完了（parser / public diff result 型 / `ToString()` を TDD で追加し、review P2 指摘を修正、再レビューで指摘なし）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-076 XPath-like path access と差分表示 helper の設計
+  - Output:
+    - `src/SSC/ParallelDiffContracts.cs`
+    - `src/SSC/Internal/XPathLikePathParser.cs`
+    - `src/SSC/Properties/AssemblyInfo.cs`
+    - `tests/SSC.Unit.Tests/XPathLikePathParserUnitTests.cs`
+    - `tests/SSC.Unit.Tests/ParallelDiffResultUnitTests.cs`
+    - `reports/task-t-077-implementation-20260623091447.md`
+    - `reports/task-t-077-review-20260623091556.md`
+    - `reports/task-t-077-review-fix-20260623092446.md`
+  - Verification:
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikePathParserUnitTests|FullyQualifiedName~ParallelDiffResultUnitTests"` 成功（20 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release` 成功（23 件）
+    - `git diff --check` 成功
+
+- T-076: XPath-like path access と差分表示 helper の設計
+  - Status: 完了（XPath-like grammar、差分構造化データ、`ToString()` 表示契約、`CompareIssue.Path` との差分、1 task / 1 push の実装分解を設計・tracking に反映）
+  - Phase: Phase 2
+  - Estimate: M
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `tasks/tasks-status.md`
+    - `tasks/phases-status.md`
+    - `tasks/feedback-points.md`
 
 - T-075: dynamic `GetState` の実行時専用メンバー判定フロー明文化
   - Status: 完了（保存済み state 参照経路と呼び出し時の反射による代替解決経路の分岐、single-model `Missing`、`MissingMemberException` 条件、container 特例を設計書へ反映）

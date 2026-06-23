@@ -12,9 +12,9 @@
 
 ## Phase 2: 詳細設計確定
 
-- Status: In Progress
+- Status: Done
 - Notes:
-  - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加中
+  - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加し、実装単位を T-077 から T-082 へ分割した
   - `doc/draft/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
   - Draft/非Draft を `doc/draft` と `doc/design` に分離
   - 非Draft の詳細設計を `doc/design/detail` に機能粒度で分割
@@ -33,6 +33,8 @@
 
 - Status: In Progress
 - Notes:
+  - T-077 を完了し、XPath-like path parser、`ParallelDiffEntry` / `ParallelDiffValue`、`ToString()` 契約、parser unit test を追加した
+  - T-077 では review P2 指摘（複数 selector grammar の誤受理）を TDD で修正し、再レビューで指摘なしを確認した
   - T-076 系実装は T-077 から T-082 へ分割し、1 task / 1 commit / 1 push の単位で進める
   - コード実装は TDD で進め、実装サブエージェントは `gpt-5.5 medium`、レビューサブエージェントは `gpt-5.5 high` を使う
   - コード実装・コードレビュー・検証実行はサブエージェントへ委譲し、親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する
