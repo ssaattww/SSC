@@ -14,6 +14,16 @@
   - 次アクション対応:
     - T-076 のコード実装フェーズに入る前に `codex-delegation-executor` で実装サブエージェントを起動する
     - review は従来どおり `review-enforcer` 経由でサブエージェントへ委譲する
+- ユーザー指摘: 実装は TDD で進め、実装サブエージェントは `gpt-5.5 medium`、レビューサブエージェントは `gpt-5.5 high` を使うこと。
+- 対応:
+  - T-077 以降のコード実装 task は、先に test target と failing test または newly required test を確定してから実装へ進む。
+  - 実装 worker は `gpt-5.5 medium`、レビュー worker は `gpt-5.5 high` を使う。
+  - 記録起点: ユーザー明示指摘
+  - 重複判定: 2026-06-23 のサブエージェント委譲方針への詳細追記
+  - スキル化判断: 既存の `tdd-executor` / `codex-delegation-executor` / `review-enforcer` 運用で対応。新規 skill 不要
+  - 次アクション対応:
+    - T-077 着手時に `tdd-executor` で test target を決め、`codex-delegation-executor` 経由で実装サブエージェントへ渡す
+    - review gate では `gpt-5.5 high` のサブエージェントへ委譲する
 
 ## 2026-04-21
 

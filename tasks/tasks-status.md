@@ -10,6 +10,9 @@
   - Estimate: M
   - Execution Policy:
     - コード実装とコードレビューはサブエージェントへ委譲する
+    - コード実装は TDD で進め、先に test target と failing test または newly required test を確定する
+    - 実装サブエージェントは `gpt-5.5 medium` を使う
+    - レビューサブエージェントは `gpt-5.5 high` を使う
     - 親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する
   - Exit Criteria:
     - XPath-like path grammar が `doc/design/detail/02-PublicApi.md` に詳細化されている
@@ -26,8 +29,11 @@
   - Depends on:
     - T-076 XPath-like path access と差分表示 helper の設計
   - Execution Policy:
+    - TDD で進め、先に parser / `ToString()` の test target を確定する
     - コード実装はサブエージェントへ委譲する
+    - 実装サブエージェントは `gpt-5.5 medium` を使う
     - コードレビューはサブエージェントへ委譲する
+    - レビューサブエージェントは `gpt-5.5 high` を使う
     - 1 task / 1 commit / 1 push で完結させる
   - Scope:
     - `ParallelDiffEntry`
@@ -48,8 +54,11 @@
   - Depends on:
     - T-077 XPath-like path parser と public result 型の追加
   - Execution Policy:
+    - TDD で進め、先に path 解決 API の test target を確定する
     - コード実装はサブエージェントへ委譲する
+    - 実装サブエージェントは `gpt-5.5 medium` を使う
     - コードレビューはサブエージェントへ委譲する
+    - レビューサブエージェントは `gpt-5.5 high` を使う
     - 1 task / 1 commit / 1 push で完結させる
   - Scope:
     - `GetNodeByPath<T>()`
@@ -71,8 +80,11 @@
   - Depends on:
     - T-078 XPath-like path による node/value/state 解決 API の追加
   - Execution Policy:
+    - TDD で進め、先に diff entry 列挙の test target を確定する
     - コード実装はサブエージェントへ委譲する
+    - 実装サブエージェントは `gpt-5.5 medium` を使う
     - コードレビューはサブエージェントへ委譲する
+    - レビューサブエージェントは `gpt-5.5 high` を使う
     - 1 task / 1 commit / 1 push で完結させる
   - Scope:
     - `Kind == Node` の `ParallelDiffEntry` 列挙
@@ -94,8 +106,11 @@
   - Depends on:
     - T-079 通常 node 差分の `GetDiffEntries()` 追加
   - Execution Policy:
+    - TDD で進め、先に `ContainerPresence` の test target を確定する
     - コード実装はサブエージェントへ委譲する
+    - 実装サブエージェントは `gpt-5.5 medium` を使う
     - コードレビューはサブエージェントへ委譲する
+    - レビューサブエージェントは `gpt-5.5 high` を使う
     - 1 task / 1 commit / 1 push で完結させる
   - Scope:
     - child node を持たない container presence mismatch の diff entry
@@ -117,7 +132,9 @@
     - T-080 empty container 差分の `ContainerPresence` entry 追加
   - Execution Policy:
     - ドキュメント更新はサブエージェントへ委譲する
+    - ドキュメント更新サブエージェントは `gpt-5.5 medium` を使う
     - レビューはサブエージェントへ委譲する
+    - レビューサブエージェントは `gpt-5.5 high` を使う
     - 1 task / 1 commit / 1 push で完結させる
   - Scope:
     - README の利用例
@@ -139,6 +156,7 @@
   - Execution Policy:
     - 検証実行はサブエージェントへ委譲する
     - 最終レビューはサブエージェントへ委譲する
+    - 最終レビューサブエージェントは `gpt-5.5 high` を使う
     - 1 task / 1 commit / 1 push で完結させる
   - Scope:
     - `dotnet test SSC.sln --configuration Release`

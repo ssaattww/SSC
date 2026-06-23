@@ -34,6 +34,7 @@
 - Status: In Progress
 - Notes:
   - T-076 系実装は T-077 から T-082 へ分割し、1 task / 1 commit / 1 push の単位で進める
+  - コード実装は TDD で進め、実装サブエージェントは `gpt-5.5 medium`、レビューサブエージェントは `gpt-5.5 high` を使う
   - コード実装・コードレビュー・検証実行はサブエージェントへ委譲し、親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する
   - T-075 を完了し、`AsDynamic()` の value path が保存済み state を読む通常経路と、実行時反射で値を辿る代替経路へどう分岐するかを設計書へ追加した
   - T-075 では、single-model `Missing` 分岐、`MissingMemberException` が対象 model / 他 model のどちらでも起こり得る条件、runtime-only container の特例も追記した
