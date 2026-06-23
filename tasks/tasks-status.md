@@ -5,7 +5,7 @@
 ## In Progress
 
 - T-076: XPath-like path access と差分表示 helper の設計
-  - Status: 設計中（XPath-like path 文法、path 取得 API、差分構造化データ、`ToString()` 表示契約を設計書へ反映する）
+  - Status: 設計更新済み（実装単位を T-077 から T-082 へ分解中）
   - Phase: Phase 2
   - Estimate: M
   - Execution Policy:
@@ -15,10 +15,141 @@
     - XPath-like path grammar が `doc/design/detail/02-PublicApi.md` に詳細化されている
     - `CompareIssue.Path` と差分 helper の path 表現の違いが設計上区別されている
     - 差分 helper は構造化データを返し、返却型が `ToString()` を実装する契約になっている
+    - 1 task / 1 push の実装タスクへ分解されている
 
 ## Backlog
 
-- （なし）
+- T-077: XPath-like path parser と public result 型の追加
+  - Status: 未着手
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-076 XPath-like path access と差分表示 helper の設計
+  - Execution Policy:
+    - コード実装はサブエージェントへ委譲する
+    - コードレビューはサブエージェントへ委譲する
+    - 1 task / 1 commit / 1 push で完結させる
+  - Scope:
+    - `ParallelDiffEntry`
+    - `ParallelDiffEntryKind`
+    - `ParallelDiffValue`
+    - XPath-like path parser の internal 実装
+  - Exit Criteria:
+    - grammar、root prefix、selector、escape の unit test がある
+    - public result 型に `ToString()` 契約が実装されている
+    - node 解決や差分列挙には踏み込まない
+    - サブエージェント実装 report とサブエージェント review report がある
+    - focused test が成功し、commit/push 済み
+
+- T-078: XPath-like path による node/value/state 解決 API の追加
+  - Status: 未着手
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-077 XPath-like path parser と public result 型の追加
+  - Execution Policy:
+    - コード実装はサブエージェントへ委譲する
+    - コードレビューはサブエージェントへ委譲する
+    - 1 task / 1 commit / 1 push で完結させる
+  - Scope:
+    - `GetNodeByPath<T>()`
+    - `GetValueByPath<T>()`
+    - `GetStateByPath<T>()`
+    - scalar/object member と keyed / ordinal container child の解決
+  - Exit Criteria:
+    - root prefix あり/なしの path 解決 E2E がある
+    - keyed container と `#ordinal` container の解決 E2E がある
+    - 未解決 path と範囲外 model index の挙動が設計どおり検証されている
+    - 差分列挙には踏み込まない
+    - サブエージェント実装 report とサブエージェント review report がある
+    - focused test が成功し、commit/push 済み
+
+- T-079: 通常 node 差分の `GetDiffEntries()` 追加
+  - Status: 未着手
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-078 XPath-like path による node/value/state 解決 API の追加
+  - Execution Policy:
+    - コード実装はサブエージェントへ委譲する
+    - コードレビューはサブエージェントへ委譲する
+    - 1 task / 1 commit / 1 push で完結させる
+  - Scope:
+    - `Kind == Node` の `ParallelDiffEntry` 列挙
+    - leaf/value node 差分
+    - object/container node 自身の presence mismatch
+    - keyed path / ordinal path の生成
+  - Exit Criteria:
+    - `GetDiffEntries()` が構造化データを返す E2E がある
+    - 生成 path を `GetNodeByPath()` に渡して同じ node を解決できることを検証している
+    - `ToString()` の代表表示を検証している
+    - empty container の `ContainerPresence` には踏み込まない
+    - サブエージェント実装 report とサブエージェント review report がある
+    - focused test が成功し、commit/push 済み
+
+- T-080: empty container 差分の `ContainerPresence` entry 追加
+  - Status: 未着手
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+  - Execution Policy:
+    - コード実装はサブエージェントへ委譲する
+    - コードレビューはサブエージェントへ委譲する
+    - 1 task / 1 commit / 1 push で完結させる
+  - Scope:
+    - child node を持たない container presence mismatch の diff entry
+    - `Kind == ContainerPresence`
+    - `Node == null`
+    - container member path の表示
+  - Exit Criteria:
+    - empty list / empty dictionary の片側欠損を diff entry として落とさない E2E がある
+    - `ContainerPresence` の `Values` と `ToString()` が Missing / null を混同しない
+    - `GetNodeByPath(Path)` で node 解決を保証しないことがテストまたは設計コメントで明確化されている
+    - サブエージェント実装 report とサブエージェント review report がある
+    - focused test が成功し、commit/push 済み
+
+- T-081: README 利用例と public API ドキュメントの同期
+  - Status: 未着手
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-080 empty container 差分の `ContainerPresence` entry 追加
+  - Execution Policy:
+    - ドキュメント更新はサブエージェントへ委譲する
+    - レビューはサブエージェントへ委譲する
+    - 1 task / 1 commit / 1 push で完結させる
+  - Scope:
+    - README の利用例
+    - public API 設計書と実装後 API 名の同期
+    - 必要に応じた package readme 同期
+  - Exit Criteria:
+    - XPath-like path access と diff entry の最小利用例が README にある
+    - 設計書と実装 API の命名・例外・表示例が一致している
+    - Markdown 検査はユーザー指示がない限り実施しない
+    - サブエージェント実装 report とサブエージェント review report がある
+    - docs-only commit/push 済み
+
+- T-082: T-076 系 API の統合検証と PR 仕上げ
+  - Status: 未着手
+  - Phase: Phase 4
+  - Estimate: S
+  - Depends on:
+    - T-081 README 利用例と public API ドキュメントの同期
+  - Execution Policy:
+    - 検証実行はサブエージェントへ委譲する
+    - 最終レビューはサブエージェントへ委譲する
+    - 1 task / 1 commit / 1 push で完結させる
+  - Scope:
+    - `dotnet test SSC.sln --configuration Release`
+    - PR body の validation / risk / report references 更新
+    - task / phase tracking の最終同期
+  - Exit Criteria:
+    - full test が成功している
+    - PR body が最新の変更、検証、残リスクを反映している
+    - T-076 系 task の完了状態が tracking に反映されている
+    - サブエージェント verification report とサブエージェント final review report がある
+    - final tracking commit/push 済み
 
 ## Done
 
