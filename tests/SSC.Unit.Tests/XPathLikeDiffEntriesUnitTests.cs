@@ -22,6 +22,27 @@ public sealed class XPathLikeDiffEntriesUnitTests
         Assert.Same(entry.Node, result.GetNodeByPath(entry.Path));
     }
 
+    [Fact]
+    public void GetDiffEntries_WithContainerPresenceMissingState_DistinguishesMissingFromNullValue()
+    {
+        // Intent: ContainerPresence では Value は null 固定でも、State で Missing と present 側を区別する。
+        var root = new FakeRootNode();
+        root.SetChildren("Items", [], [NodePresenceState.PresentValue, NodePresenceState.Missing]);
+        var result = new CompareResult<FakeRoot> { Root = root };
+
+        var entry = Assert.Single(result.GetDiffEntries());
+
+        Assert.Equal("Items", entry.Path);
+        Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Null(entry.Node);
+        Assert.Null(result.GetNodeByPath(entry.Path));
+        Assert.Equal(ValueState.Mismatched, entry.Values[0].State);
+        Assert.Null(entry.Values[0].Value);
+        Assert.Equal(ValueState.Missing, entry.Values[1].State);
+        Assert.Null(entry.Values[1].Value);
+        Assert.Equal("Items: [0]=null(Mismatched), [1]=<missing>(Missing)", entry.ToString());
+    }
+
     private sealed class FakeRoot;
 
     private class FakeNode : IParallelNode, IParallelNodeInternal
@@ -30,6 +51,7 @@ public sealed class XPathLikeDiffEntriesUnitTests
         private readonly ValueState _state;
         private readonly Dictionary<string, IParallelNode> _members = new(StringComparer.Ordinal);
         private readonly Dictionary<string, IReadOnlyList<IParallelNode>> _children = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, IReadOnlyList<NodePresenceState>> _containerPresenceStates = new(StringComparer.Ordinal);
 
         public FakeNode(object? value, ValueState state, string? keyText = null)
         {
@@ -66,7 +88,10 @@ public sealed class XPathLikeDiffEntriesUnitTests
         {
             var sets = new List<ParallelChildSet>();
             sets.AddRange(_members.Select(pair => new ParallelChildSet(pair.Key, [pair.Value], pair.Value.HasDifferences())));
-            sets.AddRange(_children.Select(pair => new ParallelChildSet(pair.Key, pair.Value, pair.Value.Any(node => node.HasDifferences()))));
+            sets.AddRange(_children.Select(pair => new ParallelChildSet(
+                pair.Key,
+                pair.Value,
+                HasPresenceMismatch(_containerPresenceStates[pair.Key]) || pair.Value.Any(node => node.HasDifferences()))));
             return sets;
         }
 
@@ -78,6 +103,18 @@ public sealed class XPathLikeDiffEntriesUnitTests
         public bool TryGetMemberNode(string memberName, out IParallelNode node)
         {
             return _members.TryGetValue(memberName, out node!);
+        }
+
+        public bool TryGetContainerPresenceStates(string memberName, out IReadOnlyList<NodePresenceState> states)
+        {
+            if (_containerPresenceStates.TryGetValue(memberName, out var containerStates))
+            {
+                states = containerStates;
+                return true;
+            }
+
+            states = Array.Empty<NodePresenceState>();
+            return false;
         }
 
         public NodePresenceState GetPresenceState(int modelIndex)
@@ -93,7 +130,32 @@ public sealed class XPathLikeDiffEntriesUnitTests
 
         public void SetChildren(string name, IReadOnlyList<IParallelNode> nodes)
         {
+            SetChildren(name, nodes, [NodePresenceState.PresentValue]);
+        }
+
+        public void SetChildren(string name, IReadOnlyList<IParallelNode> nodes, IReadOnlyList<NodePresenceState> states)
+        {
             _children[name] = nodes;
+            _containerPresenceStates[name] = states;
+        }
+
+        private static bool HasPresenceMismatch(IReadOnlyList<NodePresenceState> states)
+        {
+            if (states.Count <= 1)
+            {
+                return false;
+            }
+
+            var first = states[0];
+            for (var index = 1; index < states.Count; index++)
+            {
+                if (states[index] != first)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void ValidateIndex(int modelIndex)

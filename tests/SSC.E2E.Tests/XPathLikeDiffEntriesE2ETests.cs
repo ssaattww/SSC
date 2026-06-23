@@ -79,31 +79,65 @@ public sealed class XPathLikeDiffEntriesE2ETests
     }
 
     [Fact]
-    public void GetDiffEntries_DoesNotReturnContainerPresenceForEmptyContainerMismatch()
+    public void GetDiffEntries_ReturnsContainerPresenceForEmptyListMissingOnOneSide()
     {
-        // Intent: child node を持たない empty container presence mismatch は T-080 対象なので T-079 では列挙しない。
+        // Intent: child node を持たない empty list presence mismatch を ContainerPresence entry として返す。
         var result = ParallelCompareApi.Compare(
         [
-            new Dataset
+            new OptionalContainerDataset
             {
-                Groups =
-                [
-                    new Group { GroupId = 1, Items = [] },
-                ],
+                Items = [],
             },
-            new Dataset
+            new OptionalContainerDataset
             {
-                Groups =
-                [
-                    new Group { GroupId = 1, Items = [new Item { ItemId = 100, MetricA = 10.0 }] },
-                ],
+                Items = null,
             },
         ]);
 
         var entries = result.GetDiffEntries();
+        var entry = Assert.Single(entries, candidate => candidate.Path == "Items");
 
-        Assert.DoesNotContain(entries, entry => entry.Kind == ParallelDiffEntryKind.ContainerPresence);
-        Assert.DoesNotContain(entries, entry => entry.Path == "Groups[1].Items");
+        Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Null(entry.Node);
+        Assert.Null(result.GetNodeByPath(entry.Path));
+        Assert.Equal(2, entry.Values.Count);
+        Assert.Equal(0, entry.Values[0].ModelIndex);
+        Assert.Null(entry.Values[0].Value);
+        Assert.Equal(ValueState.Mismatched, entry.Values[0].State);
+        Assert.Equal(1, entry.Values[1].ModelIndex);
+        Assert.Null(entry.Values[1].Value);
+        Assert.Equal(ValueState.Mismatched, entry.Values[1].State);
+        Assert.Equal("Items: [0]=null(Mismatched), [1]=null(Mismatched)", entry.ToString());
+    }
+
+    [Fact]
+    public void GetDiffEntries_ReturnsContainerPresenceForEmptyDictionaryMissingOnOneSide()
+    {
+        // Intent: child node を持たない empty dictionary presence mismatch を ContainerPresence entry として返す。
+        var result = ParallelCompareApi.Compare(
+        [
+            new OptionalDictionaryDataset
+            {
+                Scores = [],
+            },
+            new OptionalDictionaryDataset
+            {
+                Scores = null,
+            },
+        ]);
+
+        var entries = result.GetDiffEntries();
+        var entry = Assert.Single(entries, candidate => candidate.Path == "Scores");
+
+        Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Null(entry.Node);
+        Assert.Null(result.GetNodeByPath(entry.Path));
+        Assert.Equal(2, entry.Values.Count);
+        Assert.Null(entry.Values[0].Value);
+        Assert.Equal(ValueState.Mismatched, entry.Values[0].State);
+        Assert.Null(entry.Values[1].Value);
+        Assert.Equal(ValueState.Mismatched, entry.Values[1].State);
+        Assert.Equal("Scores: [0]=null(Mismatched), [1]=null(Mismatched)", entry.ToString());
     }
 
     private static void AssertResolvablePath<T>(
@@ -184,5 +218,28 @@ public sealed class XPathLikeDiffEntriesE2ETests
         public string ItemId { get; init; } = string.Empty;
 
         public string Label { get; init; } = string.Empty;
+    }
+
+    public sealed class ScoreDataset
+    {
+        public List<ScoreGroup> Groups { get; init; } = [];
+    }
+
+    public sealed class ScoreGroup
+    {
+        [CompareKey]
+        public int GroupId { get; init; }
+
+        public Dictionary<string, int> Scores { get; init; } = [];
+    }
+
+    public sealed class OptionalContainerDataset
+    {
+        public List<Item>? Items { get; init; }
+    }
+
+    public sealed class OptionalDictionaryDataset
+    {
+        public Dictionary<string, int>? Scores { get; init; }
     }
 }

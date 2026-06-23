@@ -80,6 +80,18 @@ public sealed class XPathLikePathAccessUnitTests
             return _members.TryGetValue(memberName, out node!);
         }
 
+        public bool TryGetContainerPresenceStates(string memberName, out IReadOnlyList<NodePresenceState> states)
+        {
+            if (_children.ContainsKey(memberName))
+            {
+                states = [NodePresenceState.PresentValue];
+                return true;
+            }
+
+            states = Array.Empty<NodePresenceState>();
+            return false;
+        }
+
         public NodePresenceState GetPresenceState(int modelIndex)
         {
             ValidateIndex(modelIndex);

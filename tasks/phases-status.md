@@ -33,6 +33,8 @@
 
 - Status: In Progress
 - Notes:
+  - T-080 を完了し、child node を持たない empty list / dictionary の container presence mismatch を `Kind == ContainerPresence` entry として列挙できるようにした
+  - T-080 では `Node == null`、container member path、`Values` / `ToString()` による Missing と null の区別、`GetNodeByPath(Path)` 非保証を検証し、レビュー指摘なしを確認した
   - T-079 を完了し、`GetDiffEntries<T>()` で `Kind == Node` の通常 node 差分を structured entry として列挙できるようにした
   - T-079 では leaf/value node 差分、object/container node 自身の presence mismatch、keyed / ordinal path 生成、escape、generated path の `GetNodeByPath()` round-trip、代表 `ToString()` を検証し、レビュー指摘なしを確認した
   - T-078 を完了し、`GetNodeByPath<T>()` / `GetValueByPath<T>()` / `GetStateByPath<T>()` を追加した

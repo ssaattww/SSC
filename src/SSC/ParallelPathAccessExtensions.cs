@@ -141,7 +141,7 @@ public static class ParallelPathAccessExtensions
         string parentPath,
         IParallelNode parentNode)
     {
-        if (!childSet.HasDifferences || childSet.Nodes.Count == 0)
+        if (!childSet.HasDifferences)
         {
             return;
         }
@@ -150,6 +150,17 @@ public static class ParallelPathAccessExtensions
             && internalParent.TryGetMemberNode(childSet.Name, out var memberNode))
         {
             AddNodeDiffEntries(entries, memberNode, CombinePath(parentPath, childSet.Name));
+            return;
+        }
+
+        if (childSet.Nodes.Count == 0)
+        {
+            if (parentNode is IParallelNodeInternal containerParent
+                && containerParent.TryGetContainerPresenceStates(childSet.Name, out var states))
+            {
+                entries.Add(CreateContainerPresenceEntry(CombinePath(parentPath, childSet.Name), states));
+            }
+
             return;
         }
 
@@ -181,6 +192,32 @@ public static class ParallelPathAccessExtensions
             Path = path,
             Kind = ParallelDiffEntryKind.Node,
             Node = node,
+            Values = values,
+        };
+    }
+
+    private static ParallelDiffEntry CreateContainerPresenceEntry(
+        string path,
+        IReadOnlyList<NodePresenceState> states)
+    {
+        var values = new ParallelDiffValue[states.Count];
+        for (var modelIndex = 0; modelIndex < states.Count; modelIndex++)
+        {
+            values[modelIndex] = new ParallelDiffValue
+            {
+                ModelIndex = modelIndex,
+                Value = null,
+                State = states[modelIndex] == NodePresenceState.Missing
+                    ? ValueState.Missing
+                    : ValueState.Mismatched,
+            };
+        }
+
+        return new ParallelDiffEntry
+        {
+            Path = path,
+            Kind = ParallelDiffEntryKind.ContainerPresence,
+            Node = null,
             Values = values,
         };
     }

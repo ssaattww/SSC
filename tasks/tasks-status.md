@@ -8,31 +8,6 @@
 
 ## Backlog
 
-- T-080: empty container 差分の `ContainerPresence` entry 追加
-  - Status: 未着手
-  - Phase: Phase 3
-  - Estimate: M
-  - Depends on:
-    - T-079 通常 node 差分の `GetDiffEntries()` 追加
-  - Execution Policy:
-    - TDD で進め、先に `ContainerPresence` の test target を確定する
-    - コード実装はサブエージェントへ委譲する
-    - 実装サブエージェントは `gpt-5.5 medium` を使う
-    - コードレビューはサブエージェントへ委譲する
-    - レビューサブエージェントは `gpt-5.5 high` を使う
-    - 1 task / 1 commit / 1 push で完結させる
-  - Scope:
-    - child node を持たない container presence mismatch の diff entry
-    - `Kind == ContainerPresence`
-    - `Node == null`
-    - container member path の表示
-  - Exit Criteria:
-    - empty list / empty dictionary の片側欠損を diff entry として落とさない E2E がある
-    - `ContainerPresence` の `Values` と `ToString()` が Missing / null を混同しない
-    - `GetNodeByPath(Path)` で node 解決を保証しないことがテストまたは設計コメントで明確化されている
-    - サブエージェント実装 report とサブエージェント review report がある
-    - focused test が成功し、commit/push 済み
-
 - T-081: README 利用例と public API ドキュメントの同期
   - Status: 未着手
   - Phase: Phase 3
@@ -79,6 +54,26 @@
     - final tracking commit/push 済み
 
 ## Done
+
+- T-080: empty container 差分の `ContainerPresence` entry 追加
+  - Status: 完了（empty list / dictionary の child node を持たない container presence mismatch を `ContainerPresence` entry として TDD で追加し、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikeDiffEntriesUnitTests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikePathAccessUnitTests.cs`
+    - `reports/task-t-080-implementation-20260623095422.md`
+    - `reports/task-t-080-review-20260623095422.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesE2ETests"` 成功（5 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesUnitTests|FullyQualifiedName~XPathLikePathAccessUnitTests"` 成功（3 件）
+    - `git diff --check` 成功
 
 - T-079: 通常 node 差分の `GetDiffEntries()` 追加
   - Status: 完了（通常 node 差分の structured entry 列挙を TDD で追加し、generated path の round-trip と代表 `ToString()` を検証、レビュー指摘なし）

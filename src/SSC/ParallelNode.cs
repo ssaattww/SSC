@@ -247,6 +247,18 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         return _memberNodes.TryGetValue(memberName, out node!);
     }
 
+    bool IParallelNodeInternal.TryGetContainerPresenceStates(string memberName, out IReadOnlyList<NodePresenceState> states)
+    {
+        if (_containerPresenceStates.TryGetValue(memberName, out var containerStates))
+        {
+            states = containerStates;
+            return true;
+        }
+
+        states = Array.Empty<NodePresenceState>();
+        return false;
+    }
+
     NodePresenceState IParallelNodeInternal.GetPresenceState(int modelIndex)
     {
         return GetPresenceState(modelIndex);
