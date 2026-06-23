@@ -33,6 +33,7 @@
 
 - Status: Done
 - Notes:
+  - T-083 を完了し、Sprache `2.3.1` を使う `.csx` sample として、数字始まり element / attribute name を許可する XML-like parser と SSC 比較出力を追加した
   - T-076 系の XPath-like path access / diff entry helper 実装は T-077 から T-081 まで完了した
   - T-081 を完了し、README に XPath-like path access / diff entry の最小利用例を追加し、public API 設計書を実装後 API 名・契約・表示例と同期した
   - T-081 では docs review の P2 指摘 2 件を修正し、最終再レビューで指摘なしを確認した。Markdown 検査はユーザー指示により未実施
