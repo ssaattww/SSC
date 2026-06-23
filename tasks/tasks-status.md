@@ -4,35 +4,9 @@
 
 ## In Progress
 
-- （なし）
+- なし
 
 ## Backlog
-
-- T-079: 通常 node 差分の `GetDiffEntries()` 追加
-  - Status: 未着手
-  - Phase: Phase 3
-  - Estimate: M
-  - Depends on:
-    - T-078 XPath-like path による node/value/state 解決 API の追加
-  - Execution Policy:
-    - TDD で進め、先に diff entry 列挙の test target を確定する
-    - コード実装はサブエージェントへ委譲する
-    - 実装サブエージェントは `gpt-5.5 medium` を使う
-    - コードレビューはサブエージェントへ委譲する
-    - レビューサブエージェントは `gpt-5.5 high` を使う
-    - 1 task / 1 commit / 1 push で完結させる
-  - Scope:
-    - `Kind == Node` の `ParallelDiffEntry` 列挙
-    - leaf/value node 差分
-    - object/container node 自身の presence mismatch
-    - keyed path / ordinal path の生成
-  - Exit Criteria:
-    - `GetDiffEntries()` が構造化データを返す E2E がある
-    - 生成 path を `GetNodeByPath()` に渡して同じ node を解決できることを検証している
-    - `ToString()` の代表表示を検証している
-    - empty container の `ContainerPresence` には踏み込まない
-    - サブエージェント実装 report とサブエージェント review report がある
-    - focused test が成功し、commit/push 済み
 
 - T-080: empty container 差分の `ContainerPresence` entry 追加
   - Status: 未着手
@@ -105,6 +79,23 @@
     - final tracking commit/push 済み
 
 ## Done
+
+- T-079: 通常 node 差分の `GetDiffEntries()` 追加
+  - Status: 完了（通常 node 差分の structured entry 列挙を TDD で追加し、generated path の round-trip と代表 `ToString()` を検証、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-078 XPath-like path による node/value/state 解決 API の追加
+  - Output:
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikeDiffEntriesUnitTests.cs`
+    - `reports/task-t-079-implementation-20260623094407.md`
+    - `reports/task-t-079-review-20260623094407.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesE2ETests"` 成功（4 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesUnitTests"` 成功（1 件）
+    - `git diff --check` 成功
 
 - T-078: XPath-like path による node/value/state 解決 API の追加
   - Status: 完了（path 解決 API を TDD で追加し、root prefix / keyed path / ordinal path / unresolved / out-of-range を検証、レビュー指摘なし）

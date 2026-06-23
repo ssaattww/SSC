@@ -33,6 +33,8 @@
 
 - Status: In Progress
 - Notes:
+  - T-079 を完了し、`GetDiffEntries<T>()` で `Kind == Node` の通常 node 差分を structured entry として列挙できるようにした
+  - T-079 では leaf/value node 差分、object/container node 自身の presence mismatch、keyed / ordinal path 生成、escape、generated path の `GetNodeByPath()` round-trip、代表 `ToString()` を検証し、レビュー指摘なしを確認した
   - T-078 を完了し、`GetNodeByPath<T>()` / `GetValueByPath<T>()` / `GetStateByPath<T>()` を追加した
   - T-078 では root prefix あり/なし、keyed path、ordinal path、未解決 path、model index 範囲外を検証し、レビュー指摘なしを確認した
   - T-077 を完了し、XPath-like path parser、`ParallelDiffEntry` / `ParallelDiffValue`、`ToString()` 契約、parser unit test を追加した
