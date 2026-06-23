@@ -33,6 +33,8 @@
 
 - Status: In Progress
 - Notes:
+  - T-078 を完了し、`GetNodeByPath<T>()` / `GetValueByPath<T>()` / `GetStateByPath<T>()` を追加した
+  - T-078 では root prefix あり/なし、keyed path、ordinal path、未解決 path、model index 範囲外を検証し、レビュー指摘なしを確認した
   - T-077 を完了し、XPath-like path parser、`ParallelDiffEntry` / `ParallelDiffValue`、`ToString()` 契約、parser unit test を追加した
   - T-077 では review P2 指摘（複数 selector grammar の誤受理）を TDD で修正し、再レビューで指摘なしを確認した
   - T-076 系実装は T-077 から T-082 へ分割し、1 task / 1 commit / 1 push の単位で進める

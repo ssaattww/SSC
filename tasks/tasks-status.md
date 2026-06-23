@@ -8,32 +8,6 @@
 
 ## Backlog
 
-- T-078: XPath-like path による node/value/state 解決 API の追加
-  - Status: 未着手
-  - Phase: Phase 3
-  - Estimate: M
-  - Depends on:
-    - T-077 XPath-like path parser と public result 型の追加
-  - Execution Policy:
-    - TDD で進め、先に path 解決 API の test target を確定する
-    - コード実装はサブエージェントへ委譲する
-    - 実装サブエージェントは `gpt-5.5 medium` を使う
-    - コードレビューはサブエージェントへ委譲する
-    - レビューサブエージェントは `gpt-5.5 high` を使う
-    - 1 task / 1 commit / 1 push で完結させる
-  - Scope:
-    - `GetNodeByPath<T>()`
-    - `GetValueByPath<T>()`
-    - `GetStateByPath<T>()`
-    - scalar/object member と keyed / ordinal container child の解決
-  - Exit Criteria:
-    - root prefix あり/なしの path 解決 E2E がある
-    - keyed container と `#ordinal` container の解決 E2E がある
-    - 未解決 path と範囲外 model index の挙動が設計どおり検証されている
-    - 差分列挙には踏み込まない
-    - サブエージェント実装 report とサブエージェント review report がある
-    - focused test が成功し、commit/push 済み
-
 - T-079: 通常 node 差分の `GetDiffEntries()` 追加
   - Status: 未着手
   - Phase: Phase 3
@@ -131,6 +105,22 @@
     - final tracking commit/push 済み
 
 ## Done
+
+- T-078: XPath-like path による node/value/state 解決 API の追加
+  - Status: 完了（path 解決 API を TDD で追加し、root prefix / keyed path / ordinal path / unresolved / out-of-range を検証、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-077 XPath-like path parser と public result 型の追加
+  - Output:
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/XPathLikePathAccessE2ETests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikePathAccessUnitTests.cs`
+    - `reports/task-t-078-implementation-20260623093152.md`
+    - `reports/task-t-078-review-20260623093200.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikePathAccessE2ETests"` 成功（4 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikePathAccessUnitTests"` 成功（1 件）
 
 - T-077: XPath-like path parser と public result 型の追加
   - Status: 完了（parser / public diff result 型 / `ToString()` を TDD で追加し、review P2 指摘を修正、再レビューで指摘なし）
