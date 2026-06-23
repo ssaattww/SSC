@@ -93,6 +93,51 @@ internal static class DatasetGeneratedViewExtensions
 }
 ```
 
+```csharp
+public static class ParallelPathAccessExtensions
+{
+    public static IParallelNode? GetNodeByPath<T>(this CompareResult<T> result, string path);
+
+    public static object? GetValueByPath<T>(
+        this CompareResult<T> result,
+        string path,
+        int modelIndex);
+
+    public static ValueState GetStateByPath<T>(
+        this CompareResult<T> result,
+        string path,
+        int modelIndex);
+
+    public static IReadOnlyList<ParallelDiffEntry> GetDiffEntries<T>(
+        this CompareResult<T> result);
+}
+
+public sealed class ParallelDiffEntry
+{
+    public string Path { get; }
+    public ParallelDiffEntryKind Kind { get; }
+    public IParallelNode? Node { get; }
+    public IReadOnlyList<ParallelDiffValue> Values { get; }
+
+    public override string ToString();
+}
+
+public enum ParallelDiffEntryKind
+{
+    Node,
+    ContainerPresence,
+}
+
+public sealed class ParallelDiffValue
+{
+    public int ModelIndex { get; }
+    public object? Value { get; }
+    public ValueState State { get; }
+
+    public override string ToString();
+}
+```
+
 ## 4. Behavior Contract
 
 - indexer の範囲外アクセスは `ModelIndexOutOfRange`
@@ -276,7 +321,196 @@ static IEnumerable<(string Path, IParallelNode Node)> Walk(IParallelNode node, s
 - scalar/object member は `Name` だけで一意化し、container member は `Name[discriminator]` で一意化する
 - container child の discriminator は `KeyText` を優先し、`KeyText == null` のときだけ `#<ordinal>` を代替識別子として使う
 
-### 4.2.2 Dynamic `GetState` の保証範囲
+### 4.2.2 XPath-like Path Access And Diff Helper
+
+XPath-like path access は、比較結果 tree 内の node を文字列 path で取得する helper である。
+XML XPath の完全実装ではなく、SSC の object member / container node / model slot に必要な最小 grammar を定義する。
+
+目的:
+
+- dynamic / generated projection を使わない利用者にも、path 文字列で値を取得する導線を提供する
+- 差分表示 helper が、path と model 別 value/state を併記できるようにする
+- `GetDirectChildren()` で利用者が自前実装していた再帰 traversal と path 組み立てを、標準 helper として提供する
+
+非目的:
+
+- XML XPath の axis、attribute、namespace、function、predicate 全般を実装すること
+- 任意条件で node set を検索する query language を提供すること
+- `CompareIssue.Path` の既存診断形式を置き換えること
+
+#### 4.2.2.1 Public API Contract
+
+`GetNodeByPath<T>(this CompareResult<T> result, string path)` は、XPath-like path に一致する `IParallelNode` を返す。
+path が解決できない場合は `null` を返す。
+
+`GetValueByPath<T>(this CompareResult<T> result, string path, int modelIndex)` は、`GetNodeByPath(path)` で取得した node の `GetValue(modelIndex)` を返す。
+path が解決できない場合は `null` を返す。
+model index が範囲外の場合は、既存 node indexer と同じく `ModelIndexOutOfRange` の `CompareExecutionException` を返す。
+
+`GetStateByPath<T>(this CompareResult<T> result, string path, int modelIndex)` は、`GetNodeByPath(path)` で取得した node の `GetState(modelIndex)` を返す。
+path が解決できない場合は `Missing` を返す。
+model index が範囲外の場合は、既存 node indexer と同じく `ModelIndexOutOfRange` の `CompareExecutionException` を返す。
+
+`GetDiffEntries<T>(this CompareResult<T> result)` は、差分のある node を leaf/value path 単位で列挙し、child node を持たない container presence mismatch を container member path で列挙する。
+返却値は構造化データとし、表示専用 string API にはしない。
+ただし `ParallelDiffEntry` と `ParallelDiffValue` は人間確認用の `ToString()` を必ず実装する。
+
+#### 4.2.2.2 Path Grammar
+
+XPath-like path は root からの相対 path を基本とする。
+root type 名の prefix は任意であり、指定された場合は比較 root の型名と一致する必要がある。
+
+```text
+path             = [ root-name "." ] segment *( "." segment )
+segment          = member-name [ selector ]
+selector         = "[" discriminator "]"
+discriminator    = key-discriminator / ordinal-discriminator
+ordinal-discriminator = "#" 1*DIGIT
+key-discriminator     = 1*( key-char / escape-sequence )
+escape-sequence       = "\]" / "\\" / "\#"
+```
+
+`member-name` は比較対象 model の public property 名である。
+大文字小文字は区別し、`StringComparer.Ordinal` 相当で解決する。
+
+例:
+
+- `Groups`
+- `Groups[1]`
+- `Groups[1].Items[100].MetricA`
+- `Dataset.Groups[1].Items[100].MetricA`
+- `Items[#0].Name`
+
+segment の意味:
+
+- `Name`
+  - scalar/object member を表す
+  - `ParallelChildSet.Nodes.Count == 1` の member に対応する
+- `Name[key]`
+  - container member の child node を key text で選択する
+  - child node の `KeyText` と完全一致する child を選ぶ
+- `Name[#ordinal]`
+  - key text を持たない container child を ordinal で選択する
+  - ordinal は同一 `ParallelChildSet.Nodes` 内の 0-based index である
+
+selector を持つ segment は container member に対してだけ有効である。
+scalar/object member に selector が指定された場合は未解決扱いとする。
+
+selector を持たない container member は、その container 全体を表す node ではなく child set を表すため、
+`GetNodeByPath` の最終 segment としては解決できない。
+container child を取得する場合は `Items[100]` または `Items[#0]` のように selector を指定する。
+
+#### 4.2.2.3 Escaping Rule
+
+`.` は bracket 外では segment 区切りである。
+bracket 内では key discriminator の一部として扱う。
+
+bracket 内で `]` または `\` を key text として含める場合は escape する。
+key text が `#<digits>` 形式そのものの場合は、先頭の `#` を escape して ordinal discriminator と区別する。
+
+```text
+\]  => ]
+\\  => \
+\#  => #（bracket 先頭で ordinal discriminator と区別する場合）
+```
+
+例:
+
+- key text `A.B` は `Items[A.B]`
+- key text `A]B` は `Items[A\]B]`
+- key text `A\B` は `Items[A\\B]`
+- key text `#0` は `Items[\#0]`
+
+#### 4.2.2.4 Path Generation Rule
+
+`GetDiffEntries()` が生成する path は、`GetDirectChildren()` と同じ direct child traversal を基にする。
+
+- scalar/object member は `Name`
+- container child は `Name[discriminator]`
+- discriminator は `child.KeyText` を優先する
+- `child.KeyText == null` の場合だけ `#<ordinal>` を使う
+- root type 名は生成 path には含めない
+
+`Kind == Node` の diff entry で生成される path は、同一 `CompareResult<T>` 内で `GetNodeByPath(path)` に渡すと同じ node を解決できなければならない。
+
+empty container の presence mismatch のように child node が存在しない差分は、
+特定 child path を生成できない。
+この場合は container member 名の path を持つ `Kind == ContainerPresence` の diff entry として表す。
+`ContainerPresence` entry は public node に対応しないため、`Node == null` とし、`GetNodeByPath(Path)` による node 解決は保証しない。
+それでも `Path` には該当 container member 名を入れ、差分表示で位置を失わない。
+
+#### 4.2.2.5 Diff Entry Contract
+
+`ParallelDiffEntry` は 1 つの差分箇所を表す。
+
+- `Path`
+  - XPath-like path
+  - `Kind == Node` では `GetNodeByPath(Path)` で同じ node を解決できる
+  - `Kind == ContainerPresence` では container member の位置を表すが、node 解決は保証しない
+- `Kind`
+  - `Node`: `IParallelNode` に対応する差分
+  - `ContainerPresence`: child node を持たない container presence mismatch
+- `Node`
+  - `Kind == Node` では差分が観測された `IParallelNode`
+  - `Kind == ContainerPresence` では `null`
+- `Values`
+  - model slot ごとの value/state
+  - `Values.Count == result.Root.Count`
+
+`ParallelDiffValue` は 1 model slot の表示単位である。
+
+- `ModelIndex`
+  - model slot の index
+- `Value`
+  - `Kind == Node` では `Node.GetValue(ModelIndex)` の値
+  - `Kind == ContainerPresence` では `null`
+  - `Missing` と実値 `null` は `State` で区別する
+- `State`
+  - `Kind == Node` では `Node.GetState(ModelIndex)` の値
+  - `Kind == ContainerPresence` では該当 container member の presence mismatch から導いた値
+
+`GetDiffEntries()` は次の node を返す。
+
+- `HasDifferences() == true` の leaf/value node
+- object/container node 自身の presence mismatch
+- empty container など child node を持たないが `ParallelChildSet.HasDifferences == true` の差分
+
+object/container node で child 側に差分があるだけの場合は、親 node の diff entry を重複して返さない。
+親自身の presence mismatch がある場合だけ親 node の diff entry を返す。
+
+#### 4.2.2.6 ToString Contract
+
+`ParallelDiffEntry.ToString()` は、path と model 別 value/state を 1 行で表す。
+
+例:
+
+```text
+Groups[1].Items[100].MetricA: [0]=1(Mismatched), [1]=10(Mismatched)
+Groups[1].Items[200].Name: [0]="left"(Mismatched), [1]=<missing>(Missing)
+Items: [0]=null(Mismatched), [1]=<missing>(Missing)
+```
+
+`ParallelDiffValue.ToString()` は `[modelIndex]=value(state)` 形式を返す。
+
+value 表示:
+
+- `Missing` の slot は `<missing>`
+- 実値 `null` は `null`
+- string は `"` で囲む
+- その他は `Convert.ToString(value, CultureInfo.InvariantCulture)` 相当
+
+`ToString()` は人間確認用の便利表示であり、機械処理の安定契約は `Path` / `Values` / `State` / `Value` を使う。
+ただし、同じライブラリ version 内では deterministic な表示を保つ。
+
+#### 4.2.2.7 CompareIssue.Path との違い
+
+`CompareIssue.Path` は issue 診断用の property path であり、既存どおり container key / ordinal を含めない。
+一方、XPath-like path は比較結果 tree の node 解決用であり、container child を `Items[100]` / `Items[#0]` のように識別する。
+
+この 2 つは互換変換を保証しない。
+issue から詳細 node を辿る必要がある場合は、`CompareIssue.Path` と `KeyText` を組み合わせて利用者側で判断する。
+
+### 4.2.3 Dynamic `GetState` の保証範囲
 
 この節で扱うのは、`AsDynamic()` から辿る値経路の `GetState(modelIndex)` である。
 
@@ -391,7 +625,7 @@ foreach (dynamic child in root.Items[0].Detail.Children)
 - これは `a.b.c.d` の `d` が実行時専用 `List` でも `foreach` / index access できる、という意味である
 - ただし container 正規化の前提（例: sequence element に `[CompareKey]` が必要）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す
 
-### 4.2.3 実行時専用メンバーで `GetState` が判定される仕組み
+### 4.2.4 実行時専用メンバーで `GetState` が判定される仕組み
 
 この節では、`root.Items[0].Detail.Label.GetState(0)` のような dynamic value path が、
 保存済み state を読む通常経路と、呼び出し時に反射で値を辿る代替経路のどちらへ入るかを説明する。

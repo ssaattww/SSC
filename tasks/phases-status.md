@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-04-21
+- Updated: 2026-06-23
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -14,6 +14,7 @@
 
 - Status: Done
 - Notes:
+  - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加し、実装単位を T-077 から T-082 へ分割した
   - `doc/draft/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
   - Draft/非Draft を `doc/draft` と `doc/design` に分離
   - 非Draft の詳細設計を `doc/design/detail` に機能粒度で分割
@@ -30,8 +31,22 @@
 
 ## Phase 3: 実装
 
-- Status: In Progress
+- Status: Done
 - Notes:
+  - T-076 系の XPath-like path access / diff entry helper 実装は T-077 から T-081 まで完了した
+  - T-081 を完了し、README に XPath-like path access / diff entry の最小利用例を追加し、public API 設計書を実装後 API 名・契約・表示例と同期した
+  - T-081 では docs review の P2 指摘 2 件を修正し、最終再レビューで指摘なしを確認した。Markdown 検査はユーザー指示により未実施
+  - T-080 を完了し、child node を持たない empty list / dictionary の container presence mismatch を `Kind == ContainerPresence` entry として列挙できるようにした
+  - T-080 では `Node == null`、container member path、`Values` / `ToString()` による Missing と null の区別、`GetNodeByPath(Path)` 非保証を検証し、レビュー指摘なしを確認した
+  - T-079 を完了し、`GetDiffEntries<T>()` で `Kind == Node` の通常 node 差分を structured entry として列挙できるようにした
+  - T-079 では leaf/value node 差分、object/container node 自身の presence mismatch、keyed / ordinal path 生成、escape、generated path の `GetNodeByPath()` round-trip、代表 `ToString()` を検証し、レビュー指摘なしを確認した
+  - T-078 を完了し、`GetNodeByPath<T>()` / `GetValueByPath<T>()` / `GetStateByPath<T>()` を追加した
+  - T-078 では root prefix あり/なし、keyed path、ordinal path、未解決 path、model index 範囲外を検証し、レビュー指摘なしを確認した
+  - T-077 を完了し、XPath-like path parser、`ParallelDiffEntry` / `ParallelDiffValue`、`ToString()` 契約、parser unit test を追加した
+  - T-077 では review P2 指摘（複数 selector grammar の誤受理）を TDD で修正し、再レビューで指摘なしを確認した
+  - T-076 系実装は T-077 から T-082 へ分割し、1 task / 1 commit / 1 push の単位で進める
+  - コード実装は TDD で進め、実装サブエージェントは `gpt-5.5 medium`、レビューサブエージェントは `gpt-5.5 high` を使う
+  - コード実装・コードレビュー・検証実行はサブエージェントへ委譲し、親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する
   - T-075 を完了し、`AsDynamic()` の value path が保存済み state を読む通常経路と、実行時反射で値を辿る代替経路へどう分岐するかを設計書へ追加した
   - T-075 では、single-model `Missing` 分岐、`MissingMemberException` が対象 model / 他 model のどちらでも起こり得る条件、runtime-only container の特例も追記した
   - T-074 を完了し、dynamic `GetState` の保証範囲を issue/task 番号に依存しない日本語で説明し、runtime-only member/container の例を追記した
@@ -118,4 +133,8 @@
 
 ## Phase 4: 検証・受け入れ
 
-- Status: Not Started
+- Status: Done
+- Notes:
+  - T-082 を完了し、`dotnet test SSC.sln --configuration Release` が成功した（Unit tests 29 件、E2E tests 61 件）
+  - T-082 では `git diff --check`、PR #32 body 確認、最終レビューを実施し、最終レビュー指摘なしを確認した
+  - Markdown 検査はユーザー指示により未実施

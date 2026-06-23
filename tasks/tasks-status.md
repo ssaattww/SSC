@@ -1,16 +1,135 @@
 # Tasks Status
 
-- Updated: 2026-04-21
+- Updated: 2026-06-23
 
 ## In Progress
 
-- （なし）
+- なし
 
 ## Backlog
 
-- （なし）
+- なし
 
 ## Done
+
+- T-082: T-076 系 API の統合検証と PR 仕上げ
+  - Status: 完了（full validation と最終レビューをサブエージェントで実施し、PR body / tracking を最終同期）
+  - Phase: Phase 4
+  - Estimate: S
+  - Depends on:
+    - T-081 README 利用例と public API ドキュメントの同期
+  - Output:
+    - `reports/task-t-082-verification-20260623101834.md`
+    - `reports/task-t-082-final-review-20260623101834.md`
+    - `tasks/tasks-status.md`
+    - `tasks/phases-status.md`
+    - PR #32 body
+  - Verification:
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit tests 29 件、E2E tests 61 件）
+    - `git diff --check` 成功
+    - `gh pr view 32 --json body --jq .body` 成功
+    - 最終レビュー指摘なし
+    - Markdown 検査はユーザー指示により未実施
+
+- T-081: README 利用例と public API ドキュメントの同期
+  - Status: 完了（README に XPath-like path access / diff entry 利用例を追加し、public API 設計書を実装 API と同期、レビュー P2 指摘 2 件を修正して最終レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-080 empty container 差分の `ContainerPresence` entry 追加
+  - Output:
+    - `README.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/task-t-081-implementation-20260623100427.md`
+    - `reports/task-t-081-review-20260623100427.md`
+  - Verification:
+    - `rg -n "PackageReadmeFile|README.md" src/SSC/SSC.csproj src/SSC.Generators/SSC.Generators.csproj` 成功
+    - `git diff --check` 成功
+    - Markdown 検査はユーザー指示により未実施
+
+- T-080: empty container 差分の `ContainerPresence` entry 追加
+  - Status: 完了（empty list / dictionary の child node を持たない container presence mismatch を `ContainerPresence` entry として TDD で追加し、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+  - Output:
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikeDiffEntriesUnitTests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikePathAccessUnitTests.cs`
+    - `reports/task-t-080-implementation-20260623095422.md`
+    - `reports/task-t-080-review-20260623095422.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesE2ETests"` 成功（5 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesUnitTests|FullyQualifiedName~XPathLikePathAccessUnitTests"` 成功（3 件）
+    - `git diff --check` 成功
+
+- T-079: 通常 node 差分の `GetDiffEntries()` 追加
+  - Status: 完了（通常 node 差分の structured entry 列挙を TDD で追加し、generated path の round-trip と代表 `ToString()` を検証、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-078 XPath-like path による node/value/state 解決 API の追加
+  - Output:
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikeDiffEntriesUnitTests.cs`
+    - `reports/task-t-079-implementation-20260623094407.md`
+    - `reports/task-t-079-review-20260623094407.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesE2ETests"` 成功（4 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesUnitTests"` 成功（1 件）
+    - `git diff --check` 成功
+
+- T-078: XPath-like path による node/value/state 解決 API の追加
+  - Status: 完了（path 解決 API を TDD で追加し、root prefix / keyed path / ordinal path / unresolved / out-of-range を検証、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-077 XPath-like path parser と public result 型の追加
+  - Output:
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/XPathLikePathAccessE2ETests.cs`
+    - `tests/SSC.Unit.Tests/XPathLikePathAccessUnitTests.cs`
+    - `reports/task-t-078-implementation-20260623093152.md`
+    - `reports/task-t-078-review-20260623093200.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikePathAccessE2ETests"` 成功（4 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikePathAccessUnitTests"` 成功（1 件）
+
+- T-077: XPath-like path parser と public result 型の追加
+  - Status: 完了（parser / public diff result 型 / `ToString()` を TDD で追加し、review P2 指摘を修正、再レビューで指摘なし）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-076 XPath-like path access と差分表示 helper の設計
+  - Output:
+    - `src/SSC/ParallelDiffContracts.cs`
+    - `src/SSC/Internal/XPathLikePathParser.cs`
+    - `src/SSC/Properties/AssemblyInfo.cs`
+    - `tests/SSC.Unit.Tests/XPathLikePathParserUnitTests.cs`
+    - `tests/SSC.Unit.Tests/ParallelDiffResultUnitTests.cs`
+    - `reports/task-t-077-implementation-20260623091447.md`
+    - `reports/task-t-077-review-20260623091556.md`
+    - `reports/task-t-077-review-fix-20260623092446.md`
+  - Verification:
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikePathParserUnitTests|FullyQualifiedName~ParallelDiffResultUnitTests"` 成功（20 件）
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release` 成功（23 件）
+    - `git diff --check` 成功
+
+- T-076: XPath-like path access と差分表示 helper の設計
+  - Status: 完了（XPath-like grammar、差分構造化データ、`ToString()` 表示契約、`CompareIssue.Path` との差分、1 task / 1 push の実装分解を設計・tracking に反映）
+  - Phase: Phase 2
+  - Estimate: M
+  - Output:
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `tasks/tasks-status.md`
+    - `tasks/phases-status.md`
+    - `tasks/feedback-points.md`
 
 - T-075: dynamic `GetState` の実行時専用メンバー判定フロー明文化
   - Status: 完了（保存済み state 参照経路と呼び出し時の反射による代替解決経路の分岐、single-model `Missing`、`MissingMemberException` 条件、container 特例を設計書へ反映）
