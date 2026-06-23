@@ -1,6 +1,19 @@
 # Feedback Points
 
-- Updated: 2026-04-21
+- Updated: 2026-06-23
+
+## 2026-06-23
+
+- ユーザー指摘: コードの実装とレビューはサブエージェントへ出すこと。
+- 対応:
+  - T-076 以後、この repo ではコード実装とコードレビューをサブエージェントへ委譲する。
+  - 親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する。
+  - 記録起点: ユーザー明示指摘
+  - 重複判定: 2026-04-21 の「実装は main agent / review は sub-agent」を上書きする新指示
+  - スキル化判断: CodexSkill 側の `manager-only-coding-delegation` 系 feedback と同趣旨のため、新規 skill は不要
+  - 次アクション対応:
+    - T-076 のコード実装フェーズに入る前に `codex-delegation-executor` で実装サブエージェントを起動する
+    - review は従来どおり `review-enforcer` 経由でサブエージェントへ委譲する
 
 ## 2026-04-21
 

@@ -66,7 +66,7 @@ public enum CompareIssueLevel { Error, Warning }
 
 ### 5.1 Path Format
 
-`Path` は `.` 区切りでプロパティチェーンを表現する。
+`CompareIssue.Path` は `.` 区切りでプロパティチェーンを表現する。
 
 例:
 
@@ -75,6 +75,18 @@ public enum CompareIssueLevel { Error, Warning }
 - `Dataset.Groups.Items.MetricA`
 
 キー関係の補助情報は `KeyText` に出し、`Path` にインデックス番号は含めない。
+
+`CompareIssue.Path` は診断対象のプロパティ位置を示すための簡易 path であり、
+差分表示 helper が返す XPath-like path とは別契約である。
+
+- `CompareIssue.Path`:
+  - issue の発生位置を表す
+  - container の key / ordinal discriminator は含めない
+  - key 関係の補助情報は `KeyText` で表す
+- XPath-like path:
+  - 比較結果 tree 内の node を一意に辿るために使う
+  - container segment に `Items[100]` / `Items[#0]` のような discriminator を含める
+  - 詳細 grammar は `02-PublicApi.md` の XPath-like path access 契約で定義する
 
 ## 6. Recommended Error Response
 

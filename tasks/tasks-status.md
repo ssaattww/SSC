@@ -1,10 +1,20 @@
 # Tasks Status
 
-- Updated: 2026-04-21
+- Updated: 2026-06-23
 
 ## In Progress
 
-- （なし）
+- T-076: XPath-like path access と差分表示 helper の設計
+  - Status: 設計中（XPath-like path 文法、path 取得 API、差分構造化データ、`ToString()` 表示契約を設計書へ反映する）
+  - Phase: Phase 2
+  - Estimate: M
+  - Execution Policy:
+    - コード実装とコードレビューはサブエージェントへ委譲する
+    - 親 agent は設計判断、scope 管理、report 確認、Git 操作を担当する
+  - Exit Criteria:
+    - XPath-like path grammar が `doc/design/detail/02-PublicApi.md` に詳細化されている
+    - `CompareIssue.Path` と差分 helper の path 表現の違いが設計上区別されている
+    - 差分 helper は構造化データを返し、返却型が `ToString()` を実装する契約になっている
 
 ## Backlog
 

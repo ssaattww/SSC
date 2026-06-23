@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-04-21
+- Updated: 2026-06-23
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -12,8 +12,9 @@
 
 ## Phase 2: 詳細設計確定
 
-- Status: Done
+- Status: In Progress
 - Notes:
+  - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加中
   - `doc/draft/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
   - Draft/非Draft を `doc/draft` と `doc/design` に分離
   - 非Draft の詳細設計を `doc/design/detail` に機能粒度で分割
