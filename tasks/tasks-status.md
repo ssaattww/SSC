@@ -12,6 +12,24 @@
 
 ## Done
 
+- T-083: Sprache `.csx` XML-like compare sample の追加
+  - Status: 完了（Sprache `2.3.1` の `.csx` sample を追加し、数字始まり element / attribute name を許可する parser と SSC 比較出力を検証、レビュー指摘なし）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-082 T-076 系 API の統合検証と PR 仕上げ
+  - Output:
+    - `samples/xml-compare-sprache/compare-xml.csx`
+    - `samples/xml-compare-sprache/xml-like-parser.csx`
+    - `reports/task-t-083-implementation-20260623132920.md`
+    - `reports/task-t-083-review-20260623132920.md`
+    - PR #33
+  - Verification:
+    - `dotnet build src/SSC/SSC.csproj --configuration Release` 成功
+    - `XDG_CACHE_HOME=/tmp/dotnet-script-cache DOTNET_CLI_HOME=/tmp/dotnet-cli-home NUGET_PACKAGES=/tmp/nuget-packages dotnet script samples/xml-compare-sprache/compare-xml.csx` 成功
+    - `git diff --check` 成功
+    - Markdown 検査はユーザー指示により未実施
+
 - T-082: T-076 系 API の統合検証と PR 仕上げ
   - Status: 完了（full validation と最終レビューをサブエージェントで実施し、PR body / tracking を最終同期）
   - Phase: Phase 4
