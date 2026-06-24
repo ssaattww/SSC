@@ -119,7 +119,7 @@ public static class ParallelCompareApi
             context.Trace("node", path, ("nodeType", typeof(TNode)), ("nodeKind", "Object"), ("keyText", keyText));
         }
 
-        foreach (var property in TypeMetadataResolver.GetComparableProperties(typeof(TNode)))
+        foreach (var property in TypeMetadataResolver.GetComparableMembers(typeof(TNode)))
         {
             var propertyPath = $"{path}.{property.Name}";
             if (context.IsTraceEnabled)
@@ -127,13 +127,13 @@ public static class ParallelCompareApi
                 context.Trace(
                     "metadata",
                     propertyPath,
-                    ("declaredType", property.PropertyType),
-                    ("container", GetContainerCategory(property.PropertyType)));
+                    ("declaredType", property.MemberType),
+                    ("container", GetContainerCategory(property.MemberType)));
             }
 
             var memberSlots = BuildMemberSlots(slots, property, propertyPath, context);
 
-            if (TryGetDictionaryTypes(property.PropertyType, out var keyType, out var elementType))
+            if (TryGetDictionaryTypes(property.MemberType, out var keyType, out var elementType))
             {
                 if (context.IsTraceEnabled)
                 {
@@ -144,18 +144,18 @@ public static class ParallelCompareApi
                 continue;
             }
 
-            if (TryGetSequenceElementType(property.PropertyType, out elementType))
+            if (TryGetSequenceElementType(property.MemberType, out elementType))
             {
                 if (context.IsTraceEnabled)
                 {
                     context.Trace("metadata", propertyPath, ("elementType", elementType));
                 }
-                var children = BuildSequenceChildren(memberSlots, property.PropertyType, elementType, propertyPath, context);
+                var children = BuildSequenceChildren(memberSlots, property.MemberType, elementType, propertyPath, context);
                 node.SetChildren(property.Name, children, memberSlots.Select(slot => slot.State).ToArray());
                 continue;
             }
 
-            var memberNode = BuildNode(property.PropertyType, memberSlots, propertyPath, context, keyText: null);
+            var memberNode = BuildNode(property.MemberType, memberSlots, propertyPath, context, keyText: null);
             node.SetMemberNode(property.Name, memberNode);
         }
 
@@ -164,7 +164,7 @@ public static class ParallelCompareApi
 
     private static NodeSlot[] BuildMemberSlots(
         NodeSlot[] parentSlots,
-        PropertyInfo property,
+        ComparableMember property,
         string path,
         CompareContext context)
     {
@@ -186,7 +186,7 @@ public static class ParallelCompareApi
             object? value;
             try
             {
-                value = property.GetValue(parentSlots[modelIndex].Value);
+                value = property.GetValue(parentSlots[modelIndex].Value!);
             }
             catch (Exception ex)
             {
@@ -195,7 +195,7 @@ public static class ParallelCompareApi
                     path,
                     modelIndex,
                     null,
-                    $"failed to get property '{property.Name}': {ex.Message}");
+                    $"failed to get member '{property.Name}': {ex.Message}");
                 slots[modelIndex] = NodeSlot.Missing;
                 continue;
             }
@@ -320,8 +320,8 @@ public static class ParallelCompareApi
         string path,
         CompareContext context)
     {
-        var compareKeyProperty = TypeMetadataResolver.GetCompareKeyProperty(elementType);
-        if (compareKeyProperty is null)
+        var compareKeyMember = TypeMetadataResolver.GetCompareKeyMember(elementType);
+        if (compareKeyMember is null)
         {
             context.RecordExecutionError(
                 CompareIssueCode.CompareKeyNotFoundOnSequenceElement,
@@ -340,10 +340,10 @@ public static class ParallelCompareApi
                 path,
                 ("container", containerCategory),
                 ("elementType", elementType),
-                ("compareKey", compareKeyProperty.Name));
+                ("compareKey", compareKeyMember.Name));
         }
 
-        var keyType = compareKeyProperty.PropertyType;
+        var keyType = compareKeyMember.MemberType;
         var comparer = new KeyComparer(keyType, context.Configuration.StringKeyComparison);
         var maps = new Dictionary<object, object?>[containerSlots.Length];
         var union = new HashSet<object>(comparer);
@@ -412,7 +412,7 @@ public static class ParallelCompareApi
                 object? key;
                 try
                 {
-                    key = compareKeyProperty.GetValue(element);
+                    key = compareKeyMember.GetValue(element);
                 }
                 catch (Exception ex)
                 {
@@ -421,7 +421,7 @@ public static class ParallelCompareApi
                         path,
                         modelIndex,
                         null,
-                        $"failed to read compare key '{compareKeyProperty.Name}': {ex.Message}");
+                        $"failed to read compare key '{compareKeyMember.Name}': {ex.Message}");
                     continue;
                 }
 
@@ -432,7 +432,7 @@ public static class ParallelCompareApi
                         path,
                         modelIndex,
                         NullKeyText,
-                        $"compare key '{compareKeyProperty.Name}' is null.");
+                        $"compare key '{compareKeyMember.Name}' is null.");
                     continue;
                 }
 

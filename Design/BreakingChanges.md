@@ -18,3 +18,19 @@
   - 差分のある直下子要素をライブラリ外から探索できる共通面を公開するため
 - 備考:
   - T-070 は設計反映段階で breaking change として記録した
+
+## 2026-06-24
+
+### #35 public field を比較対象 member に追加
+
+- 対象:
+  - runtime metadata resolution の public instance field
+  - Source Generator generated projection の public instance field
+  - `[CompareKey]` / `[CompareIgnore]` の public field 適用
+- 変更種別:
+  - これまで比較対象外だった public field を、public property と同等の comparable member として扱う動作変更
+- 影響:
+  - 既存 model に public field がある場合、比較結果・差分・Issue・generated view の公開形が変わり得る
+  - field を比較対象外にしたい場合は `[CompareIgnore]` を明示する必要がある
+- 背景:
+  - `public IEnumerable<Item>? Children;` のような public field container が runtime/dynamic/generated projection で認識されない #34 を修正し、#35 で仕様化するため

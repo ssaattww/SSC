@@ -146,21 +146,21 @@ public sealed class ParallelDiffValue
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
 - `HasDifferences()` は current node 自体、または配下 subtree のいずれかに差分があれば `true`
-- `GetDirectChildren()` は current node の直下 property を `ParallelChildSet` 単位で返す
+- `GetDirectChildren()` は current node の直下 comparable member（public property / public field）を `ParallelChildSet` 単位で返す
 
 ### 4.0 Direct Child Traversal Contract
 
 `GetDirectChildren()` は「ユーザーが自前で再帰を書くための最小探索プリミティブ」として定義する。
 
 - 返却順:
-  - `ParallelChildSet` の順序は comparable property の順序に従う
+  - `ParallelChildSet` の順序は comparable member の順序に従う
   - 各 `ParallelChildSet.Nodes` の順序は既存 child access の順序に従う
   - container member では key union / 正規化済み要素順を維持する
 - 返却形:
   - scalar/object member は `Nodes.Count == 1`
   - `List` / `Array` / `IEnumerable` / `Dictionary` は正規化済み要素 node 群を `Nodes` に格納する
-- `HasDifferences` はその property 自体または `Nodes` 配下に差分がある場合に `true`
-- `Name` は source model の property 名そのものを使う
+- `HasDifferences` はその member 自体または `Nodes` 配下に差分がある場合に `true`
+- `Name` は source model の property / field 名そのものを使う
 - child を持たない node は空配列を返す
 - 親参照は公開しない。必要な再帰・path 組み立てはユーザー側で `Name` と `IParallelNode` を使って行う
 - `Name` だけでは container member 配下の複数 child を一意化できないため、path 表現が必要な場合は `childSet.Name` に child 側の識別子を付けて segment を作る
@@ -370,7 +370,7 @@ key-discriminator     = 1*( key-char / escape-sequence )
 escape-sequence       = "\]" / "\\" / "\#"
 ```
 
-`member-name` は比較対象 model の public property 名である。
+`member-name` は比較対象 model の public property / public field 名である。
 大文字小文字は区別し、`StringComparer.Ordinal` 相当で解決する。
 
 例:
@@ -666,7 +666,7 @@ dynamic value path の `GetState` は、内部的には次の情報を持つ。
 
 2. 呼び出し時に反射で値を辿る代替経路
    - 保存済み node が無い場合、`GetState(modelIndex)` はその場で root model object から member path を辿る
-   - 具体的には、各段で現在の実行時型に対して public property を反射で探し、値を取得する
+   - 具体的には、各段で現在の実行時型に対して public property / public field を反射で探し、値を取得する
    - 対象 model slot が欠損なら `Missing`
    - 比較相手 model が 1 つも無い場合も `Missing`
    - 対象 model slot に値があり、比較相手 slot のどれかが欠損なら `Mismatched`
@@ -682,7 +682,7 @@ GetState(modelIndex)
      -> No:
         -> 指定 model の root 値を取得
         -> member path を各段で反射して辿る
-        -> 途中の property が見つからなければ MissingMemberException
+        -> 途中の public property / public field が見つからなければ MissingMemberException
         -> 比較相手 model が無ければ Missing
         -> 他 model に対しても同じ path を反射して辿る
         -> presence / Equals で Matched/Mismatched/Missing を決める
@@ -694,11 +694,11 @@ GetState(modelIndex)
    - 実行時オブジェクトに対象メンバーがあれば、保存済み node が無くても判定自体はできる
 
 2. `GetState` は失敗することがある
-   - 対象 model でも比較相手 model でも、member path の途中で property を見つけられないと `MissingMemberException` になる
-   - getter 自体が例外を投げる場合、その例外は `GetState` 呼び出し側へそのまま伝播する
+   - 対象 model でも比較相手 model でも、member path の途中で public property / public field を見つけられないと `MissingMemberException` になる
+   - property getter / field read 自体が例外を投げる場合、その例外は `GetState` 呼び出し側へそのまま伝播する
 
 3. 「getter を再実行しない」保証は無い
-   - 判定のために、その場で property getter を呼んで値を取得するからである
+   - 判定のために、その場で property getter / field read により値を取得するからである
    - したがって、副作用や例外発生は compare 時ではなく `GetState` 呼び出し時に起き得る
 
 実行時専用メンバーが container の場合は、この代替経路に入る前に member access 側で container 判定を行う。
@@ -748,6 +748,7 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
 - Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
 - `SelectModel(modelIndex)` は指定 model で `Missing` でない要素のみを返し、順序は key union 順を維持する
+- generated projection は public property と public field を同じ comparable member として扱い、container field も typed list accessor として生成する
 - getter を再実行しない `GetState` 保証は dynamic value path に限定し、generated nested value path の parity はこの設計範囲に含めない
 
 ## 4.4 Generated Projection Scope (Initial)

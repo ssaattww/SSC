@@ -76,8 +76,8 @@ public readonly struct ParallelChildSet
 ```
 
 - `HasDifferences()` は current node またはその配下 subtree のどこかに差分があれば `true`
-- `GetDirectChildren()` は current node の直下 member を property 単位で返す
-- `ParallelChildSet.HasDifferences` は、その property 自体または配下 child node 群に差分があるかを返す
+- `GetDirectChildren()` は current node の直下 comparable member（public property / public field）を member 単位で返す
+- `ParallelChildSet.HasDifferences` は、その member 自体または配下 child node 群に差分があるかを返す
 - 返却される探索対象 node は通常アクセス時と同じ `IParallelNode` / `ParallelNode<T>` 系であり、探索専用の別 node 型は導入しない
 - 親参照（`Parent` など）は T-070 の対象外とし、上方向の経路復元は公開契約に含めない
 
@@ -128,7 +128,18 @@ public sealed class CompareIgnoreAttribute : Attribute
 ```
 
 - 制限を増やさず、必要な除外だけ明示するための属性
-- `CompareIgnore` が付いたメンバーはノード生成対象から外す
+- `CompareIgnore` が付いた public property / public field はノード生成対象から外す
+
+## 3.5 Comparable Member Scope
+
+比較対象 member は、public instance property と public instance field である。
+
+- property は public getter を持ち、indexer でないものを対象にする
+- field は public instance field を対象にする
+- static member は対象外
+- `[CompareIgnore]` は property / field のどちらにも指定でき、指定された member は比較対象から除外する
+- `List` / `Array` / `IEnumerable` / `Dictionary` の container 判定と Source Generator の generated projection は、property / field のどちらでも同じ規則で扱う
+- sequence element の `[CompareKey]` も property / field のどちらにも指定できる
 
 ## 4. Presence State
 

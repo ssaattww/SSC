@@ -187,7 +187,7 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
             }
 
             var members = new List<MemberShape>();
-            foreach (var property in GetComparableProperties(type))
+            foreach (var property in GetComparableMembers(type))
             {
                 if (TryGetDictionaryValueType(property.Type, out var dictionaryElementType)
                     && dictionaryElementType is INamedTypeSymbol dictionaryElementNamedType)
@@ -214,34 +214,58 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         return shapes;
     }
 
-    private static IEnumerable<IPropertySymbol> GetComparableProperties(INamedTypeSymbol type)
+    private static IEnumerable<IFieldOrPropertySymbol> GetComparableMembers(INamedTypeSymbol type)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
         for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
         {
-            foreach (var property in current.GetMembers().OfType<IPropertySymbol>())
+            foreach (var member in current.GetMembers())
             {
-                if (!seen.Add(property.Name))
+                if (member is IPropertySymbol property)
                 {
+                    if (!seen.Add(property.Name))
+                    {
+                        continue;
+                    }
+
+                    if (property.IsStatic || property.GetMethod is null || property.Parameters.Length > 0)
+                    {
+                        continue;
+                    }
+
+                    if (property.DeclaredAccessibility != Accessibility.Public)
+                    {
+                        continue;
+                    }
+
+                    if (HasAttribute(property, CompareIgnoreAttributeMetadataName))
+                    {
+                        continue;
+                    }
+
+                    yield return new FieldOrPropertySymbol(property.Name, property.Type);
                     continue;
                 }
 
-                if (property.IsStatic || property.GetMethod is null || property.Parameters.Length > 0)
+                if (member is IFieldSymbol field)
                 {
-                    continue;
-                }
+                    if (!seen.Add(field.Name))
+                    {
+                        continue;
+                    }
 
-                if (property.DeclaredAccessibility != Accessibility.Public)
-                {
-                    continue;
-                }
+                    if (field.IsStatic || field.DeclaredAccessibility != Accessibility.Public)
+                    {
+                        continue;
+                    }
 
-                if (HasAttribute(property, CompareIgnoreAttributeMetadataName))
-                {
-                    continue;
-                }
+                    if (HasAttribute(field, CompareIgnoreAttributeMetadataName))
+                    {
+                        continue;
+                    }
 
-                yield return property;
+                    yield return new FieldOrPropertySymbol(field.Name, field.Type);
+                }
             }
         }
     }
@@ -392,6 +416,20 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         }
 
         return sanitized;
+    }
+
+    private interface IFieldOrPropertySymbol
+    {
+        string Name { get; }
+
+        ITypeSymbol Type { get; }
+    }
+
+    private sealed class FieldOrPropertySymbol(string name, ITypeSymbol type) : IFieldOrPropertySymbol
+    {
+        public string Name { get; } = name;
+
+        public ITypeSymbol Type { get; } = type;
     }
 
     private enum MemberKind

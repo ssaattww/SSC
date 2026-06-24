@@ -4,6 +4,42 @@ namespace SSC.E2E.Tests;
 
 public sealed class ContainerAndSelectManyE2ETests
 {
+
+    [Fact]
+    public void Compare_PublicIEnumerableField_NormalizesChildrenByCompareKey()
+    {
+        // Intent: public IEnumerable<T> field is a comparable container member, matching Issue #34.
+        var models = new[]
+        {
+            new FieldEnumerableDataset
+            {
+                Children = new[]
+                {
+                    new FieldEnumerableItem { ItemId = 1, Label = "left-1" },
+                    new FieldEnumerableItem { ItemId = 2, Label = "left-2" },
+                },
+            },
+            new FieldEnumerableDataset
+            {
+                Children = new[]
+                {
+                    new FieldEnumerableItem { ItemId = 1, Label = "right-1" },
+                    new FieldEnumerableItem { ItemId = 3, Label = "right-3" },
+                },
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = Assert.IsType<ParallelNode<FieldEnumerableDataset>>(result.Root);
+        var children = root.Children(model => model.Children);
+
+        Assert.Equal(new[] { "1", "2", "3" }, children.Select(child => child.KeyText).ToArray());
+        Assert.Equal("left-1", children[0][0]?.Label);
+        Assert.Equal("right-1", children[0][1]?.Label);
+        Assert.Equal(ValueState.Missing, children[1].GetState(1));
+        Assert.Equal(ValueState.Missing, children[2].GetState(0));
+    }
+
     [Fact]
     public void Compare_NormalizesDictionaryByUnionedKeys()
     {
@@ -863,6 +899,19 @@ public sealed class ContainerAndSelectManyE2ETests
     public sealed class NullableDataset
     {
         public List<NullableItem> Items { get; init; } = [];
+    }
+
+    public sealed class FieldEnumerableDataset
+    {
+        public IEnumerable<FieldEnumerableItem>? Children;
+    }
+
+    public sealed class FieldEnumerableItem
+    {
+        [CompareKey]
+        public int ItemId { get; init; }
+
+        public string? Label { get; init; }
     }
 
     public sealed class NullableItem
