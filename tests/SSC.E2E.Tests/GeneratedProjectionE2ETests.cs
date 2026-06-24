@@ -5,6 +5,40 @@ namespace SSC.E2E.Tests;
 
 public sealed class GeneratedProjectionE2ETests
 {
+
+    [Fact]
+    public void Compare_GeneratedProjection_PublicIEnumerableField_GeneratesContainerAccessor()
+    {
+        // Intent: Source Generator also recognizes public IEnumerable<T> fields as comparable containers, matching Issue #34.
+        var models = new[]
+        {
+            new GeneratedDataset
+            {
+                FieldChildren = new[]
+                {
+                    new GeneratedFieldChild { ChildId = 1, Label = "left-1" },
+                    new GeneratedFieldChild { ChildId = 2, Label = "left-2" },
+                },
+            },
+            new GeneratedDataset
+            {
+                FieldChildren = new[]
+                {
+                    new GeneratedFieldChild { ChildId = 1, Label = "right-1" },
+                    new GeneratedFieldChild { ChildId = 3, Label = "right-3" },
+                },
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        Assert.Equal(new[] { "1", "2", "3" }, root.FieldChildren.Select(child => child.NodeMeta.KeyText).ToArray());
+        Assert.Equal("left-1", root.FieldChildren[0].Label[0]);
+        Assert.Equal("right-1", root.FieldChildren[0].Label[1]);
+        Assert.Equal(ValueState.Missing, root.FieldChildren[1].Label.GetState(1));
+        Assert.Equal(ValueState.Missing, root.FieldChildren[2].Label.GetState(0));
+    }
+
     [Fact]
     public void Compare_GeneratedProjection_AllowsContainerScalarAndDictionaryAccess()
     {
@@ -366,6 +400,16 @@ public sealed class GeneratedDataset
     public List<GeneratedGroup> Groups { get; init; } = [];
 
     public Dictionary<string, int> Scores { get; init; } = new(StringComparer.Ordinal);
+
+    public IEnumerable<GeneratedFieldChild>? FieldChildren;
+}
+
+public sealed class GeneratedFieldChild
+{
+    [CompareKey]
+    public int ChildId { get; init; }
+
+    public string? Label { get; init; }
 }
 
 public sealed class GeneratedGroup

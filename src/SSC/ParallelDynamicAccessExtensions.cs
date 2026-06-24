@@ -65,7 +65,10 @@ internal sealed class DynamicParallelNodeView : DynamicObject
         var property = _internalNode.ModelType.GetProperty(
             binder.Name,
             BindingFlags.Instance | BindingFlags.Public);
-        if (_internalNode.TryGetMemberNode(binder.Name, out var memberNode) || property is not null)
+        var field = property is null
+            ? _internalNode.ModelType.GetField(binder.Name, BindingFlags.Instance | BindingFlags.Public)
+            : null;
+        if (_internalNode.TryGetMemberNode(binder.Name, out var memberNode) || property is not null || field is not null)
         {
             result = DynamicParallelValuePathView.FromMember(_node, binder.Name, memberNode, _configuration);
             return true;
@@ -350,18 +353,20 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
                 continue;
             }
 
-            var property = currentValue.GetType().GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
-            if (property is null)
+            var currentType = currentValue.GetType();
+            var property = currentType.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
+            var field = property is null ? currentType.GetField(memberName, BindingFlags.Instance | BindingFlags.Public) : null;
+            if (property is null && field is null)
             {
                 result = null;
                 return false;
             }
 
-            var memberValue = property.GetValue(currentValue);
+            var memberValue = property is not null ? property.GetValue(currentValue) : field!.GetValue(currentValue);
             values[modelIndex] = memberValue;
             states[modelIndex] = memberValue is null ? NodePresenceState.PresentNull : NodePresenceState.PresentValue;
 
-            var candidateType = memberValue?.GetType() ?? property.PropertyType;
+            var candidateType = memberValue?.GetType() ?? property?.PropertyType ?? field!.FieldType;
             if (ParallelCompareApi.IsContainerType(candidateType))
             {
                 containerType ??= candidateType;
@@ -402,15 +407,17 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
 
         foreach (var memberName in _memberPath)
         {
-            var property = current.GetType().GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
-            if (property is null)
+            var currentType = current.GetType();
+            var property = currentType.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
+            var field = property is null ? currentType.GetField(memberName, BindingFlags.Instance | BindingFlags.Public) : null;
+            if (property is null && field is null)
             {
                 throw new MissingMemberException(
                     current.GetType().FullName,
                     memberName);
             }
 
-            current = property.GetValue(current);
+            current = property is not null ? property.GetValue(current) : field!.GetValue(current);
             if (current is null)
             {
                 state = NodePresenceState.PresentNull;
