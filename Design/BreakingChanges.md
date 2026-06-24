@@ -2,6 +2,22 @@
 
 ## 2026-06-25
 
+### T-085 MissingCompareKeyListPolicy の既定値変更
+
+- 対象:
+  - `CompareConfiguration.MissingCompareKeyListPolicy`
+  - `[CompareKey]` が無い sequence member の既定比較
+- 変更種別:
+  - public runtime behavior の変更
+- 影響:
+  - 従来は `CompareKey` が無い sequence member で `CompareKeyNotFoundOnSequenceElement` を Error 記録し、配下 node をスキップしていた
+  - T-085 以降の既定値は `AlignByIndex` となり、同条件では ordinal index で要素を揃えて比較する
+  - 旧挙動が必要な利用コードは `MissingCompareKeyListPolicy.SkipAndRecordError` を明示する必要がある
+- 背景:
+  - gist `XmlCustom.cs` の `Node.Children` / `Node.ChildrenOfNode` は `[CompareKey]` なしの `IEnumerable<T>` であり、既定 `Compare(...)` で parsed `Document` 比較を成功させる必要があったため
+- 備考:
+  - `CompareKey` が存在する sequence では従来どおり key union で比較する
+
 ### T-084 Source Generator object member の生成型変更
 
 - 対象:

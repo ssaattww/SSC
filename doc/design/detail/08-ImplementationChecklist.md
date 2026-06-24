@@ -9,8 +9,8 @@
 ## 2. Container Rules
 
 4. Dictionary 正規化で `TKey` を比較キーとして使っているか
-5. List/Array で CompareKey 必須を検証しているか
-6. CompareKey 無し List を `Skip + Error` 化しているか
+5. List/Array で CompareKey ありの場合は key union で揃えているか
+6. CompareKey 無し List を ordinal index で揃えているか
 7. 重複キーを Error 化しているか
 8. IEnumerable の 1 回マテリアライズを保証しているか
 
@@ -38,7 +38,7 @@
 
 20. 2 model / N model の正常系
 21. 欠損混在（片側・両側）
-22. CompareKey 無し / 重複キー異常系
+22. CompareKey 無し ordinal 比較 / 明示 skip policy / 重複キー異常系
 23. Dictionary/List/IEnumerable 各コンテナ系
 24. SelectMany の順序保証
 

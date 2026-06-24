@@ -25,8 +25,8 @@ E0=[80,90], E1=[70,null], E2=[null,60]
 
 ## 3. List/Array Rules
 
-- 要素型に `CompareKey` が必須
-- `CompareKey` 無し: `Skip + CompareKeyNotFoundOnSequenceElement`
+- 要素型に `CompareKey` がある場合は key union で揃える
+- `CompareKey` 無し: ordinal index で揃える
 - 重複キー: `DuplicateCompareKeyDetected`
 - strict モードでは上記を例外化
 - trace 有効時は declared type に対して `List` / `Array` のどちらで扱ったかを記録する
@@ -46,6 +46,7 @@ E2=[null,(3,30)]
 ## 4. IEnumerable Rules
 
 - Compare 開始時に `List<T>` へ 1 回マテリアライズ
+- 要素型に `CompareKey` がある場合は key union で揃え、無い場合は ordinal index で揃える
 - 再列挙しない
 - 実行時型が未対応コンテナの場合 `UnsupportedContainerType`
 - trace 有効時は declared type と runtime type、materialize 件数、再判定結果を記録する

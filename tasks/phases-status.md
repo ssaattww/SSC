@@ -33,6 +33,8 @@
 
 - Status: Done
 - Notes:
+  - T-085 を完了し、gist `XmlCustom.cs` と同等の E2E で `Document` 同士の比較が成功することを検証し、key なし sequence を ordinal 比較として扱う修正を sub-agent 実装で完了した
+  - T-085 では `CompareConfiguration.MissingCompareKeyListPolicy` の既定値を `AlignByIndex` に変更し、旧来の skip + error は `SkipAndRecordError` 明示時の opt-in とした
   - T-084 を完了し、gist `YXml.cs` と生成済み `global_Document.ParallelGenerated.g.cs` の Source Generator 出力を根拠に、`Document.Root` 配下の generated member 展開不足を regression test で再現して修正した
   - T-084 では class / struct 型の direct object member を nested generated view として生成し、`root.Root.Name` / `root.Root.Attribute` / `root.Root.Range` 相当の型付きアクセスを可能にした
   - T-084 の generated API source shape 変更は `Design/BreakingChanges.md` に記録した

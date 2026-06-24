@@ -623,7 +623,8 @@ foreach (dynamic child in root.Items[0].Detail.Children)
 ```
 
 - これは `a.b.c.d` の `d` が実行時専用 `List` でも `foreach` / index access できる、という意味である
-- ただし container 正規化の前提（例: sequence element に `[CompareKey]` が必要）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す
+- sequence element に `[CompareKey]` が無い場合は ordinal index で揃えるため、runtime-only container でも list view として access できる
+- `MissingCompareKeyListPolicy.SkipAndRecordError` を明示した場合は、旧来どおり `CompareKeyNotFoundOnSequenceElement` を記録して配下をスキップする
 
 ### 4.2.4 実行時専用メンバーで `GetState` が判定される仕組み
 
@@ -807,7 +808,7 @@ public sealed class CompareConfiguration
     public StringComparison StringKeyComparison { get; init; } = StringComparison.Ordinal;
     public NullKeyPolicy NullKeyPolicy { get; init; } = NullKeyPolicy.Error;
     public MissingCompareKeyListPolicy MissingCompareKeyListPolicy { get; init; } =
-        MissingCompareKeyListPolicy.SkipAndRecordError;
+        MissingCompareKeyListPolicy.AlignByIndex;
     public DuplicateKeyPolicy DuplicateKeyPolicy { get; init; } =
         DuplicateKeyPolicy.RecordError;
     public Action<string>? TraceLog { get; init; }
@@ -815,6 +816,9 @@ public sealed class CompareConfiguration
 ```
 
 `TraceLog` を指定した場合、`Compare(...)` 実行中に内部 trace 行を同期的に受け取れる。
+
+`MissingCompareKeyListPolicy.AlignByIndex` は、sequence 要素型に `CompareKey` が無い場合に ordinal index で要素を揃える。
+旧来どおり `CompareKeyNotFoundOnSequenceElement` を Error として記録して配下をスキップする場合は、`SkipAndRecordError` を明示する。
 
 - 用途:
   - container 判定の確認
