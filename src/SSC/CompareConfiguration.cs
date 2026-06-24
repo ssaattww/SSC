@@ -8,7 +8,7 @@ public sealed class CompareConfiguration
 
     public NullKeyPolicy NullKeyPolicy { get; init; } = NullKeyPolicy.Error;
 
-    public MissingCompareKeyListPolicy MissingCompareKeyListPolicy { get; init; } = MissingCompareKeyListPolicy.SkipAndRecordError;
+    public MissingCompareKeyListPolicy MissingCompareKeyListPolicy { get; init; } = MissingCompareKeyListPolicy.AlignByIndex;
 
     public DuplicateKeyPolicy DuplicateKeyPolicy { get; init; } = DuplicateKeyPolicy.RecordError;
 
@@ -22,6 +22,7 @@ public enum NullKeyPolicy
 
 public enum MissingCompareKeyListPolicy
 {
+    AlignByIndex,
     SkipAndRecordError,
 }
 

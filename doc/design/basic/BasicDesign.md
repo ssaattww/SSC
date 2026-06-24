@@ -105,10 +105,11 @@ public interface Parallel<T> : IEnumerable<Parallel<T>>
 
 ## 6. List マッピング方針（属性ベース）
 
-### 6.1 順序比較の禁止
+### 6.1 順序比較の位置づけ
 
-List を index で揃える比較は**設計上禁止**する。
-順序は表示上の情報であり、比較意味を持たない。
+List は、要素型に `CompareKey` がある場合は key union で揃える。
+`CompareKey` が無い場合は ordinal index で揃える。
+旧来の skip + error が必要な利用者は `MissingCompareKeyListPolicy.SkipAndRecordError` を明示する。
 
 ---
 
@@ -138,11 +139,8 @@ public sealed class ItemDetail
 ### 6.3 List マッピング公式ルール
 
 1. CompareKey がある List<T> は必ずキーで揃える
-2. CompareKey が無い List<T> に順序比較を行ってはならない
-3. CompareKey 無し List は
-   - スキップ
-   - 全要素を null として並列化
-   のいずれかをポリシーで選択
+2. CompareKey が無い List<T> は ordinal index で揃える
+3. 旧来の skip + error が必要な場合は `MissingCompareKeyListPolicy.SkipAndRecordError` を明示する
 
 ---
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Globalization;
 using System.Reflection;
 using SSC.Internal;
 
@@ -323,6 +324,11 @@ public static class ParallelCompareApi
         var compareKeyMember = TypeMetadataResolver.GetCompareKeyMember(elementType);
         if (compareKeyMember is null)
         {
+            if (context.Configuration.MissingCompareKeyListPolicy == MissingCompareKeyListPolicy.AlignByIndex)
+            {
+                return BuildIndexAlignedSequenceChildren(containerSlots, containerType, elementType, path, context);
+            }
+
             context.RecordExecutionError(
                 CompareIssueCode.CompareKeyNotFoundOnSequenceElement,
                 path,
@@ -482,6 +488,82 @@ public static class ParallelCompareApi
                 context,
                 keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key));
             children.Add(childNode);
+        }
+
+        return children;
+    }
+
+    private static IReadOnlyList<IParallelNode> BuildIndexAlignedSequenceChildren(
+        NodeSlot[] containerSlots,
+        Type containerType,
+        Type elementType,
+        string path,
+        CompareContext context)
+    {
+        var containerCategory = GetContainerCategory(containerType);
+        if (context.IsTraceEnabled)
+        {
+            context.Trace(
+                "container",
+                path,
+                ("container", containerCategory),
+                ("elementType", elementType),
+                ("compareKey", "<index>"));
+        }
+
+        var lists = new List<object?>[containerSlots.Length];
+        var maxCount = 0;
+        for (var modelIndex = 0; modelIndex < containerSlots.Length; modelIndex++)
+        {
+            lists[modelIndex] = [];
+            if (containerSlots[modelIndex].State != NodePresenceState.PresentValue || containerSlots[modelIndex].Value is null)
+            {
+                continue;
+            }
+
+            var rawContainer = containerSlots[modelIndex].Value!;
+            if (rawContainer is not IEnumerable enumerable)
+            {
+                context.RecordExecutionError(
+                    CompareIssueCode.UnsupportedContainerType,
+                    path,
+                    modelIndex,
+                    null,
+                    $"container type '{rawContainer.GetType().Name}' is not supported.");
+                continue;
+            }
+
+            lists[modelIndex] = enumerable.Cast<object?>().ToList();
+            maxCount = Math.Max(maxCount, lists[modelIndex].Count);
+            if (context.IsTraceEnabled)
+            {
+                context.Trace(
+                    "container",
+                    path,
+                    ("modelIndex", modelIndex),
+                    ("container", containerCategory),
+                    ("runtimeType", rawContainer.GetType()),
+                    ("materializedCount", lists[modelIndex].Count));
+            }
+        }
+
+        var children = new List<IParallelNode>(maxCount);
+        for (var itemIndex = 0; itemIndex < maxCount; itemIndex++)
+        {
+            var slots = new NodeSlot[containerSlots.Length];
+            for (var modelIndex = 0; modelIndex < containerSlots.Length; modelIndex++)
+            {
+                if (itemIndex >= lists[modelIndex].Count)
+                {
+                    slots[modelIndex] = NodeSlot.Missing;
+                    continue;
+                }
+
+                var value = lists[modelIndex][itemIndex];
+                slots[modelIndex] = value is null ? NodeSlot.PresentNull : NodeSlot.PresentValue(value);
+            }
+
+            children.Add(BuildNode(elementType, slots, path, context, keyText: itemIndex.ToString(CultureInfo.InvariantCulture)));
         }
 
         return children;

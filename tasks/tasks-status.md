@@ -12,6 +12,46 @@
 
 ## Done
 
+- T-085: gist `XmlCustom` 同等 E2E 比較の修正
+  - Status: 完了（gist `XmlCustom.cs` と同等の XML custom model / parser を E2E に用意し、key なし sequence を ordinal 比較として扱うことで Source Generator 付き `Document` 同士の比較を成功させた）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-084 Source Generator の object member 展開不足修正
+  - Exit Criteria:
+    - E2E に gist `XmlCustom` と同等の `Document` / `Node` / `Content` / `XmlAttribute` / `TextRange` model と parser 利用ケースが追加されている
+    - `XmlCustom.Document` で parse した `Document` 同士を `ParallelCompareApi.Compare` して `HasError == false` になる
+    - `[CompareKey]` のない list / sequence element は skip + error ではなく ordinal index で比較される
+    - `[CompareKey]` のある list / sequence element は既存の key union 比較を維持する
+    - generated view で `Root` 配下の主要 member を辿れる
+    - failing proof、実装修正、検証、sub-agent review、PR 更新が完了している
+  - Output:
+    - PR #38
+    - `src/SSC/CompareConfiguration.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `tests/SSC.E2E.Tests/XmlCustomGeneratedCompareE2ETests.cs`
+    - `tests/SSC.E2E.Tests/CompareApiE2ETests.cs`
+    - `tests/SSC.E2E.Tests/ContainerAndSelectManyE2ETests.cs`
+    - `tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj`
+    - `doc/design/basic/BasicDesign.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-085-implementation-20260625082652.md`
+    - `reports/task-t-085-review-20260625084004.md`
+    - `reports/task-t-085-review-r2-20260625084601.md`
+  - Verification:
+    - failing proof: gist `XmlCustom` E2E が production 修正前に `CompareKeyNotFoundOnSequenceElement` で失敗
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XmlCustomGeneratedCompareE2ETests|FullyQualifiedName~CompareApiE2ETests.Compare_WhenSequenceElementHasNoCompareKey_AlignsByOrdinalIndex|FullyQualifiedName~CompareApiE2ETests.Compare_WhenMissingCompareKeyPolicySkips_RecordsErrorAndSkips|FullyQualifiedName~ContainerAndSelectManyE2ETests.Compare_DynamicProjection_RuntimeDerivedContainerMember_WithoutCompareKeyAlignsByOrdinalIndex|FullyQualifiedName~GeneratedProjection"` 成功（15 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 29 件 / E2E 66 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - gpt-5.5 medium implementation sub-agent 実施
+    - gpt-5.5 high review / re-review sub-agent 実施、最終指摘なし
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+
 - T-084: Source Generator の object member 展開不足修正
   - Status: 完了（gist `YXml.cs` と生成済み `global_Document.ParallelGenerated.g.cs` を根拠に、`Document.Root` が nested generated view にならず `Root` 配下の generated member が不完全になる問題を修正した）
   - Phase: Phase 3

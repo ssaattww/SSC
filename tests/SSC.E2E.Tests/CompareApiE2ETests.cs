@@ -73,10 +73,55 @@ public sealed class CompareApiE2ETests
         Assert.DoesNotContain(result.Issues, issue => issue.Code == CompareIssueCode.CompareKeyNotFoundOnSequenceElement);
     }
 
+    /// <summary>
+    /// Verifies that sequence elements without CompareKey align by ordinal index and report missing trailing elements.
+    /// </summary>
     [Fact]
-    public void Compare_WhenSequenceElementHasNoCompareKey_RecordsErrorAndSkips()
+    public void Compare_WhenSequenceElementHasNoCompareKey_AlignsByOrdinalIndex()
     {
-        // Intent: List 要素に [CompareKey] が無い場合は Error を記録し、その配下ノードをスキップする。
+        var models = new[]
+        {
+            new NonKeyedRoot
+            {
+                Items =
+                [
+                    new NonKeyedItem { Value = 1 },
+                ],
+            },
+            new NonKeyedRoot
+            {
+                Items =
+                [
+                    new NonKeyedItem { Value = 2 },
+                    new NonKeyedItem { Value = 3 },
+                ],
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+
+        Assert.False(result.HasError);
+        Assert.DoesNotContain(result.Issues, issue => issue.Code == CompareIssueCode.CompareKeyNotFoundOnSequenceElement);
+
+        var root = Assert.IsType<ParallelNode<NonKeyedRoot>>(result.Root);
+        var items = root.GetChildren<NonKeyedItem>(nameof(NonKeyedRoot.Items));
+
+        Assert.Equal(2, items.Count);
+        Assert.Equal("0", items[0].KeyText);
+        Assert.Equal(1, items[0][0]?.Value);
+        Assert.Equal(2, items[0][1]?.Value);
+        Assert.Equal(ValueState.Mismatched, items[0].GetState(0));
+        Assert.Equal("1", items[1].KeyText);
+        Assert.Equal(ValueState.Missing, items[1].GetState(0));
+        Assert.Equal(3, items[1][1]?.Value);
+    }
+
+    /// <summary>
+    /// Verifies that SkipAndRecordError preserves the previous missing CompareKey error-and-skip behavior.
+    /// </summary>
+    [Fact]
+    public void Compare_WhenMissingCompareKeyPolicySkips_RecordsErrorAndSkips()
+    {
         var models = new[]
         {
             new NonKeyedRoot
@@ -94,8 +139,12 @@ public sealed class CompareApiE2ETests
                 ],
             },
         };
+        var configuration = new CompareConfiguration
+        {
+            MissingCompareKeyListPolicy = MissingCompareKeyListPolicy.SkipAndRecordError,
+        };
 
-        var result = ParallelCompareApi.Compare(models);
+        var result = ParallelCompareApi.Compare(models, configuration);
 
         Assert.True(result.HasError);
         Assert.Contains(result.Issues, issue => issue.Code == CompareIssueCode.CompareKeyNotFoundOnSequenceElement);

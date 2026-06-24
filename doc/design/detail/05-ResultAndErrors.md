@@ -32,7 +32,7 @@ public enum CompareIssueLevel { Error, Warning }
 - `InputModelListEmpty`: models が空
 - `InputModelNullElement`: models 内に null
 - `UnsupportedContainerType`: 未対応コンテナ
-- `CompareKeyNotFoundOnSequenceElement`: List 要素に CompareKey 無し
+- `CompareKeyNotFoundOnSequenceElement`: `MissingCompareKeyListPolicy.SkipAndRecordError` 指定時に List 要素に CompareKey 無し
 - `CompareKeyValueIsNull`: CompareKey 値 / dictionary key / sequence element が null
 - `DuplicateCompareKeyDetected`: 重複キー
 - `ModelIndexOutOfRange`: indexer 範囲外

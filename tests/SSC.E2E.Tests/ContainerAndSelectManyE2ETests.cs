@@ -491,10 +491,12 @@ public sealed class ContainerAndSelectManyE2ETests
         Assert.Equal("right-2", (string?)children[1].Label[1]);
     }
 
+    /// <summary>
+    /// Verifies that a runtime-derived container without CompareKey aligns by ordinal index through dynamic access.
+    /// </summary>
     [Fact]
-    public void Compare_DynamicProjection_RuntimeDerivedContainerMember_ThrowsWhenSequenceElementHasNoCompareKey()
+    public void Compare_DynamicProjection_RuntimeDerivedContainerMember_WithoutCompareKeyAlignsByOrdinalIndex()
     {
-        // Intent: runtime-derived container の正規化前提を満たさない場合は silent に握り潰さず例外で可視化する。
         var models = new[]
         {
             new DerivedDetailDataset
@@ -526,6 +528,7 @@ public sealed class ContainerAndSelectManyE2ETests
                             Children =
                             [
                                 new DerivedRuntimeChildWithoutKey { Label = "right-1" },
+                                new DerivedRuntimeChildWithoutKey { Label = "right-2" },
                             ],
                         },
                     },
@@ -536,10 +539,17 @@ public sealed class ContainerAndSelectManyE2ETests
         var result = ParallelCompareApi.Compare(models);
         dynamic root = result.AsDynamic()!;
 
-        var exception = Assert.Throws<CompareExecutionException>(
-            () => _ = ((IEnumerable<object?>)root.Items[0].Detail.Children).Cast<dynamic>().ToArray());
+        var children = ((IEnumerable<object?>)root.Items[0].Detail.Children).Cast<dynamic>().ToArray();
 
-        Assert.Equal(CompareIssueCode.CompareKeyNotFoundOnSequenceElement, exception.Code);
+        Assert.Equal(2, children.Length);
+        Assert.Equal("0", (string?)children[0].NodeKeyText);
+        Assert.Equal("left-1", (string?)children[0].Label[0]);
+        Assert.Equal("right-1", (string?)children[0].Label[1]);
+        Assert.Equal(ValueState.Mismatched, (ValueState)children[0].GetState(0));
+        Assert.Equal("1", (string?)children[1].NodeKeyText);
+        Assert.Null((string?)children[1].Label[0]);
+        Assert.Equal("right-2", (string?)children[1].Label[1]);
+        Assert.Equal(ValueState.Missing, (ValueState)children[1].GetState(0));
     }
 
     [Fact]
