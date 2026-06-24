@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-06-23
+- Updated: 2026-06-25
 
 ## In Progress
 
@@ -11,6 +11,35 @@
 - なし
 
 ## Done
+
+- T-084: Source Generator の object member 展開不足修正
+  - Status: 完了（gist `YXml.cs` と生成済み `global_Document.ParallelGenerated.g.cs` を根拠に、`Document.Root` が nested generated view にならず `Root` 配下の generated member が不完全になる問題を修正した）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-083 Sprache `.csx` XML-like compare sample の追加
+  - Exit Criteria:
+    - gist の `Document.Root` 構造を最小再現する Source Generator regression test が追加されている
+    - class / struct 型の object member が nested generated view として生成され、`Root.Name` / `Root.Attribute` / `Root.Range` 相当の対象メンバーを辿れる
+    - 既存の比較 API 契約を破壊しない
+    - 検証・レビュー・PR 更新が完了している
+  - Output:
+    - PR #37
+    - `src/SSC.Generators/ParallelViewGenerator.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-084-implementation-20260625080132.md`
+    - `reports/task-t-084-review-20260625080208.md`
+  - Verification:
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~GeneratedProjectionE2ETests.Compare_GeneratedProjection_ObjectMember_GeneratesNestedViewMembers"` 成功（1 件）
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~GeneratedProjectionE2ETests"` 成功（9 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 29 件 / E2E 64 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - gpt-5.5 high sub-agent review 実施、通常パスを壊す指摘なし
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
 
 - T-083: Sprache `.csx` XML-like compare sample の追加
   - Status: 完了（Sprache `2.3.1` の `.csx` sample を追加し、数字始まり element / attribute name を許可する parser と SSC 比較出力を検証、レビュー指摘なし）
