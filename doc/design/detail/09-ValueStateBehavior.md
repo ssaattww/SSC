@@ -45,7 +45,7 @@ node level の object/container 判定では、model object 自体の参照同�
 #### 3.2.1 Dynamic
 
 `AsDynamic()` から辿る `Property` の最終値を比較対象として、node level と同じルールを適用する。
-getter / field read の詳細な評価タイミングは `02-PublicApi` の「Getter / Field Read 評価タイミング」を正とする。
+getter の詳細な評価タイミングは `02-PublicApi` の「Getter 評価タイミング」を正とする。
 
 - `null` 同士は一致
 - `null` と非 `null` は不一致

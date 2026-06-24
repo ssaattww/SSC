@@ -29,15 +29,15 @@
 
 処理:
 
-- public instance property / public instance field の列挙
+- public プロパティ列挙
 - container 種別判定
 - CompareKey 抽出ルール構築
 - `CompareIgnore` 付与メンバーを除外
-- trace 有効時は member ごとの宣言型と container category を記録
+- trace 有効時は property ごとのプロパティ宣言型と container category を記録
 
 反射対象ポリシー:
 
-- 基本は public getter property と public instance field を広く対象とする
+- 基本は public getter メンバーを広く対象とする
 - 比較から外したいメンバーだけ `CompareIgnore` で明示除外する
 - 制限は最小化し、除外指定で制御する
 
@@ -56,9 +56,9 @@
 
 補足:
 
-- 上記 member node のための property getter / field read は compare / node construction 中に発生し得る
+- 上記 member node のための getter 評価は compare / node construction 中に発生し得る
 - dynamic value-path `GetState` は、事前構築済み member については保存済み member state を読むだけにし、state lookup 中に getter を再実行しない
-- 宣言型に無い実行時専用メンバーは、この事前構築の対象外であり、必要時は呼び出し時の反射による代替解決を使う
+- プロパティ宣言型に無い実行時専用メンバーは、この事前構築の対象外であり、必要時は呼び出し時の反射による代替解決を使う
 - generated projection の nested value path を同じ経路へ統一する作業は、この設計範囲に含めない
 
 dynamic value-path `GetState` の lookup 経路:
@@ -68,33 +68,33 @@ dynamic value-path `GetState` の lookup 経路:
 3. 持たない場合は、対象 model の root value から member path を反射で辿る
 4. 対象 model が欠損なら `Missing`、比較相手 model が 1 つも無い場合も `Missing` を返す
 5. 比較相手がある場合は、他 model についても同じ path を反射で辿り、presence / 値一致で `ValueState` を決める
-6. 対象 model でも他 model でも、反射途中で public property / public field が見つからなければ `MissingMemberException`
-7. property getter / field read が例外を投げれば、その例外は呼び出し側へ伝播する
+6. 対象 model でも他 model でも、反射途中で property が見つからなければ `MissingMemberException`
+7. getter が例外を投げれば、その例外は呼び出し側へ伝播する
 8. 実行時専用メンバーが container の場合は、member access 側で container view へ切り替える処理を先に試みる
 
 trace 有効時は path 単位で次を記録する。
 
 - scalar / object / container のどの経路へ入ったか
-- member value 取得失敗時の issue 化
+- member getter 評価失敗時の issue 化
 - child node / member node の構築結果
 
 出力: `Parallel<T>`
 
 
-### 4.1 Getter / Field Read Timing
+### 4.1 Getter Evaluation Timing
 
 node construction は comparable member の値を取得する境界でもある。
 public property の getter に処理がある場合、その処理はこの phase で実行され得る。
 
-- object member / scalar member: member node を materialize するために property getter / field read を実行する
-- sequence / dictionary member: container slots を作るために property getter / field read を実行する
-- sequence element の `[CompareKey]`: container normalization 中に compare key getter / field read を実行する
-- getter / field read が失敗した場合は `ReflectionMetadataBuildFailed` として Issue 化し、継続可能な範囲では該当 slot を `Missing` として扱う
+- object member / scalar member: member node を materialize するために property getter を実行する
+- sequence / dictionary member: container slots を作るために property getter を実行する
+- sequence element の `[CompareKey]`: container normalization 中に compare key getter を実行する
+- getter が失敗した場合は `ReflectionMetadataBuildFailed` として Issue 化し、継続可能な範囲では該当 slot を `Missing` として扱う
 
 `GetState(...)` 呼び出し時に getter を再実行するかどうかは access layer の契約で決まる。
 
 - dynamic value path が保存済み member node を持つ場合: 保存済み state を読むため getter を再実行しない
-- dynamic runtime-only fallback の場合: 呼び出し時 reflection で property getter / field read を実行し得る
+- dynamic runtime-only fallback の場合: 呼び出し時 reflection で property getter を実行し得る
 - generated projection の value path の場合: generated getter delegate を value indexer / `GetState(...)` 時に実行し得る
 
 ## 5. Container Normalization
@@ -107,7 +107,7 @@ public property の getter に処理がある場合、その処理はこの phas
 
 trace 有効時は次も記録する。
 
-- member 宣言型上の分類結果
+- プロパティ宣言型上の分類結果
 - runtime type
 - `IEnumerable` 実体化件数
 - compare key 解決結果
