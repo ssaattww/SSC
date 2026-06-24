@@ -143,6 +143,22 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         source.AppendLine();
         source.AppendLine("    public global::SSC.ParallelGeneratedMeta NodeMeta => new(_node);");
         source.AppendLine();
+        if (!typeShape.Members.Any(static member => string.Equals(member.MemberName, "GetState", StringComparison.Ordinal)))
+        {
+            source.AppendLine("    public global::SSC.ValueState GetState(int modelIndex) => _node.GetState(modelIndex);");
+            source.AppendLine();
+        }
+
+        if (!typeShape.Members.Any(static member => string.Equals(member.MemberName, "Select", StringComparison.Ordinal)))
+        {
+            source.AppendLine("    public global::SSC.ParallelGeneratedValue<");
+            source.AppendLine($"        {modelTypeName},");
+            source.AppendLine("        TNext> Select<TNext>(global::System.Func<");
+            source.AppendLine($"        {modelTypeName},");
+            source.AppendLine("        TNext> selector) =>");
+            source.AppendLine("        new(_node, selector);");
+            source.AppendLine();
+        }
 
         foreach (var member in typeShape.Members)
         {
@@ -157,6 +173,20 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
                 var elementTypeName = member.ElementType.ToDisplayString(TypeDisplayFormat);
                 source.AppendLine($"    public global::SSC.ParallelGeneratedList<{elementTypeName}, {childViewName}> {memberName} =>");
                 source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
+                source.AppendLine();
+                continue;
+            }
+
+            if (member.Kind == MemberKind.Object)
+            {
+                if (member.ObjectType is null || !viewNames.TryGetValue(member.ObjectType, out var childViewName))
+                {
+                    continue;
+                }
+
+                var objectTypeName = member.ObjectType.ToDisplayString(TypeDisplayFormat);
+                source.AppendLine($"    public {childViewName} {memberName} =>");
+                source.AppendLine($"        new(global::SSC.ParallelGeneratedRuntime.RequireMemberNode<{modelTypeName}, {objectTypeName}>(_node, nameof({modelTypeName}.{memberName}), nameof({modelTypeName}.{memberName})));");
                 source.AppendLine();
                 continue;
             }
@@ -202,6 +232,13 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
                 {
                     members.Add(MemberShape.Container(property.Name, sequenceElementNamedType));
                     queue.Enqueue(sequenceElementNamedType);
+                    continue;
+                }
+
+                if (TryGetObjectMemberType(property.Type, out var objectMemberType))
+                {
+                    members.Add(MemberShape.Object(property.Name, objectMemberType));
+                    queue.Enqueue(objectMemberType);
                     continue;
                 }
 
@@ -299,6 +336,26 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         return false;
     }
 
+    private static bool TryGetObjectMemberType(ITypeSymbol type, out INamedTypeSymbol objectType)
+    {
+        if (IsScalarType(type))
+        {
+            objectType = null!;
+            return false;
+        }
+
+        if (type is INamedTypeSymbol named
+            && (named.TypeKind == TypeKind.Class || named.TypeKind == TypeKind.Struct || named.TypeKind == TypeKind.Interface)
+            && named.SpecialType != SpecialType.System_Object)
+        {
+            objectType = named;
+            return true;
+        }
+
+        objectType = null!;
+        return false;
+    }
+
     private static bool TryGetSequenceElementType(ITypeSymbol type, out ITypeSymbol elementType)
     {
         if (type.SpecialType == SpecialType.System_String)
@@ -380,6 +437,48 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         return $"model.{escapedMemberName}";
     }
 
+    private static bool IsScalarType(ITypeSymbol type)
+    {
+        if (type is INamedTypeSymbol named
+            && named.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
+            && named.TypeArguments.Length == 1)
+        {
+            return IsScalarType(named.TypeArguments[0]);
+        }
+
+        if (type.TypeKind == TypeKind.Enum)
+        {
+            return true;
+        }
+
+        return type.SpecialType is
+                SpecialType.System_Boolean or
+                SpecialType.System_Char or
+                SpecialType.System_SByte or
+                SpecialType.System_Byte or
+                SpecialType.System_Int16 or
+                SpecialType.System_UInt16 or
+                SpecialType.System_Int32 or
+                SpecialType.System_UInt32 or
+                SpecialType.System_Int64 or
+                SpecialType.System_UInt64 or
+                SpecialType.System_Decimal or
+                SpecialType.System_Single or
+                SpecialType.System_Double or
+                SpecialType.System_String
+            || IsWellKnownScalar(type);
+    }
+
+    private static bool IsWellKnownScalar(ITypeSymbol type)
+    {
+        var fullName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        return fullName is
+            "global::System.DateTime" or
+            "global::System.DateTimeOffset" or
+            "global::System.Guid" or
+            "global::System.TimeSpan";
+    }
+
     private static bool IsNullableValueType(ITypeSymbol type)
     {
         return type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
@@ -435,6 +534,7 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
     private enum MemberKind
     {
         Container,
+        Object,
         Value,
     }
 
@@ -453,11 +553,17 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
 
     private sealed class MemberShape
     {
-        private MemberShape(string memberName, MemberKind kind, INamedTypeSymbol? elementType, ITypeSymbol? valueType)
+        private MemberShape(
+            string memberName,
+            MemberKind kind,
+            INamedTypeSymbol? elementType,
+            INamedTypeSymbol? objectType,
+            ITypeSymbol? valueType)
         {
             MemberName = memberName;
             Kind = kind;
             ElementType = elementType;
+            ObjectType = objectType;
             ValueType = valueType;
         }
 
@@ -467,12 +573,17 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
 
         public INamedTypeSymbol? ElementType { get; }
 
+        public INamedTypeSymbol? ObjectType { get; }
+
         public ITypeSymbol? ValueType { get; }
 
         public static MemberShape Container(string memberName, INamedTypeSymbol elementType) =>
-            new(memberName, MemberKind.Container, elementType, null);
+            new(memberName, MemberKind.Container, elementType, null, null);
+
+        public static MemberShape Object(string memberName, INamedTypeSymbol objectType) =>
+            new(memberName, MemberKind.Object, null, objectType, null);
 
         public static MemberShape Value(string memberName, ITypeSymbol valueType) =>
-            new(memberName, MemberKind.Value, null, valueType);
+            new(memberName, MemberKind.Value, null, null, valueType);
     }
 }

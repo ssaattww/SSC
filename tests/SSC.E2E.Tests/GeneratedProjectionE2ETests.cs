@@ -5,6 +5,47 @@ namespace SSC.E2E.Tests;
 
 public sealed class GeneratedProjectionE2ETests
 {
+    [Fact]
+    public void Compare_GeneratedProjection_ObjectMember_GeneratesNestedViewMembers()
+    {
+        // Intent: Source Generator expands class-typed members such as Document.Root into nested generated views.
+        var models = new[]
+        {
+            new GeneratedDocument
+            {
+                Root = new GeneratedXmlNode
+                {
+                    Name = "root",
+                    Attribute = new Dictionary<string, GeneratedXmlAttribute>
+                    {
+                        ["id"] = new() { Name = "id", Value = "left" },
+                    },
+                    Range = new GeneratedTextRange { StartLine = 1, EndLine = 3 },
+                },
+            },
+            new GeneratedDocument
+            {
+                Root = new GeneratedXmlNode
+                {
+                    Name = "root",
+                    Attribute = new Dictionary<string, GeneratedXmlAttribute>
+                    {
+                        ["id"] = new() { Name = "id", Value = "right" },
+                    },
+                    Range = new GeneratedTextRange { StartLine = 1, EndLine = 4 },
+                },
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        Assert.Equal("root", root.Root.Name[0]);
+        Assert.Equal("right", root.Root.Attribute[0].Value[1]);
+        Assert.Equal(ValueState.Mismatched, root.Root.Attribute[0].Value.GetState(0));
+        Assert.Equal(1, root.Root.Range.StartLine[0]);
+        Assert.Equal(4, root.Root.Range.EndLine[1]);
+    }
+
 
     [Fact]
     public void Compare_GeneratedProjection_PublicIEnumerableField_GeneratesContainerAccessor()
@@ -392,6 +433,35 @@ public sealed class GeneratedProjectionE2ETests
 
         public ValueState GetState(int modelIndex) => ValueState.Missing;
     }
+}
+
+[GenerateParallelView]
+public sealed class GeneratedDocument
+{
+    public GeneratedXmlNode Root { get; init; } = new();
+}
+
+public sealed class GeneratedXmlNode
+{
+    public string Name { get; init; } = string.Empty;
+
+    public Dictionary<string, GeneratedXmlAttribute>? Attribute;
+
+    public GeneratedTextRange Range;
+}
+
+public sealed class GeneratedXmlAttribute
+{
+    public required string Name;
+
+    public required string Value;
+}
+
+public struct GeneratedTextRange
+{
+    public int StartLine;
+
+    public int EndLine;
 }
 
 [GenerateParallelView]

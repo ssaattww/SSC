@@ -733,7 +733,8 @@ var root = ParallelCompareApi.Compare(models).AsGeneratedView();
 
 var leftMetricAt100 = root.Groups[0].Items[0].MetricA[0]; // 1.0
 var rightStateAt200 = root.Groups[0].Items[1].MetricA.GetState(1); // Missing
-var leftLabel = root.Groups[0].Items[0].Detail.Select(x => x.Label)[0]; // nested value path
+var leftLabel = root.Groups[0].Items[0].Detail.Label[0]; // direct nested object view
+var leftLabelViaSelector = root.Groups[0].Items[0].Detail.Select(x => x.Label)[0]; // compatible nested value path
 var nodeCount = root.Groups[0].Items[0].NodeMeta.Count;
 
 // model 単位で list を選択（Missing slot を除外）
@@ -747,6 +748,8 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - 投影切替の入口は `CompareResult` 拡張に統一する
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
 - Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
+- class / struct 型の object member は nested generated view として直接辿れる（例: `root.Root.Name[0]`）
+- object member view は互換導線として `Select(...)` も提供し、既存の nested value path 利用を維持する
 - `SelectModel(modelIndex)` は指定 model で `Missing` でない要素のみを返し、順序は key union 順を維持する
 - getter を再実行しない `GetState` 保証は dynamic value path に限定し、generated nested value path の parity はこの設計範囲に含めない
 
@@ -759,7 +762,10 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - value path:
   - `Property[modelIndex]`
   - `Property.GetState(modelIndex)`
-  - nested object path は `Select(...)` で連鎖
+- object path:
+  - class / struct 型の direct member は nested generated view として生成
+  - nested object path は直接 member access で連鎖
+  - `Select(...)` による nested value path は互換導線として維持
 - out of scope（初期版）:
   - 任意メソッド呼び出しの投影
   - indexer プロパティ投影

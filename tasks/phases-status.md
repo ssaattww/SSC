@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-06-23
+- Updated: 2026-06-25
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -33,6 +33,9 @@
 
 - Status: Done
 - Notes:
+  - T-084 を完了し、gist `YXml.cs` と生成済み `global_Document.ParallelGenerated.g.cs` の Source Generator 出力を根拠に、`Document.Root` 配下の generated member 展開不足を regression test で再現して修正した
+  - T-084 では class / struct 型の direct object member を nested generated view として生成し、`root.Root.Name` / `root.Root.Attribute` / `root.Root.Range` 相当の型付きアクセスを可能にした
+  - T-084 の generated API source shape 変更は `Design/BreakingChanges.md` に記録した
   - T-083 を完了し、Sprache `2.3.1` を使う `.csx` sample として、数字始まり element / attribute name を許可する XML-like parser と SSC 比較出力を追加した
   - T-076 系の XPath-like path access / diff entry helper 実装は T-077 から T-081 まで完了した
   - T-081 を完了し、README に XPath-like path access / diff entry の最小利用例を追加し、public API 設計書を実装後 API 名・契約・表示例と同期した

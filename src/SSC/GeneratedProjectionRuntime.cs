@@ -273,4 +273,31 @@ public static class ParallelGeneratedRuntime
             $"{apiName} can be used only with compare result nodes.",
             nameof(node));
     }
+
+    public static ParallelNode<TMember> RequireMemberNode<TParent, TMember>(
+        ParallelNode<TParent> node,
+        string memberName,
+        string apiName)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentException.ThrowIfNullOrEmpty(memberName);
+        ArgumentException.ThrowIfNullOrEmpty(apiName);
+
+        var internalNode = (IParallelNodeInternal)node;
+        if (!internalNode.TryGetMemberNode(memberName, out var rawMemberNode))
+        {
+            throw new ArgumentException(
+                $"{apiName} cannot find generated member node '{memberName}'.",
+                nameof(memberName));
+        }
+
+        if (rawMemberNode is ParallelNode<TMember> memberNode)
+        {
+            return memberNode;
+        }
+
+        throw new ArgumentException(
+            $"{apiName} can be used only with generated member node '{memberName}'.",
+            nameof(memberName));
+    }
 }
