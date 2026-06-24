@@ -45,6 +45,7 @@ node level の object/container 判定では、model object 自体の参照同�
 #### 3.2.1 Dynamic
 
 `AsDynamic()` から辿る `Property` の最終値を比較対象として、node level と同じルールを適用する。
+getter / field read の詳細な評価タイミングは `02-PublicApi` の「Getter / Field Read 評価タイミング」を正とする。
 
 - `null` 同士は一致
 - `null` と非 `null` は不一致
@@ -64,6 +65,7 @@ node level の object/container 判定では、model object 自体の参照同�
 #### 3.2.2 Generated
 
 generated projection でも公開 `ValueState` の意味は同じである。
+ただし generated projection の value path は generated getter delegate を access / `GetState(...)` 時に実行し得る。
 
 - `null` 同士は一致
 - `null` と非 `null` は不一致

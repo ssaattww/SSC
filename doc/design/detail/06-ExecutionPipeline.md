@@ -80,6 +80,23 @@ trace 有効時は path 単位で次を記録する。
 
 出力: `Parallel<T>`
 
+
+### 4.1 Getter / Field Read Timing
+
+node construction は comparable member の値を取得する境界でもある。
+public property の getter に処理がある場合、その処理はこの phase で実行され得る。
+
+- object member / scalar member: member node を materialize するために property getter / field read を実行する
+- sequence / dictionary member: container slots を作るために property getter / field read を実行する
+- sequence element の `[CompareKey]`: container normalization 中に compare key getter / field read を実行する
+- getter / field read が失敗した場合は `ReflectionMetadataBuildFailed` として Issue 化し、継続可能な範囲では該当 slot を `Missing` として扱う
+
+`GetState(...)` 呼び出し時に getter を再実行するかどうかは access layer の契約で決まる。
+
+- dynamic value path が保存済み member node を持つ場合: 保存済み state を読むため getter を再実行しない
+- dynamic runtime-only fallback の場合: 呼び出し時 reflection で property getter / field read を実行し得る
+- generated projection の value path の場合: generated getter delegate を value indexer / `GetState(...)` 時に実行し得る
+
 ## 5. Container Normalization
 
 優先順:

@@ -510,7 +510,24 @@ value 表示:
 この 2 つは互換変換を保証しない。
 issue から詳細 node を辿る必要がある場合は、`CompareIssue.Path` と `KeyText` を組み合わせて利用者側で判断する。
 
-### 4.2.3 Dynamic `GetState` の保証範囲
+
+### 4.2.3 Getter / Field Read 評価タイミング
+
+public property の getter 内で計算・変換・遅延取得などの処理を行う model はサポートする。
+ただし、getter / field read がいつ実行されるかは access 経路ごとに異なるため、次を公開契約として扱う。
+
+| 経路 | getter / field read の実行タイミング | `GetState` 時の再実行保証 | 例外の扱い |
+| --- | --- | --- | --- |
+| `Compare(...)` による node construction | 比較実行中に comparable member を materialize するとき | 対象外 | strict=false では Issue 化して該当 slot を Missing 扱いにする。strict=true では設定に従い例外化する |
+| `AsDynamic()` の事前構築済み value path `GetState(...)` | `Compare(...)` 中に前倒しで評価済み | 再実行しない | compare 時に扱い、`GetState(...)` では再送出しない |
+| `AsDynamic()` の value indexer `Property[modelIndex]` | indexer access 時に値を読む | 対象外 | access 時の getter 例外は呼び出し側へ伝播し得る |
+| `AsDynamic()` の runtime-only fallback `GetState(...)` | `GetState(...)` 呼び出し時に reflection で辿る | 再実行しない保証なし | 呼び出し側へ伝播し得る |
+| generated projection の value indexer / `GetState(...)` | generated value wrapper が保持する getter delegate を access / `GetState(...)` 時に実行する | 再実行しない保証なし | 呼び出し側へ伝播し得る |
+
+このため、副作用を持つ getter や重い getter は利用できるが、API 経路によって実行回数・実行タイミングが変わり得る。
+安定した比較結果が必要な場合は、getter が同じ入力に対して同じ値を返すようにするか、値を model 構築時に事前計算しておくことを推奨する。
+
+### 4.2.4 Dynamic `GetState` の保証範囲
 
 この節で扱うのは、`AsDynamic()` から辿る値経路の `GetState(modelIndex)` である。
 
@@ -625,7 +642,7 @@ foreach (dynamic child in root.Items[0].Detail.Children)
 - これは `a.b.c.d` の `d` が実行時専用 `List` でも `foreach` / index access できる、という意味である
 - ただし container 正規化の前提（例: sequence element に `[CompareKey]` が必要）を満たさない場合は、silent に欠落させず access 時に `CompareExecutionException` を返す
 
-### 4.2.4 実行時専用メンバーで `GetState` が判定される仕組み
+### 4.2.5 実行時専用メンバーで `GetState` が判定される仕組み
 
 この節では、`root.Items[0].Detail.Label.GetState(0)` のような dynamic value path が、
 保存済み state を読む通常経路と、呼び出し時に反射で値を辿る代替経路のどちらへ入るかを説明する。
@@ -749,7 +766,7 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
 - `SelectModel(modelIndex)` は指定 model で `Missing` でない要素のみを返し、順序は key union 順を維持する
 - generated projection は public property と public field を同じ comparable member として扱い、container field も typed list accessor として生成する
-- getter を再実行しない `GetState` 保証は dynamic value path に限定し、generated nested value path の parity はこの設計範囲に含めない
+- getter を再実行しない `GetState` 保証は dynamic value path に限定する。generated projection の value indexer / `GetState(...)` は generated getter delegate を access 時に実行する（詳細は 4.2.3 の評価タイミング表を参照）
 
 ## 4.4 Generated Projection Scope (Initial)
 
