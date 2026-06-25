@@ -14,6 +14,7 @@
 
 - Status: Done
 - Notes:
+  - T-089 で generated object view / direct scalar generated member / dynamic materialized path の表示は underlying member/root node の `ToString()` に委譲し、元モデル型の `ToString()` 表示を model slot 別に確認できる契約を追加する
   - T-088 で `ParallelNode<T>` と generated value の `ToString()` の model slot 別 value/state 表示契約を追加する
   - T-087 で generated projection list の key text indexer と diff path selector 互換を public API として確定した
   - T-086 で `ParallelDiffEntry` の親 path / 親 node を public API として確定した
@@ -36,6 +37,7 @@
 
 - Status: Done
 - Notes:
+  - T-089 を完了し、generated object view / direct scalar generated member / `Select(...)` 派生 value / dynamic materialized path の `ToString()` を underlying node 表示へ委譲した
   - T-088 を完了し、`ParallelNode<T>` と generated value の `ToString()` を Diff と同じ value/state 表示へ改善した
   - T-087 follow-up を完了し、Dictionary member の generated access を string key text 限定から key 型 indexer へ拡張した
   - T-087 を完了し、generated projection list で `Attribute["id"]` のような raw key text access と `GetDiffEntries().Path` の escaped discriminator access を実装した
@@ -148,6 +150,7 @@
 
 - Status: Done
 - Notes:
+  - T-089 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-088 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-087 follow-up で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-087 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
