@@ -416,6 +416,23 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
     public ValueState GetState(int modelIndex)
     {
         var selectedValue = ResolveValue(modelIndex, out var selectedPresence);
+        return GetState(
+            modelIndex,
+            selectedValue,
+            selectedPresence,
+            index =>
+            {
+                var value = ResolveValue(index, out var presence);
+                return new ResolvedGeneratedValue(value, presence);
+            });
+    }
+
+    private ValueState GetState(
+        int modelIndex,
+        TValue selectedValue,
+        NodePresenceState selectedPresence,
+        Func<int, ResolvedGeneratedValue> getResolvedValue)
+    {
         if (selectedPresence == NodePresenceState.Missing)
         {
             return ValueState.Missing;
@@ -434,21 +451,21 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
                 continue;
             }
 
-            var otherValue = ResolveValue(index, out var otherPresence);
-            if (otherPresence == NodePresenceState.Missing)
+            var other = getResolvedValue(index);
+            if (other.Presence == NodePresenceState.Missing)
             {
                 matched = false;
                 break;
             }
 
-            if (otherPresence != selectedPresence)
+            if (other.Presence != selectedPresence)
             {
                 matched = false;
                 break;
             }
 
             if (selectedPresence == NodePresenceState.PresentValue
-                && !EqualityComparer<TValue>.Default.Equals(selectedValue, otherValue))
+                && !EqualityComparer<TValue>.Default.Equals(selectedValue, other.Value))
             {
                 matched = false;
                 break;
@@ -474,6 +491,39 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
 
                 return selector(value);
             });
+    }
+
+    public override string ToString()
+    {
+        var resolvedValues = new ResolvedGeneratedValue[_node.Count];
+        for (var modelIndex = 0; modelIndex < resolvedValues.Length; modelIndex++)
+        {
+            var value = ResolveValue(modelIndex, out var presence);
+            resolvedValues[modelIndex] = new ResolvedGeneratedValue(value, presence);
+        }
+
+        return ParallelDisplayFormatter.FormatSlots(
+            _node.Count,
+            modelIndex =>
+            {
+                var selected = resolvedValues[modelIndex];
+                return new ParallelDisplaySlot(
+                    selected.Value,
+                    GetState(modelIndex, selected.Value, selected.Presence, index => resolvedValues[index]));
+            });
+    }
+
+    private readonly struct ResolvedGeneratedValue
+    {
+        public ResolvedGeneratedValue(TValue value, NodePresenceState presence)
+        {
+            Value = value;
+            Presence = presence;
+        }
+
+        public TValue Value { get; }
+
+        public NodePresenceState Presence { get; }
     }
 
     private TValue ResolveValue(int modelIndex, out NodePresenceState state)

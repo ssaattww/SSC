@@ -12,6 +12,42 @@
 
 ## Done
 
+- T-088: `Parallel` の `ToString()` に model slot 別 value/state 表示を追加
+  - Status: 完了（`ParallelNode<T>` と generated value の `ToString()` を Diff 表示と同じ model slot 別 value/state 形式にした）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-077 XPath-like path parser と public result 型の追加
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+  - Exit Criteria:
+    - `ParallelNode<T>.ToString()` が `[modelIndex]=value(State)` を model slot 順に返す
+    - generated value の `ToString()` が同じ形式を返す
+    - Missing/null/string/数値の表示規則が `ParallelDiffValue.ToString()` と一致する
+    - 表示は `CultureInfo.InvariantCulture` 相当で current culture に依存しない
+    - 既存 `ParallelDiffValue.ToString()` と値フォーマット実装を共有し、重複を増やさない
+    - TDD、設計更新、実装修正、検証、sub-agent review、PR 作成が完了している
+  - Output:
+    - `src/SSC/ParallelDisplayFormatter.cs`
+    - `src/SSC/ParallelDiffContracts.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `tests/SSC.Unit.Tests/ParallelNodeUnitTests.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-088-parallel-tostring-values-20260625163131.md`
+    - `reports/task-t-088-parallel-tostring-values-review-20260625163131.md`
+  - Verification:
+    - TDD 赤確認: `ParallelNode<T>.ToString()` が object 既定表示で失敗
+    - TDD 赤確認: generated value の `ToString()` が object 既定表示で失敗
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~ParallelNodeUnitTests.ToString_FormatsModelSlotValuesLikeDiffValues|FullyQualifiedName~ParallelDiffResultUnitTests"` 成功（3 件）
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~GeneratedProjectionE2ETests.Compare_GeneratedProjection_ObjectMember_GeneratesNestedViewMembers"` 成功（1 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 31 件 / E2E 72 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+    - gpt-5.5 high review sub-agent 実施、指摘なし
+
 - T-087: generated projection dictionary key 型 access follow-up
   - Status: 完了（Dictionary member を string key text 限定ではなく、通常の Dictionary に近い key 型 indexer で参照できるようにした）
   - Phase: Phase 3

@@ -40,28 +40,6 @@ public sealed class ParallelDiffValue
 
     public override string ToString()
     {
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"[{ModelIndex}]={FormatValue()}({State})");
-    }
-
-    private string FormatValue()
-    {
-        if (State == ValueState.Missing)
-        {
-            return "<missing>";
-        }
-
-        if (Value is null)
-        {
-            return "null";
-        }
-
-        if (Value is string text)
-        {
-            return string.Create(CultureInfo.InvariantCulture, $"\"{text}\"");
-        }
-
-        return Convert.ToString(Value, CultureInfo.InvariantCulture) ?? string.Empty;
+        return ParallelDisplayFormatter.FormatSlot(ModelIndex, Value, State);
     }
 }
