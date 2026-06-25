@@ -171,8 +171,18 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
                 }
 
                 var elementTypeName = member.ElementType.ToDisplayString(TypeDisplayFormat);
-                source.AppendLine($"    public global::SSC.ParallelGeneratedList<{elementTypeName}, {childViewName}> {memberName} =>");
-                source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
+                if (member.KeyType is not null)
+                {
+                    var keyTypeName = member.KeyType.ToDisplayString(TypeDisplayFormat);
+                    source.AppendLine($"    public global::SSC.ParallelGeneratedDictionary<{keyTypeName}, {elementTypeName}, {childViewName}> {memberName} =>");
+                    source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
+                }
+                else
+                {
+                    source.AppendLine($"    public global::SSC.ParallelGeneratedList<{elementTypeName}, {childViewName}> {memberName} =>");
+                    source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
+                }
+
                 source.AppendLine();
                 continue;
             }
@@ -219,10 +229,10 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
             var members = new List<MemberShape>();
             foreach (var property in GetComparableMembers(type))
             {
-                if (TryGetDictionaryValueType(property.Type, out var dictionaryElementType)
+                if (TryGetDictionaryTypes(property.Type, out var dictionaryKeyType, out var dictionaryElementType)
                     && dictionaryElementType is INamedTypeSymbol dictionaryElementNamedType)
                 {
-                    members.Add(MemberShape.Container(property.Name, dictionaryElementNamedType));
+                    members.Add(MemberShape.Dictionary(property.Name, dictionaryKeyType, dictionaryElementNamedType));
                     queue.Enqueue(dictionaryElementNamedType);
                     continue;
                 }
@@ -313,7 +323,7 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
             attribute.AttributeClass?.ToDisplayString() == fullTypeName);
     }
 
-    private static bool TryGetDictionaryValueType(ITypeSymbol type, out ITypeSymbol valueType)
+    private static bool TryGetDictionaryTypes(ITypeSymbol type, out ITypeSymbol keyType, out ITypeSymbol valueType)
     {
         foreach (var candidate in EnumerateSelfAndInterfaces(type))
         {
@@ -328,10 +338,12 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
                 continue;
             }
 
+            keyType = named.TypeArguments[0];
             valueType = named.TypeArguments[1];
             return true;
         }
 
+        keyType = null!;
         valueType = null!;
         return false;
     }
@@ -364,7 +376,7 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
             return false;
         }
 
-        if (TryGetDictionaryValueType(type, out _))
+        if (TryGetDictionaryTypes(type, out _, out _))
         {
             elementType = null!;
             return false;
@@ -556,12 +568,14 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         private MemberShape(
             string memberName,
             MemberKind kind,
+            ITypeSymbol? keyType,
             INamedTypeSymbol? elementType,
             INamedTypeSymbol? objectType,
             ITypeSymbol? valueType)
         {
             MemberName = memberName;
             Kind = kind;
+            KeyType = keyType;
             ElementType = elementType;
             ObjectType = objectType;
             ValueType = valueType;
@@ -571,6 +585,8 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
 
         public MemberKind Kind { get; }
 
+        public ITypeSymbol? KeyType { get; }
+
         public INamedTypeSymbol? ElementType { get; }
 
         public INamedTypeSymbol? ObjectType { get; }
@@ -578,12 +594,15 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
         public ITypeSymbol? ValueType { get; }
 
         public static MemberShape Container(string memberName, INamedTypeSymbol elementType) =>
-            new(memberName, MemberKind.Container, elementType, null, null);
+            new(memberName, MemberKind.Container, null, elementType, null, null);
+
+        public static MemberShape Dictionary(string memberName, ITypeSymbol keyType, INamedTypeSymbol elementType) =>
+            new(memberName, MemberKind.Container, keyType, elementType, null, null);
 
         public static MemberShape Object(string memberName, INamedTypeSymbol objectType) =>
-            new(memberName, MemberKind.Object, null, objectType, null);
+            new(memberName, MemberKind.Object, null, null, objectType, null);
 
         public static MemberShape Value(string memberName, ITypeSymbol valueType) =>
-            new(memberName, MemberKind.Value, null, null, valueType);
+            new(memberName, MemberKind.Value, null, null, null, valueType);
     }
 }

@@ -36,6 +36,7 @@ public enum CompareIssueLevel { Error, Warning }
 - `CompareKeyValueIsNull`: CompareKey 値 / dictionary key / sequence element が null
 - `DuplicateCompareKeyDetected`: 重複キー
 - `ModelIndexOutOfRange`: indexer 範囲外
+- `KeyNotFound`: key text indexer の key 未検出
 - `ReflectionMetadataBuildFailed`: 反射メタデータ構築失敗
 
 ## 4. Strict Mode Matrix

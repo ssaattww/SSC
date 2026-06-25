@@ -14,6 +14,7 @@
 
 - Status: Done
 - Notes:
+  - T-087 で generated projection list の key text indexer と diff path selector 互換を public API として確定した
   - T-086 で `ParallelDiffEntry` の親 path / 親 node を public API として確定した
   - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加し、実装単位を T-077 から T-082 へ分割した
   - `doc/draft/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
@@ -34,6 +35,8 @@
 
 - Status: Done
 - Notes:
+  - T-087 follow-up を完了し、Dictionary member の generated access を string key text 限定から key 型 indexer へ拡張した
+  - T-087 を完了し、generated projection list で `Attribute["id"]` のような raw key text access と `GetDiffEntries().Path` の escaped discriminator access を実装した
   - T-086 を完了し、`GetDiffEntries()` の `Kind == Node` / `Kind == ContainerPresence` entry から `ParentPath` / `ParentNode` を取得できるようにした
   - T-085 を完了し、gist `XmlCustom.cs` と同等の E2E で `Document` 同士の比較が成功することを検証し、key なし sequence を ordinal 比較として扱う修正を sub-agent 実装で完了した
   - T-085 では `CompareConfiguration.MissingCompareKeyListPolicy` の既定値を `AlignByIndex` に変更し、旧来の skip + error は `SkipAndRecordError` 明示時の opt-in とした
@@ -143,6 +146,8 @@
 
 - Status: Done
 - Notes:
+  - T-087 follow-up で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
+  - T-087 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-086 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-082 を完了し、`dotnet test SSC.sln --configuration Release` が成功した（Unit tests 29 件、E2E tests 61 件）
   - T-082 では `git diff --check`、PR #32 body 確認、最終レビューを実施し、最終レビュー指摘なしを確認した

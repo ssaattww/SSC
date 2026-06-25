@@ -16,11 +16,164 @@ public readonly struct ParallelGeneratedMeta
     public ValueState GetState(int modelIndex) => _node.GetState(modelIndex);
 }
 
+public sealed class ParallelGeneratedDictionary<TKey, TElement, TView> : IEnumerable<TView>
+    where TKey : notnull
+{
+    private readonly IReadOnlyList<ParallelNode<TElement>> _nodes;
+    private readonly int _modelCount;
+    private readonly Func<ParallelNode<TElement>, TView> _viewFactory;
+    private Dictionary<string, int>? _keyIndexCache;
+    private Dictionary<object, int>? _keyValueIndexCache;
+
+    public ParallelGeneratedDictionary(
+        IReadOnlyList<ParallelNode<TElement>> nodes,
+        int modelCount,
+        Func<ParallelNode<TElement>, TView> viewFactory)
+    {
+        ArgumentNullException.ThrowIfNull(nodes);
+        ArgumentOutOfRangeException.ThrowIfNegative(modelCount);
+        ArgumentNullException.ThrowIfNull(viewFactory);
+        _nodes = nodes;
+        _modelCount = modelCount;
+        _viewFactory = viewFactory;
+    }
+
+    public int Count => _nodes.Count;
+
+    public TView this[TKey key]
+    {
+        get
+        {
+            ArgumentNullException.ThrowIfNull(key);
+            return ResolveByKeyValue(NormalizeKey(key));
+        }
+    }
+
+    public TView AtIndex(int index)
+    {
+        ValidateIndex(index);
+        return _viewFactory(_nodes[index]);
+    }
+
+    public TView ByPathKey(string discriminator)
+    {
+        ArgumentNullException.ThrowIfNull(discriminator);
+        if (!ParallelGeneratedKeyText.TryUnescapeXPathLikeDiscriminator(discriminator, out var keyText))
+        {
+            keyText = discriminator;
+        }
+
+        return ResolveByKeyText(keyText, "generated dictionary");
+    }
+
+    public ParallelGeneratedModelList<TElement, TView> SelectModel(int modelIndex)
+    {
+        ValidateModelIndex(modelIndex);
+        return new ParallelGeneratedModelList<TElement, TView>(_nodes, _viewFactory, modelIndex);
+    }
+
+    public IEnumerator<TView> GetEnumerator()
+    {
+        for (var index = 0; index < _nodes.Count; index++)
+        {
+            yield return _viewFactory(_nodes[index]);
+        }
+    }
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+    private TView ResolveByKeyText(string keyText, string containerName)
+    {
+        if (GetKeyIndexCache().TryGetValue(keyText, out var index))
+        {
+            return _viewFactory(_nodes[index]);
+        }
+
+        throw new CompareExecutionException(
+            CompareIssueCode.KeyNotFound,
+            $"key '{keyText}' was not found in {containerName}.");
+    }
+
+    private TView ResolveByKeyValue(object key)
+    {
+        if (GetKeyValueIndexCache().TryGetValue(key, out var index))
+        {
+            return _viewFactory(_nodes[index]);
+        }
+
+        throw new CompareExecutionException(
+            CompareIssueCode.KeyNotFound,
+            $"key '{key}' was not found in generated dictionary.");
+    }
+
+    private void ValidateIndex(int index)
+    {
+        if (index >= 0 && index < _nodes.Count)
+        {
+            return;
+        }
+
+        throw new CompareExecutionException(
+            CompareIssueCode.ModelIndexOutOfRange,
+            $"dictionary index '{index}' is out of range for count '{_nodes.Count}'.");
+    }
+
+    private void ValidateModelIndex(int modelIndex)
+    {
+        if (modelIndex >= 0 && modelIndex < _modelCount)
+        {
+            return;
+        }
+
+        throw new CompareExecutionException(
+            CompareIssueCode.ModelIndexOutOfRange,
+            $"model index '{modelIndex}' is out of range for count '{_modelCount}'.");
+    }
+
+    private Dictionary<string, int> GetKeyIndexCache()
+    {
+        if (_keyIndexCache is not null)
+        {
+            return _keyIndexCache;
+        }
+
+        _keyIndexCache = ParallelGeneratedKeyText.CreateKeyIndexCache(_nodes);
+        return _keyIndexCache;
+    }
+
+    private Dictionary<object, int> GetKeyValueIndexCache()
+    {
+        if (_keyValueIndexCache is not null)
+        {
+            return _keyValueIndexCache;
+        }
+
+        var comparer = _nodes.FirstOrDefault(static node => node.KeyComparer is not null)?.KeyComparer
+            ?? EqualityComparer<object>.Default;
+        var keyValueIndexCache = new Dictionary<object, int>(comparer);
+        for (var index = 0; index < _nodes.Count; index++)
+        {
+            var keyValue = _nodes[index].KeyValue;
+            if (keyValue is not null)
+            {
+                keyValueIndexCache.TryAdd(keyValue, index);
+            }
+        }
+
+        _keyValueIndexCache = keyValueIndexCache;
+        return _keyValueIndexCache;
+    }
+
+    private static object NormalizeKey(object key) =>
+        key is DateTime dateTime ? dateTime.ToUniversalTime() : key;
+}
+
 public sealed class ParallelGeneratedList<TElement, TView> : IReadOnlyList<TView>
 {
     private readonly IReadOnlyList<ParallelNode<TElement>> _nodes;
     private readonly int _modelCount;
     private readonly Func<ParallelNode<TElement>, TView> _viewFactory;
+    private Dictionary<string, int>? _keyIndexCache;
 
     public ParallelGeneratedList(IReadOnlyList<ParallelNode<TElement>> nodes, Func<ParallelNode<TElement>, TView> viewFactory)
         : this(nodes, nodes.Count > 0 ? nodes[0].Count : 0, viewFactory)
@@ -48,6 +201,30 @@ public sealed class ParallelGeneratedList<TElement, TView> : IReadOnlyList<TView
         {
             ValidateIndex(index);
             return _viewFactory(_nodes[index]);
+        }
+    }
+
+    public TView this[string keyText]
+    {
+        get
+        {
+            ArgumentNullException.ThrowIfNull(keyText);
+
+            var keyIndexCache = GetKeyIndexCache();
+            if (ParallelGeneratedKeyText.TryUnescapeXPathLikeDiscriminator(keyText, out var unescapedKeyText)
+                && keyIndexCache.TryGetValue(unescapedKeyText, out var index))
+            {
+                return _viewFactory(_nodes[index]);
+            }
+
+            if (keyIndexCache.TryGetValue(keyText, out index))
+            {
+                return _viewFactory(_nodes[index]);
+            }
+
+            throw new CompareExecutionException(
+                CompareIssueCode.KeyNotFound,
+                $"key '{keyText}' was not found in generated list.");
         }
     }
 
@@ -81,6 +258,21 @@ public sealed class ParallelGeneratedList<TElement, TView> : IReadOnlyList<TView
             $"model index '{modelIndex}' is out of range for count '{_modelCount}'.");
     }
 
+    private Dictionary<string, int> GetKeyIndexCache()
+    {
+        if (_keyIndexCache is not null)
+        {
+            return _keyIndexCache;
+        }
+
+        _keyIndexCache = ParallelGeneratedKeyText.CreateKeyIndexCache(_nodes);
+        return _keyIndexCache;
+    }
+
+    public TView AtIndex(int index) => this[index];
+
+    public TView ByPathKey(string discriminator) => this[discriminator];
+
     public IEnumerator<TView> GetEnumerator()
     {
         for (var index = 0; index < _nodes.Count; index++)
@@ -90,6 +282,58 @@ public sealed class ParallelGeneratedList<TElement, TView> : IReadOnlyList<TView
     }
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+internal static class ParallelGeneratedKeyText
+{
+    public static Dictionary<string, int> CreateKeyIndexCache<TElement>(IReadOnlyList<ParallelNode<TElement>> nodes)
+    {
+        var keyIndexCache = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var index = 0; index < nodes.Count; index++)
+        {
+            var keyText = nodes[index].KeyText;
+            if (keyText is not null)
+            {
+                keyIndexCache.TryAdd(keyText, index);
+            }
+        }
+
+        return keyIndexCache;
+    }
+
+    public static bool TryUnescapeXPathLikeDiscriminator(string keyText, out string unescapedKeyText)
+    {
+        var builder = new System.Text.StringBuilder(keyText.Length);
+        var changed = false;
+        for (var index = 0; index < keyText.Length; index++)
+        {
+            var current = keyText[index];
+            if (current != '\\')
+            {
+                builder.Append(current);
+                continue;
+            }
+
+            if (index + 1 >= keyText.Length)
+            {
+                unescapedKeyText = string.Empty;
+                return false;
+            }
+
+            var escaped = keyText[++index];
+            if (escaped is not (']' or '\\' or '#'))
+            {
+                unescapedKeyText = string.Empty;
+                return false;
+            }
+
+            builder.Append(escaped);
+            changed = true;
+        }
+
+        unescapedKeyText = changed ? builder.ToString() : keyText;
+        return changed;
+    }
 }
 
 public sealed class ParallelGeneratedModelList<TElement, TView> : IReadOnlyList<TView>
