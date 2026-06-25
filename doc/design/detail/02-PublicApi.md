@@ -115,7 +115,9 @@ public static class ParallelPathAccessExtensions
 public sealed class ParallelDiffEntry
 {
     public string Path { get; }
+    public string? ParentPath { get; }
     public ParallelDiffEntryKind Kind { get; }
+    public IParallelNode? ParentNode { get; }
     public IParallelNode? Node { get; }
     public IReadOnlyList<ParallelDiffValue> Values { get; }
 
@@ -432,12 +434,14 @@ key text が `#<digits>` 形式そのものの場合は、先頭の `#` を esca
 - root type 名は生成 path には含めない
 
 `Kind == Node` の diff entry で生成される path は、同一 `CompareResult<T>` 内で `GetNodeByPath(path)` に渡すと同じ node を解決できなければならない。
+同時に、entry の親 path / 親 node も traversal 中に保持し、利用者が `Path` を文字列分割して親へ戻る必要がないようにする。
 
 empty container の presence mismatch のように child node が存在しない差分は、
 特定 child path を生成できない。
 この場合は container member 名の path を持つ `Kind == ContainerPresence` の diff entry として表す。
 `ContainerPresence` entry は public node に対応しないため、`Node == null` とし、`GetNodeByPath(Path)` による node 解決は保証しない。
 それでも `Path` には該当 container member 名を入れ、差分表示で位置を失わない。
+`ContainerPresence` entry の `ParentNode` は、該当 container member を所有する親 node を指す。
 
 #### 4.2.2.5 Diff Entry Contract
 
@@ -447,9 +451,18 @@ empty container の presence mismatch のように child node が存在しない
   - XPath-like path
   - `Kind == Node` では `GetNodeByPath(Path)` で同じ node を解決できる
   - `Kind == ContainerPresence` では container member の位置を表すが、node 解決は保証しない
+- `ParentPath`
+  - 親 node の XPath-like path
+  - root 直下の diff entry では `null`
+  - `Kind == Node` / `Kind == ContainerPresence` のどちらでも同じ規則で設定する
+  - `ParentPath != null` の場合、同一 `CompareResult<T>` 内で `GetNodeByPath(ParentPath)` に渡すと `ParentNode` と同じ node を解決できる
 - `Kind`
   - `Node`: `IParallelNode` に対応する差分
   - `ContainerPresence`: child node を持たない container presence mismatch
+- `ParentNode`
+  - diff entry の直接の親 `IParallelNode`
+  - root 直下の diff entry では compare root を指す
+  - `Kind == ContainerPresence` では container member を所有する親 node を指す
 - `Node`
   - `Kind == Node` では差分が観測された `IParallelNode`
   - `Kind == ContainerPresence` では `null`

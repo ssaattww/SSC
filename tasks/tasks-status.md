@@ -12,6 +12,43 @@
 
 ## Done
 
+- T-086: `GetDiffEntries()` entry から親 node を直接参照できる API 追加
+  - Status: 完了（`ParallelDiffEntry` に親 path / 親 node を追加し、`GetDiffEntries()` 利用者が path 文字列を再解析せず親へ辿れるようにした）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+    - T-080 empty container 差分の `ContainerPresence` entry 追加
+  - Exit Criteria:
+    - `ParallelDiffEntry` の public contract に親 path / 親 node の扱いが設計されている
+    - `Kind == Node` の diff entry で、親 node と親 path が取得できる
+    - `Kind == ContainerPresence` の diff entry でも、entry 自身の node がない一方で container を所有する親 node が取得できる
+    - root 直下 diff の親は compare root として扱われる
+    - key text 内の `.` / `]` / `\` を含む path でも、利用者側で文字列 split せずに親を参照できる
+    - TDD、実装修正、検証、sub-agent review、PR 更新が完了している
+  - Output:
+    - PR #39
+    - `src/SSC/ParallelDiffContracts.cs`
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.Unit.Tests/XPathLikeDiffEntriesUnitTests.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/task-t-086-implementation-20260625130859.md`
+    - `reports/task-t-086-review-20260625131324.md`
+    - `reports/task-t-086-review-r2-20260625131809.md`
+    - `reports/task-t-086-verification-20260625132024.md`
+  - Verification:
+    - TDD 赤確認: `ParentPath` / `ParentNode` 未定義の compile error
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesUnitTests|FullyQualifiedName~ParallelDiffResultUnitTests"` 成功（5 件）
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesE2ETests"` 成功（6 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 30 件 / E2E 67 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+    - gpt-5.5 medium implementation / verification sub-agent 実施
+    - gpt-5.5 high review / re-review sub-agent 実施、最終指摘なし
+
 - T-085: gist `XmlCustom` 同等 E2E 比較の修正
   - Status: 完了（gist `XmlCustom.cs` と同等の XML custom model / parser を E2E に用意し、key なし sequence を ordinal 比較として扱うことで Source Generator 付き `Document` 同士の比較を成功させた）
   - Phase: Phase 3

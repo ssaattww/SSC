@@ -110,11 +110,13 @@ public static class ParallelPathAccessExtensions
     private static void AddNodeDiffEntries(
         List<ParallelDiffEntry> entries,
         IParallelNode node,
-        string path)
+        string path,
+        string? parentPath,
+        IParallelNode parentNode)
     {
         if (HasOwnPresenceMismatch(node))
         {
-            entries.Add(CreateNodeEntry(path, node));
+            entries.Add(CreateNodeEntry(path, parentPath, parentNode, node));
             return;
         }
 
@@ -123,7 +125,7 @@ public static class ParallelPathAccessExtensions
         {
             if (node.HasDifferences())
             {
-                entries.Add(CreateNodeEntry(path, node));
+                entries.Add(CreateNodeEntry(path, parentPath, parentNode, node));
             }
 
             return;
@@ -149,7 +151,12 @@ public static class ParallelPathAccessExtensions
         if (parentNode is IParallelNodeInternal internalParent
             && internalParent.TryGetMemberNode(childSet.Name, out var memberNode))
         {
-            AddNodeDiffEntries(entries, memberNode, CombinePath(parentPath, childSet.Name));
+            AddNodeDiffEntries(
+                entries,
+                memberNode,
+                CombinePath(parentPath, childSet.Name),
+                ToEntryParentPath(parentPath),
+                parentNode);
             return;
         }
 
@@ -158,7 +165,11 @@ public static class ParallelPathAccessExtensions
             if (parentNode is IParallelNodeInternal containerParent
                 && containerParent.TryGetContainerPresenceStates(childSet.Name, out var states))
             {
-                entries.Add(CreateContainerPresenceEntry(CombinePath(parentPath, childSet.Name), states));
+                entries.Add(CreateContainerPresenceEntry(
+                    CombinePath(parentPath, childSet.Name),
+                    ToEntryParentPath(parentPath),
+                    parentNode,
+                    states));
             }
 
             return;
@@ -170,11 +181,20 @@ public static class ParallelPathAccessExtensions
             var selector = childNode.KeyText is null
                 ? $"#{ordinal}"
                 : EscapeKeyText(childNode.KeyText);
-            AddNodeDiffEntries(entries, childNode, CombinePath(parentPath, $"{childSet.Name}[{selector}]"));
+            AddNodeDiffEntries(
+                entries,
+                childNode,
+                CombinePath(parentPath, $"{childSet.Name}[{selector}]"),
+                ToEntryParentPath(parentPath),
+                parentNode);
         }
     }
 
-    private static ParallelDiffEntry CreateNodeEntry(string path, IParallelNode node)
+    private static ParallelDiffEntry CreateNodeEntry(
+        string path,
+        string? parentPath,
+        IParallelNode parentNode,
+        IParallelNode node)
     {
         var values = new ParallelDiffValue[node.Count];
         for (var modelIndex = 0; modelIndex < node.Count; modelIndex++)
@@ -190,7 +210,9 @@ public static class ParallelPathAccessExtensions
         return new ParallelDiffEntry
         {
             Path = path,
+            ParentPath = parentPath,
             Kind = ParallelDiffEntryKind.Node,
+            ParentNode = parentNode,
             Node = node,
             Values = values,
         };
@@ -198,6 +220,8 @@ public static class ParallelPathAccessExtensions
 
     private static ParallelDiffEntry CreateContainerPresenceEntry(
         string path,
+        string? parentPath,
+        IParallelNode parentNode,
         IReadOnlyList<NodePresenceState> states)
     {
         var values = new ParallelDiffValue[states.Count];
@@ -216,7 +240,9 @@ public static class ParallelPathAccessExtensions
         return new ParallelDiffEntry
         {
             Path = path,
+            ParentPath = parentPath,
             Kind = ParallelDiffEntryKind.ContainerPresence,
+            ParentNode = parentNode,
             Node = null,
             Values = values,
         };
@@ -246,6 +272,11 @@ public static class ParallelPathAccessExtensions
         return string.IsNullOrEmpty(parentPath)
             ? segment
             : $"{parentPath}.{segment}";
+    }
+
+    private static string? ToEntryParentPath(string parentPath)
+    {
+        return string.IsNullOrEmpty(parentPath) ? null : parentPath;
     }
 
     private static string EscapeKeyText(string keyText)

@@ -12,7 +12,11 @@ public sealed class ParallelDiffEntry
 {
     public string Path { get; init; } = string.Empty;
 
+    public string? ParentPath { get; init; }
+
     public ParallelDiffEntryKind Kind { get; init; }
+
+    public IParallelNode? ParentNode { get; init; }
 
     public IParallelNode? Node { get; init; }
 
