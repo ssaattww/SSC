@@ -18,8 +18,29 @@ public sealed class XPathLikeDiffEntriesUnitTests
         var entry = Assert.Single(result.GetDiffEntries());
 
         Assert.Equal("Items[#0].Name", entry.Path);
+        Assert.Equal("Items[#0]", entry.ParentPath);
+        Assert.NotNull(entry.ParentPath);
+        Assert.Same(itemNode, entry.ParentNode);
         Assert.Same(nameNode, entry.Node);
+        Assert.Same(entry.ParentNode, result.GetNodeByPath(entry.ParentPath));
         Assert.Same(entry.Node, result.GetNodeByPath(entry.Path));
+    }
+
+    [Fact]
+    public void GetDiffEntries_WithRootDirectNodeDiff_ReturnsRootParent()
+    {
+        // Intent: root 直下 node 差分は ParentPath を null にし、ParentNode で root を直接返す。
+        var nameNode = new FakeNode(value: "left", state: ValueState.Mismatched);
+        var root = new FakeRootNode();
+        root.SetMember("Name", nameNode);
+        var result = new CompareResult<FakeRoot> { Root = root };
+
+        var entry = Assert.Single(result.GetDiffEntries());
+
+        Assert.Equal("Name", entry.Path);
+        Assert.Null(entry.ParentPath);
+        Assert.Same(root, entry.ParentNode);
+        Assert.Same(nameNode, entry.Node);
     }
 
     [Fact]
@@ -34,6 +55,8 @@ public sealed class XPathLikeDiffEntriesUnitTests
 
         Assert.Equal("Items", entry.Path);
         Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Null(entry.ParentPath);
+        Assert.Same(root, entry.ParentNode);
         Assert.Null(entry.Node);
         Assert.Null(result.GetNodeByPath(entry.Path));
         Assert.Equal(ValueState.Mismatched, entry.Values[0].State);

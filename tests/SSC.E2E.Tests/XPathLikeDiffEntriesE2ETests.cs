@@ -14,6 +14,10 @@ public sealed class XPathLikeDiffEntriesE2ETests
         var metric = Assert.Single(entries, entry => entry.Path == "Groups[1].Items[100].MetricA");
 
         Assert.Equal(ParallelDiffEntryKind.Node, metric.Kind);
+        Assert.Equal("Groups[1].Items[100]", metric.ParentPath);
+        Assert.NotNull(metric.ParentPath);
+        Assert.NotNull(metric.ParentNode);
+        Assert.Same(metric.ParentNode, result.GetNodeByPath(metric.ParentPath));
         Assert.NotNull(metric.Node);
         Assert.Same(metric.Node, result.GetNodeByPath(metric.Path));
         Assert.Equal(2, metric.Values.Count);
@@ -36,6 +40,10 @@ public sealed class XPathLikeDiffEntriesE2ETests
         var missingItem = Assert.Single(entries, entry => entry.Path == "Groups[1].Items[200]");
 
         Assert.Equal(ParallelDiffEntryKind.Node, missingItem.Kind);
+        Assert.Equal("Groups[1]", missingItem.ParentPath);
+        Assert.NotNull(missingItem.ParentPath);
+        Assert.NotNull(missingItem.ParentNode);
+        Assert.Same(missingItem.ParentNode, result.GetNodeByPath(missingItem.ParentPath));
         Assert.NotNull(missingItem.Node);
         Assert.Same(missingItem.Node, result.GetNodeByPath(missingItem.Path));
         Assert.Equal(200, ((Item?)missingItem.Values[0].Value)?.ItemId);
@@ -73,9 +81,9 @@ public sealed class XPathLikeDiffEntriesE2ETests
 
         var entries = result.GetDiffEntries();
 
-        AssertResolvablePath(entries, result, "Items[A\\]B].Label");
-        AssertResolvablePath(entries, result, "Items[A\\\\B].Label");
-        AssertResolvablePath(entries, result, "Items[\\#0].Label");
+        AssertResolvablePath(entries, result, "Items[A\\]B].Label", "Items[A\\]B]");
+        AssertResolvablePath(entries, result, "Items[A\\\\B].Label", "Items[A\\\\B]");
+        AssertResolvablePath(entries, result, "Items[\\#0].Label", "Items[\\#0]");
     }
 
     [Fact]
@@ -98,6 +106,8 @@ public sealed class XPathLikeDiffEntriesE2ETests
         var entry = Assert.Single(entries, candidate => candidate.Path == "Items");
 
         Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Null(entry.ParentPath);
+        Assert.Same(result.Root, entry.ParentNode);
         Assert.Null(entry.Node);
         Assert.Null(result.GetNodeByPath(entry.Path));
         Assert.Equal(2, entry.Values.Count);
@@ -130,6 +140,8 @@ public sealed class XPathLikeDiffEntriesE2ETests
         var entry = Assert.Single(entries, candidate => candidate.Path == "Scores");
 
         Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Null(entry.ParentPath);
+        Assert.Same(result.Root, entry.ParentNode);
         Assert.Null(entry.Node);
         Assert.Null(result.GetNodeByPath(entry.Path));
         Assert.Equal(2, entry.Values.Count);
@@ -140,12 +152,57 @@ public sealed class XPathLikeDiffEntriesE2ETests
         Assert.Equal("Scores: [0]=null(Mismatched), [1]=null(Mismatched)", entry.ToString());
     }
 
+    [Fact]
+    public void GetDiffEntries_ReturnsNestedContainerPresenceWithResolvableParent()
+    {
+        // Intent: nested ContainerPresence entry でも ParentPath/ParentNode が所有 node を直接指す。
+        var result = ParallelCompareApi.Compare(
+        [
+            new OptionalNestedContainerDataset
+            {
+                Groups =
+                [
+                    new OptionalNestedContainerGroup
+                    {
+                        GroupId = 1,
+                        Items = [],
+                    },
+                ],
+            },
+            new OptionalNestedContainerDataset
+            {
+                Groups =
+                [
+                    new OptionalNestedContainerGroup
+                    {
+                        GroupId = 1,
+                        Items = null,
+                    },
+                ],
+            },
+        ]);
+
+        var entries = result.GetDiffEntries();
+        var entry = Assert.Single(entries, candidate => candidate.Path == "Groups[1].Items");
+
+        Assert.Equal(ParallelDiffEntryKind.ContainerPresence, entry.Kind);
+        Assert.Equal("Groups[1]", entry.ParentPath);
+        Assert.NotNull(entry.ParentPath);
+        Assert.NotNull(entry.ParentNode);
+        Assert.Same(entry.ParentNode, result.GetNodeByPath(entry.ParentPath));
+        Assert.Null(entry.Node);
+    }
+
     private static void AssertResolvablePath<T>(
         IReadOnlyList<ParallelDiffEntry> entries,
         CompareResult<T> result,
-        string path)
+        string path,
+        string parentPath)
     {
         var entry = Assert.Single(entries, candidate => candidate.Path == path);
+        Assert.Equal(parentPath, entry.ParentPath);
+        Assert.NotNull(entry.ParentNode);
+        Assert.Same(entry.ParentNode, result.GetNodeByPath(parentPath));
         Assert.Same(entry.Node, result.GetNodeByPath(path));
     }
 
@@ -241,5 +298,18 @@ public sealed class XPathLikeDiffEntriesE2ETests
     public sealed class OptionalDictionaryDataset
     {
         public Dictionary<string, int>? Scores { get; init; }
+    }
+
+    public sealed class OptionalNestedContainerDataset
+    {
+        public List<OptionalNestedContainerGroup> Groups { get; init; } = [];
+    }
+
+    public sealed class OptionalNestedContainerGroup
+    {
+        [CompareKey]
+        public int GroupId { get; init; }
+
+        public List<Item>? Items { get; init; }
     }
 }

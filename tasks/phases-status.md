@@ -12,9 +12,9 @@
 
 ## Phase 2: 詳細設計確定
 
-- Status: In Progress
+- Status: Done
 - Notes:
-  - T-086 で `GetDiffEntries()` が返す `ParallelDiffEntry` から親 path / 親 node を直接参照できる public API を設計中
+  - T-086 で `ParallelDiffEntry` の親 path / 親 node を public API として確定した
   - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加し、実装単位を T-077 から T-082 へ分割した
   - `doc/draft/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
   - Draft/非Draft を `doc/draft` と `doc/design` に分離
@@ -32,9 +32,9 @@
 
 ## Phase 3: 実装
 
-- Status: In Progress
+- Status: Done
 - Notes:
-  - T-086 の設計完了後、実装サブエージェントで親 path / 親 node を `ParallelDiffEntry` に追加する
+  - T-086 を完了し、`GetDiffEntries()` の `Kind == Node` / `Kind == ContainerPresence` entry から `ParentPath` / `ParentNode` を取得できるようにした
   - T-085 を完了し、gist `XmlCustom.cs` と同等の E2E で `Document` 同士の比較が成功することを検証し、key なし sequence を ordinal 比較として扱う修正を sub-agent 実装で完了した
   - T-085 では `CompareConfiguration.MissingCompareKeyListPolicy` の既定値を `AlignByIndex` に変更し、旧来の skip + error は `SkipAndRecordError` 明示時の opt-in とした
   - T-084 を完了し、gist `YXml.cs` と生成済み `global_Document.ParallelGenerated.g.cs` の Source Generator 出力を根拠に、`Document.Root` 配下の generated member 展開不足を regression test で再現して修正した
@@ -143,6 +143,7 @@
 
 - Status: Done
 - Notes:
+  - T-086 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-082 を完了し、`dotnet test SSC.sln --configuration Release` が成功した（Unit tests 29 件、E2E tests 61 件）
   - T-082 では `git diff --check`、PR #32 body 確認、最終レビューを実施し、最終レビュー指摘なしを確認した
   - Markdown 検査はユーザー指示により未実施
