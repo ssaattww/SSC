@@ -150,6 +150,13 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         return _states[modelIndex] == NodePresenceState.PresentValue ? _values[modelIndex] : null;
     }
 
+    public override string ToString()
+    {
+        return ParallelDisplayFormatter.FormatSlots(
+            Count,
+            modelIndex => new ParallelDisplaySlot(GetValue(modelIndex), GetState(modelIndex)));
+    }
+
     public bool HasDifferences()
     {
         if (_states.Length <= 1)

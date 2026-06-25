@@ -40,12 +40,14 @@ public sealed class GeneratedProjectionE2ETests
         var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
 
         Assert.Equal("root", root.Root.Name[0]);
+        Assert.Equal("[0]=\"root\"(Matched), [1]=\"root\"(Matched)", root.Root.Name.ToString());
         // Attribute["id"] は dictionary key の指定で、続く [0] / [1] は model index の指定。
         Assert.Equal("id", root.Root.Attribute["id"][0]!.Name);
         Assert.Equal("left", root.Root.Attribute["id"][0]!.Value);
         Assert.Equal("right", root.Root.Attribute["id"][1]!.Value);
         // child view 自体の GetState と、Value member の GetState は別々に取得できる。
         Assert.Equal("right", root.Root.Attribute["id"].Value[1]);
+        Assert.Equal("[0]=\"left\"(Mismatched), [1]=\"right\"(Mismatched)", root.Root.Attribute["id"].Value.ToString());
         Assert.Equal(ValueState.Mismatched, root.Root.Attribute["id"].GetState(0));
         Assert.Equal(ValueState.Mismatched, root.Root.Attribute["id"].Value.GetState(0));
         Assert.Equal(1, root.Root.Range.StartLine[0]);

@@ -1,3 +1,4 @@
+using System.Globalization;
 using SSC;
 
 namespace SSC.Unit.Tests;
@@ -49,6 +50,28 @@ public sealed class ParallelNodeUnitTests
 
         Assert.Equal(ValueState.Missing, node.GetState(0));
         Assert.Equal(ValueState.Missing, node.GetState(1));
+    }
+
+    [Fact]
+    public void ToString_FormatsModelSlotValuesLikeDiffValues()
+    {
+        // Intent: デバッグ時に Parallel node 自体から Diff と同じ value/state 表示を確認できる。
+        var originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+        try
+        {
+            var textNode = ParallelNode<string>.CreateLeaf(["left", "right"], [ValueState.Mismatched, ValueState.Mismatched], keyText: "k");
+            var nullNode = ParallelNode<string>.CreateLeaf([null, null], [ValueState.Matched, ValueState.Matched], keyText: "k");
+            var missingNode = ParallelNode<decimal?>.CreateLeaf([1.5m, null], [ValueState.Mismatched, ValueState.Missing], keyText: "k");
+
+            Assert.Equal("[0]=\"left\"(Mismatched), [1]=\"right\"(Mismatched)", textNode.ToString());
+            Assert.Equal("[0]=null(Matched), [1]=null(Matched)", nullNode.ToString());
+            Assert.Equal("[0]=1.5(Mismatched), [1]=<missing>(Missing)", missingNode.ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [Fact]

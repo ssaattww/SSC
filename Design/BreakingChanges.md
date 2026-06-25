@@ -2,6 +2,22 @@
 
 ## 2026-06-25
 
+### T-088 `ParallelNode<T>` / generated value `ToString()` の表示変更
+
+- 対象:
+  - `ParallelNode<T>.ToString()`
+  - `ParallelGeneratedValue<TModel, TValue>.ToString()`
+- 変更種別:
+  - public convenience display の変更
+- 影響:
+  - 従来は object 既定の型名表示だった
+  - T-088 以降は `[0]="left"(Mismatched), [1]="right"(Mismatched)` のように model slot 別 value/state を表示する
+  - `ToString()` の文字列を厳密に比較していた利用コードは期待値更新が必要になる可能性がある
+- 背景:
+  - デバッグ時に `Parallel` node そのものから Diff と同様に値を確認できるようにするため
+- 備考:
+  - 機械処理では indexer / `GetState(modelIndex)` / Diff entry の structured data を使う
+
 ### T-085 MissingCompareKeyListPolicy の既定値変更
 
 - 対象:

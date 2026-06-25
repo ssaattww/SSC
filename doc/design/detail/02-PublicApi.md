@@ -150,6 +150,7 @@ public sealed class ParallelDiffValue
 - `AnyPresent == Values.Any(v => Missing でない)`
 - `HasDifferences()` は current node 自体、または配下 subtree のいずれかに差分があれば `true`
 - `GetDirectChildren()` は current node の直下 property を `ParallelChildSet` 単位で返す
+- `ParallelNode<T>.ToString()` と generated value の `ToString()` は model slot 別 value/state を Diff と同じ形式で返す
 
 ### 4.0 Direct Child Traversal Contract
 
@@ -494,6 +495,17 @@ object/container node で child 側に差分があるだけの場合は、親 no
 
 #### 4.2.2.6 ToString Contract
 
+`ParallelNode<T>.ToString()` は、node 自身の model slot 別 value/state を 1 行で表す。
+generated value の `ToString()` も同じ形式で、対象 member の value/state を 1 行で表す。
+
+例:
+
+```text
+[0]="left"(Mismatched), [1]="right"(Mismatched)
+[0]=null(Matched), [1]=null(Matched)
+[0]=<missing>(Missing), [1]=10(Mismatched)
+```
+
 `ParallelDiffEntry.ToString()` は、path と model 別 value/state を 1 行で表す。
 
 例:
@@ -504,7 +516,7 @@ Groups[1].Items[200].Name: [0]="left"(Mismatched), [1]=<missing>(Missing)
 Items: [0]=null(Mismatched), [1]=<missing>(Missing)
 ```
 
-`ParallelDiffValue.ToString()` は `[modelIndex]=value(state)` 形式を返す。
+`ParallelDiffValue.ToString()`、`ParallelNode<T>.ToString()`、generated value の `ToString()` の各 slot は `[modelIndex]=value(state)` 形式を返す。
 
 value 表示:
 
@@ -513,7 +525,7 @@ value 表示:
 - string は `"` で囲む
 - その他は `Convert.ToString(value, CultureInfo.InvariantCulture)` 相当
 
-`ToString()` は人間確認用の便利表示であり、機械処理の安定契約は `Path` / `Values` / `State` / `Value` を使う。
+`ToString()` は人間確認用の便利表示であり、機械処理の安定契約は `Path` / `Values` / `State` / `Value` / indexer / `GetState(modelIndex)` を使う。
 ただし、同じライブラリ version 内では deterministic な表示を保つ。
 
 #### 4.2.2.7 CompareIssue.Path との違い
