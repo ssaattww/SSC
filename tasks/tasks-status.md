@@ -41,9 +41,11 @@
     - `reports/task-t-087-followup-dictionary-key-review-20260625140236.md`
     - `reports/task-t-087-followup-dictionary-key-review-r2-20260625141147.md`
     - `reports/task-t-087-followup-dictionary-key-review-r3-20260625141638.md`
+    - `reports/task-t-087-attribute-model-index-access-review-20260625154715.md`
   - Verification:
     - TDD 赤確認: `root.Scores[100]` が ordinal index access として解決され、範囲外で失敗
     - TDD 赤確認: case-insensitive string key と DateTime normalized key が `KeyNotFound` で失敗
+    - `root.Root.Attribute["id"][0]` のような key + model index access を E2E で検証
     - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XmlCustomGeneratedCompareE2ETests|FullyQualifiedName~GeneratedProjectionE2ETests"` 成功（15 件）
     - `dotnet test SSC.sln --configuration Release` 成功（E2E 71 件 / Unit 29 件）
     - `dotnet format SSC.sln --verify-no-changes` 成功
@@ -83,6 +85,43 @@
     - TDD 赤確認: diff path selector `A\]B` が generated key access で `KeyNotFound`
     - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XmlCustomGeneratedCompareE2ETests|FullyQualifiedName~GeneratedProjectionE2ETests"` 成功（12 件）
     - `dotnet test SSC.sln --configuration Release` 成功（E2E 68 件 / Unit 29 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+    - gpt-5.5 medium implementation / verification sub-agent 実施
+    - gpt-5.5 high review / re-review sub-agent 実施、最終指摘なし
+
+- T-086: `GetDiffEntries()` entry から親 node を直接参照できる API 追加
+  - Status: 完了（`ParallelDiffEntry` に親 path / 親 node を追加し、`GetDiffEntries()` 利用者が path 文字列を再解析せず親へ辿れるようにした）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+    - T-080 empty container 差分の `ContainerPresence` entry 追加
+  - Exit Criteria:
+    - `ParallelDiffEntry` の public contract に親 path / 親 node の扱いが設計されている
+    - `Kind == Node` の diff entry で、親 node と親 path が取得できる
+    - `Kind == ContainerPresence` の diff entry でも、entry 自身の node がない一方で container を所有する親 node が取得できる
+    - root 直下 diff の親は compare root として扱われる
+    - key text 内の `.` / `]` / `\` を含む path でも、利用者側で文字列 split せずに親を参照できる
+    - TDD、実装修正、検証、sub-agent review、PR 更新が完了している
+  - Output:
+    - PR #39
+    - `src/SSC/ParallelDiffContracts.cs`
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.Unit.Tests/XPathLikeDiffEntriesUnitTests.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/task-t-086-implementation-20260625130859.md`
+    - `reports/task-t-086-review-20260625131324.md`
+    - `reports/task-t-086-review-r2-20260625131809.md`
+    - `reports/task-t-086-verification-20260625132024.md`
+  - Verification:
+    - TDD 赤確認: `ParentPath` / `ParentNode` 未定義の compile error
+    - `dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesUnitTests|FullyQualifiedName~ParallelDiffResultUnitTests"` 成功（5 件）
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XPathLikeDiffEntriesE2ETests"` 成功（6 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 30 件 / E2E 67 件）
     - `dotnet format SSC.sln --verify-no-changes` 成功
     - `git diff --check` 成功
     - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
