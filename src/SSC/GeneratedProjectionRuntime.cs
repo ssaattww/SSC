@@ -401,6 +401,7 @@ public sealed class ParallelGeneratedModelList<TElement, TView> : IReadOnlyList<
 public sealed class ParallelGeneratedValue<TModel, TValue>
 {
     private readonly ParallelNode<TModel> _node;
+    private readonly IParallelNode? _valueNode;
     private readonly Func<TModel, TValue> _getter;
 
     public ParallelGeneratedValue(ParallelNode<TModel> node, Func<TModel, TValue> getter)
@@ -411,10 +412,25 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
         _getter = getter;
     }
 
+    public ParallelGeneratedValue(
+        ParallelNode<TModel> node,
+        IParallelNode valueNode,
+        Func<TModel, TValue> getter)
+        : this(node, getter)
+    {
+        ArgumentNullException.ThrowIfNull(valueNode);
+        _valueNode = valueNode;
+    }
+
     public TValue this[int modelIndex] => ResolveValue(modelIndex, out _);
 
     public ValueState GetState(int modelIndex)
     {
+        if (_valueNode is not null)
+        {
+            return _valueNode.GetState(modelIndex);
+        }
+
         var selectedValue = ResolveValue(modelIndex, out var selectedPresence);
         return GetState(
             modelIndex,
@@ -495,22 +511,20 @@ public sealed class ParallelGeneratedValue<TModel, TValue>
 
     public override string ToString()
     {
-        var resolvedValues = new ResolvedGeneratedValue[_node.Count];
-        for (var modelIndex = 0; modelIndex < resolvedValues.Length; modelIndex++)
+        return _valueNode?.ToString() ?? CreateDerivedLeaf().ToString();
+    }
+
+    private ParallelNode<TValue> CreateDerivedLeaf()
+    {
+        var values = new TValue?[_node.Count];
+        var states = new ValueState[_node.Count];
+        for (var modelIndex = 0; modelIndex < _node.Count; modelIndex++)
         {
-            var value = ResolveValue(modelIndex, out var presence);
-            resolvedValues[modelIndex] = new ResolvedGeneratedValue(value, presence);
+            values[modelIndex] = ResolveValue(modelIndex, out _);
+            states[modelIndex] = GetState(modelIndex);
         }
 
-        return ParallelDisplayFormatter.FormatSlots(
-            _node.Count,
-            modelIndex =>
-            {
-                var selected = resolvedValues[modelIndex];
-                return new ParallelDisplaySlot(
-                    selected.Value,
-                    GetState(modelIndex, selected.Value, selected.Presence, index => resolvedValues[index]));
-            });
+        return ParallelNode<TValue>.CreateLeaf(values, states);
     }
 
     private readonly struct ResolvedGeneratedValue
@@ -592,6 +606,26 @@ public static class ParallelGeneratedRuntime
 
         throw new ArgumentException(
             $"{apiName} can be used only with generated member node '{memberName}'.",
+            nameof(memberName));
+    }
+
+    public static IParallelNode RequireMemberNode<TParent>(
+        ParallelNode<TParent> node,
+        string memberName,
+        string apiName)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        ArgumentException.ThrowIfNullOrEmpty(memberName);
+        ArgumentException.ThrowIfNullOrEmpty(apiName);
+
+        var internalNode = (IParallelNodeInternal)node;
+        if (internalNode.TryGetMemberNode(memberName, out var rawMemberNode))
+        {
+            return rawMemberNode;
+        }
+
+        throw new ArgumentException(
+            $"{apiName} cannot find generated member node '{memberName}'.",
             nameof(memberName));
     }
 }

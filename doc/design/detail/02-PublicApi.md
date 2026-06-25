@@ -151,6 +151,14 @@ public sealed class ParallelDiffValue
 - `HasDifferences()` は current node 自体、または配下 subtree のいずれかに差分があれば `true`
 - `GetDirectChildren()` は current node の直下 property を `ParallelChildSet` 単位で返す
 - `ParallelNode<T>.ToString()` と generated value の `ToString()` は model slot 別 value/state を Diff と同じ形式で返す
+- generated object view の `ToString()` は underlying `ParallelNode<T>.ToString()` に委譲する
+  - 元モデル型が `ToString()` を override している場合、その文字列表現を model slot 別に確認できる
+  - 例: `root.Root.Attribute["id"].ToString()` は `GeneratedXmlAttribute.ToString()` の結果を `[0]=...(State), [1]=...(State)` 形式で返す
+  - 生成型に comparable member `ToString` がある場合は名前衝突を避けるため、object view の override は生成しない
+- direct generated scalar member は対応する member `ParallelNode<TValue>` に indexer / `GetState()` / `ToString()` を委譲し、`ParallelNode<T>.ToString()` と表示実装を共有する
+  - `Select(...)` 由来の派生 generated value は materialized member node を持たないため、一時的な leaf `ParallelNode<TValue>` に変換して `ToString()` 表示を共有する
+- dynamic projection は materialized node がある path では `ToString()` を同じ node 表示へ委譲する
+  - runtime reflection だけで辿る materialized node のない派生 path は対象外
 
 ### 4.0 Direct Child Traversal Contract
 

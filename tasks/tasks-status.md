@@ -12,6 +12,42 @@
 
 ## Done
 
+- T-089: generated object view の `ToString()` で元モデルの表示を model slot 別に返す
+  - Status: 完了（generated object view / direct scalar generated member / `Select(...)` 派生 value / dynamic materialized path の `ToString()` を node 表示へ委譲した）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-084 Source Generator の object member 展開不足修正
+    - T-088 `Parallel` の `ToString()` に model slot 別 value/state 表示を追加
+  - Exit Criteria:
+    - generated object view の `ToString()` が `_node.ToString()` と同等の model slot 別 value/state 形式を返す
+    - direct scalar generated member の `ToString()` / `GetState()` は対応する member node に委譲し、表示実装を `ParallelNode<T>.ToString()` と共有する
+    - dynamic projection も materialized node がある場合は `ToString()` を同じ node 表示へ委譲する
+    - 元モデル型が `ToString()` を override している場合、その表示が object view から確認できる
+    - `root.Root.Attribute["id"].ToString()` のように scalar member まで掘らない表示を E2E で検証する
+    - 生成型に comparable member `ToString` がある場合は名前衝突を避ける
+    - 設計更新、TDD、実装修正、検証、sub-agent review、PR 更新が完了している
+  - Output:
+    - PR #42
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `src/SSC.Generators/ParallelViewGenerator.cs`
+    - `src/SSC/ParallelDynamicAccessExtensions.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `doc/design/detail/02-PublicApi.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-089-generated-object-tostring-20260625170134.md`
+    - `reports/task-t-089-generated-object-tostring-verification-20260625170333.md`
+    - `reports/task-t-089-generated-object-tostring-review-20260625170550.md`
+  - Verification:
+    - TDD 赤確認: generated object view の `ToString()` が生成 view class の型名表示になり失敗
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~GeneratedProjectionE2ETests.Compare_GeneratedProjection_ObjectMember_GeneratesNestedViewMembers|FullyQualifiedName~GeneratedProjectionE2ETests.Compare_GeneratedProjection_ToStringMember_DoesNotConflictWithObjectViewToString|FullyQualifiedName~GeneratedProjectionE2ETests.Compare_DynamicProjection_ToString_UsesMaterializedNodeDisplay"` 成功（3 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 31 件 / E2E 74 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+    - gpt-5.5 medium verification sub-agent 実施、指摘なし
+    - gpt-5.5 high review / re-review sub-agent 実施、最終指摘なし
+
 - T-088: `Parallel` の `ToString()` に model slot 別 value/state 表示を追加
   - Status: 完了（`ParallelNode<T>` と generated value の `ToString()` を Diff 表示と同じ model slot 別 value/state 形式にした）
   - Phase: Phase 3

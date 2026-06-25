@@ -2,6 +2,23 @@
 
 ## 2026-06-25
 
+### T-089 generated object view `ToString()` の表示変更
+
+- 対象:
+  - Source Generator が生成する nested object view の `ToString()`
+- 変更種別:
+  - generated API の public convenience display 変更
+- 影響:
+  - 従来は generated view class の型名表示だった
+  - T-089 以降は underlying `ParallelNode<T>.ToString()` に委譲し、元モデル型の `ToString()` 結果を model slot 別 value/state 形式で表示する
+  - `ToString()` の文字列を厳密に比較していた利用コードは期待値更新が必要になる可能性がある
+- 背景:
+  - `root.Root.Attribute["id"]` のような object view でも、元モデル型が `ToString()` を実装している場合はデバッグ時にその値を直接確認できるようにするため
+- 備考:
+  - 機械処理では indexer / `GetState(modelIndex)` / scalar member access / Diff entry の structured data を使う
+  - direct generated scalar member の `ToString()` は個別 formatter ではなく、対応する member `ParallelNode<TValue>.ToString()` に委譲する
+  - dynamic projection も materialized node がある path では同じ node `ToString()` に委譲する
+
 ### T-088 `ParallelNode<T>` / generated value `ToString()` の表示変更
 
 - 対象:

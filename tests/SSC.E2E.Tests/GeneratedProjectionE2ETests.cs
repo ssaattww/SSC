@@ -41,11 +41,13 @@ public sealed class GeneratedProjectionE2ETests
 
         Assert.Equal("root", root.Root.Name[0]);
         Assert.Equal("[0]=\"root\"(Matched), [1]=\"root\"(Matched)", root.Root.Name.ToString());
+        Assert.Equal("[0]=\"ROOT\"(Matched), [1]=\"ROOT\"(Matched)", root.Root.Name.Select(static value => value.ToUpperInvariant()).ToString());
         // Attribute["id"] は dictionary key の指定で、続く [0] / [1] は model index の指定。
         Assert.Equal("id", root.Root.Attribute["id"][0]!.Name);
         Assert.Equal("left", root.Root.Attribute["id"][0]!.Value);
         Assert.Equal("right", root.Root.Attribute["id"][1]!.Value);
         // child view 自体の GetState と、Value member の GetState は別々に取得できる。
+        Assert.Equal("[0]=id=left(Mismatched), [1]=id=right(Mismatched)", root.Root.Attribute["id"].ToString());
         Assert.Equal("right", root.Root.Attribute["id"].Value[1]);
         Assert.Equal("[0]=\"left\"(Mismatched), [1]=\"right\"(Mismatched)", root.Root.Attribute["id"].Value.ToString());
         Assert.Equal(ValueState.Mismatched, root.Root.Attribute["id"].GetState(0));
@@ -54,6 +56,66 @@ public sealed class GeneratedProjectionE2ETests
         Assert.Equal(4, root.Root.Range.EndLine[1]);
     }
 
+    [Fact]
+    public void Compare_GeneratedProjection_ToStringMember_DoesNotConflictWithObjectViewToString()
+    {
+        // Intent: A model member named ToString keeps its generated accessor instead of colliding with object view ToString().
+        var models = new[]
+        {
+            new GeneratedToStringMemberDocument
+            {
+                Child = new GeneratedToStringMemberChild { ToString = "left" },
+            },
+            new GeneratedToStringMemberDocument
+            {
+                Child = new GeneratedToStringMemberChild { ToString = "right" },
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        Assert.Equal("left", root.Child.ToString[0]);
+        Assert.Equal("right", root.Child.ToString[1]);
+        Assert.Equal(ValueState.Mismatched, root.Child.ToString.GetState(0));
+    }
+
+    [Fact]
+    public void Compare_DynamicProjection_ToString_UsesMaterializedNodeDisplay()
+    {
+        // Intent: dynamic access and generated access share the same materialized node ToString() display.
+        var models = new[]
+        {
+            new GeneratedDocument
+            {
+                Root = new GeneratedXmlNode
+                {
+                    Name = "root",
+                    Attribute = new Dictionary<string, GeneratedXmlAttribute>
+                    {
+                        ["id"] = new() { Name = "id", Value = "left" },
+                    },
+                    Range = new GeneratedTextRange { StartLine = 1, EndLine = 3 },
+                },
+            },
+            new GeneratedDocument
+            {
+                Root = new GeneratedXmlNode
+                {
+                    Name = "root",
+                    Attribute = new Dictionary<string, GeneratedXmlAttribute>
+                    {
+                        ["id"] = new() { Name = "id", Value = "right" },
+                    },
+                    Range = new GeneratedTextRange { StartLine = 1, EndLine = 4 },
+                },
+            },
+        };
+
+        dynamic root = ParallelCompareApi.Compare(models).AsDynamic()!;
+
+        Assert.Equal("[0]=\"root\"(Matched), [1]=\"root\"(Matched)", root.Root.Name.ToString());
+        Assert.Equal("[0]=id=left(Mismatched), [1]=id=right(Mismatched)", root.Root.Attribute[0].ToString());
+    }
 
     [Fact]
     public void Compare_GeneratedProjection_PublicIEnumerableField_GeneratesContainerAccessor()
@@ -682,6 +744,8 @@ public sealed class GeneratedXmlAttribute
     public required string Name;
 
     public required string Value;
+
+    public override string ToString() => $"{Name}={Value}";
 }
 
 public struct GeneratedTextRange
@@ -689,6 +753,17 @@ public struct GeneratedTextRange
     public int StartLine;
 
     public int EndLine;
+}
+
+[GenerateParallelView]
+public sealed class GeneratedToStringMemberDocument
+{
+    public GeneratedToStringMemberChild Child { get; init; } = new();
+}
+
+public sealed class GeneratedToStringMemberChild
+{
+    public new string ToString { get; init; } = string.Empty;
 }
 
 [GenerateParallelView]

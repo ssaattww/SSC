@@ -103,6 +103,8 @@ internal sealed class DynamicParallelNodeView : DynamicObject
         return false;
     }
 
+    public override string ToString() => _node.ToString() ?? string.Empty;
+
     public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
     {
         if (indexes.Length != 1 || indexes[0] is not int modelIndex)
@@ -317,6 +319,8 @@ internal sealed class DynamicParallelValuePathView : DynamicObject
         result = null;
         return false;
     }
+
+    public override string ToString() => _materializedNode?.ToString() ?? base.ToString() ?? string.Empty;
 
     public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
     {

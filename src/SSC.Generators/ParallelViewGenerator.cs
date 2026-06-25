@@ -160,9 +160,16 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
             source.AppendLine();
         }
 
+        if (!typeShape.Members.Any(static member => string.Equals(member.MemberName, "ToString", StringComparison.Ordinal)))
+        {
+            source.AppendLine("    public override string ToString() => _node.ToString();");
+            source.AppendLine();
+        }
+
         foreach (var member in typeShape.Members)
         {
             var memberName = EscapeIdentifier(member.MemberName);
+            var memberVisibility = GetGeneratedMemberVisibility(member.MemberName);
             if (member.Kind == MemberKind.Container)
             {
                 if (member.ElementType is null || !viewNames.TryGetValue(member.ElementType, out var childViewName))
@@ -174,12 +181,12 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
                 if (member.KeyType is not null)
                 {
                     var keyTypeName = member.KeyType.ToDisplayString(TypeDisplayFormat);
-                    source.AppendLine($"    public global::SSC.ParallelGeneratedDictionary<{keyTypeName}, {elementTypeName}, {childViewName}> {memberName} =>");
+                    source.AppendLine($"    {memberVisibility} global::SSC.ParallelGeneratedDictionary<{keyTypeName}, {elementTypeName}, {childViewName}> {memberName} =>");
                     source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
                 }
                 else
                 {
-                    source.AppendLine($"    public global::SSC.ParallelGeneratedList<{elementTypeName}, {childViewName}> {memberName} =>");
+                    source.AppendLine($"    {memberVisibility} global::SSC.ParallelGeneratedList<{elementTypeName}, {childViewName}> {memberName} =>");
                     source.AppendLine($"        new(_node.GetChildren<{elementTypeName}>(nameof({modelTypeName}.{memberName})), _node.Count, static child => new {childViewName}(child));");
                 }
 
@@ -195,7 +202,7 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
                 }
 
                 var objectTypeName = member.ObjectType.ToDisplayString(TypeDisplayFormat);
-                source.AppendLine($"    public {childViewName} {memberName} =>");
+                source.AppendLine($"    {memberVisibility} {childViewName} {memberName} =>");
                 source.AppendLine($"        new(global::SSC.ParallelGeneratedRuntime.RequireMemberNode<{modelTypeName}, {objectTypeName}>(_node, nameof({modelTypeName}.{memberName}), nameof({modelTypeName}.{memberName})));");
                 source.AppendLine();
                 continue;
@@ -203,13 +210,16 @@ public sealed class ParallelViewGenerator : IIncrementalGenerator
 
             var valueTypeName = GetGeneratedValueTypeName(member.ValueType!);
             var getterExpression = GetGeneratedValueGetterExpression(memberName, member.ValueType!);
-            source.AppendLine($"    public global::SSC.ParallelGeneratedValue<{modelTypeName}, {valueTypeName}> {memberName} =>");
-            source.AppendLine($"        new(_node, static model => {getterExpression});");
+            source.AppendLine($"    {memberVisibility} global::SSC.ParallelGeneratedValue<{modelTypeName}, {valueTypeName}> {memberName} =>");
+            source.AppendLine($"        new(_node, global::SSC.ParallelGeneratedRuntime.RequireMemberNode<{modelTypeName}>(_node, nameof({modelTypeName}.{memberName}), nameof({modelTypeName}.{memberName})), static model => {getterExpression});");
             source.AppendLine();
         }
 
         source.AppendLine("}");
     }
+
+    private static string GetGeneratedMemberVisibility(string memberName) =>
+        memberName is "Equals" or "GetHashCode" or "GetType" or "ToString" ? "public new" : "public";
 
     private static List<TypeShape> BuildTypeGraph(INamedTypeSymbol rootType)
     {
