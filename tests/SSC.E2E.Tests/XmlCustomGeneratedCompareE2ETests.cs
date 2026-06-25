@@ -43,8 +43,16 @@ public sealed class XmlCustomGeneratedCompareE2ETests
         var root = result.AsGeneratedView()!;
 
         Assert.Equal("root", root.Root.Name[0]);
+        // Attribute["id"] は dictionary key の指定で、続く [0] は model index の指定。
+        Assert.Equal("id", root.Root.Attribute["id"][0]!.Name);
+        Assert.Equal("same", root.Root.Attribute["id"][0]!.Value);
         Assert.Equal("same", root.Root.Attribute["id"].Value[0]);
+        Assert.Equal(ValueState.Matched, root.Root.Attribute["id"].GetState(0));
+        // child view 自体の GetState と、Value member の GetState は別々に取得できる。
+        Assert.Equal("source", root.Root.Attribute["source"][1]!.Name);
+        Assert.Equal("right", root.Root.Attribute["source"][1]!.Value);
         Assert.Equal("right", root.Root.Attribute["source"].Value[1]);
+        Assert.Equal(ValueState.Mismatched, root.Root.Attribute["source"].GetState(0));
         Assert.Equal(ValueState.Mismatched, root.Root.Attribute["source"].Value.GetState(0));
         Assert.True(root.Root.Attribute["id"].Range.StartLine[0] > 0);
         Assert.Equal("section", root.Root.ChildrenOfNode[0].Name[0]);
