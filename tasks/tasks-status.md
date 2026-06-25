@@ -4,7 +4,20 @@
 
 ## In Progress
 
-- なし
+- T-086: `GetDiffEntries()` entry から親 node を直接参照できる API 追加
+  - Status: 設計中（`ParallelDiffEntry` に親 path / 親 node を持たせ、`GetDiffEntries()` 利用者が path 文字列を再解析せず親へ辿れる public API を追加する）
+  - Phase: Phase 2
+  - Estimate: S
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+    - T-080 empty container 差分の `ContainerPresence` entry 追加
+  - Exit Criteria:
+    - `ParallelDiffEntry` の public contract に親 path / 親 node の扱いが設計されている
+    - `Kind == Node` の diff entry で、親 node と親 path が取得できる
+    - `Kind == ContainerPresence` の diff entry でも、entry 自身の node がない一方で container を所有する親 node が取得できる
+    - root 直下 diff の親は compare root として扱われる
+    - key text 内の `.` / `]` / `\` を含む path でも、利用者側で文字列 split せずに親を参照できる
+    - TDD、実装修正、検証、sub-agent review、PR 更新が完了している
 
 ## Backlog
 

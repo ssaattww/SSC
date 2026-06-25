@@ -64,3 +64,4 @@
 36. `HasDifferences()` が leaf/object/container の各 node で subtree 差分を正しく判定するか
 37. `GetDirectChildren()` が scalar/object member を `Nodes.Count == 1`、container member を正規化済み child 集合として返すか
 38. `GetDirectChildren()` の `ParallelChildSet` 順序と `Nodes` 順序が既存 property / key union 契約を崩していないか
+39. `GetDiffEntries()` が `Kind == Node` / `Kind == ContainerPresence` の両方で親 path / 親 node を保持しているか
