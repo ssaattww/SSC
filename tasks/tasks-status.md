@@ -4,9 +4,17 @@
 
 ## In Progress
 
+- なし
+
+## Backlog
+
+- なし
+
+## Done
+
 - T-087: generated projection list の key text indexer 追加
-  - Status: 設計中（CustomXML の `Attribute` のように key union 済みの generated container を、ordinal index だけでなく key text で直接参照できるようにする）
-  - Phase: Phase 2
+  - Status: 完了（CustomXML の `Attribute` のように key union 済みの generated container を、ordinal index だけでなく key text と diff path selector で直接参照できるようにした）
+  - Phase: Phase 3
   - Estimate: S
   - Depends on:
     - T-084 Source Generator の object member 展開不足修正
@@ -17,12 +25,30 @@
     - missing key は `CompareExecutionException` と専用 `CompareIssueCode` で失敗する
     - key access は繰り返し利用時に線形探索を避ける
     - TDD、実装修正、検証、sub-agent review、PR 更新が完了している
-
-## Backlog
-
-- なし
-
-## Done
+  - Output:
+    - PR #40
+    - `src/SSC/Contracts.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `tests/SSC.E2E.Tests/XmlCustomGeneratedCompareE2ETests.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/05-ResultAndErrors.md`
+    - `doc/design/detail/08-ImplementationChecklist.md`
+    - `reports/task-t-087-implementation-20260625132744.md`
+    - `reports/task-t-087-review-20260625133338.md`
+    - `reports/task-t-087-review-r2-20260625133952.md`
+    - `reports/task-t-087-verification-20260625134141.md`
+  - Verification:
+    - TDD 赤確認: generated list の string indexer 不在による compile error
+    - TDD 赤確認: diff path selector `A\]B` が generated key access で `KeyNotFound`
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XmlCustomGeneratedCompareE2ETests|FullyQualifiedName~GeneratedProjectionE2ETests"` 成功（12 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（E2E 68 件 / Unit 29 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+    - gpt-5.5 medium implementation / verification sub-agent 実施
+    - gpt-5.5 high review / re-review sub-agent 実施、最終指摘なし
 
 - T-085: gist `XmlCustom` 同等 E2E 比較の修正
   - Status: 完了（gist `XmlCustom.cs` と同等の XML custom model / parser を E2E に用意し、key なし sequence を ordinal 比較として扱うことで Source Generator 付き `Document` 同士の比較を成功させた）

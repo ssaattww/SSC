@@ -43,6 +43,7 @@ public sealed class XmlCustomGeneratedCompareE2ETests
         var root = result.AsGeneratedView()!;
 
         Assert.Equal("root", root.Root.Name[0]);
+        Assert.Equal("same", root.Root.Attribute["id"].Value[0]);
         Assert.Equal("same", root.Root.Attribute[0].Value[0]);
         Assert.Equal("right", root.Root.Attribute[1].Value[1]);
         Assert.Equal(ValueState.Mismatched, root.Root.Attribute[1].Value.GetState(0));

@@ -167,9 +167,86 @@ public sealed class GeneratedProjectionE2ETests
         Assert.Equal("left-100", leftDetailLabel);
         Assert.Equal(ValueState.Missing, rightMissingDetailState);
         Assert.Equal("100", firstItemKey);
+        Assert.Equal(1, root.Groups["1"].GroupId[0]);
+        Assert.Equal(1.0, root.Groups["1"].Items["100"].MetricA[0]);
+        Assert.Equal(10, root.Scores["A"][0]);
 
         Assert.Equal(10, root.Scores[0][0]);
         Assert.Equal(20, root.Scores[0][1]);
+    }
+
+    [Fact]
+    public void Compare_GeneratedProjection_KeyTextAccess_WhenMissingKey_ThrowsExecutionException()
+    {
+        // Intent: generated list の key text indexer は未検出 key を KeyNotFound で返す。
+        var models = new[]
+        {
+            new GeneratedDataset
+            {
+                Groups =
+                [
+                    new GeneratedGroup { GroupId = 1 },
+                ],
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        var exception = Assert.Throws<CompareExecutionException>(() =>
+        {
+            var _ = root.Groups["missing"];
+        });
+
+        Assert.Equal(CompareIssueCode.KeyNotFound, exception.Code);
+    }
+
+    [Fact]
+    public void Compare_GeneratedProjection_KeyTextAccess_AcceptsDiffPathEscapedDiscriminator()
+    {
+        // Intent: GetDiffEntries の bracket 内 discriminator を generated key text indexer へ渡して同じ child を引ける。
+        var models = new[]
+        {
+            new GeneratedDocument
+            {
+                Root = new GeneratedXmlNode
+                {
+                    Name = "root",
+                    Attribute = new Dictionary<string, GeneratedXmlAttribute>
+                    {
+                        ["A]B"] = new() { Name = "A]B", Value = "left-bracket" },
+                        ["A\\]B"] = new() { Name = "A\\]B", Value = "left-escaped-bracket" },
+                        ["#0"] = new() { Name = "#0", Value = "left-hash" },
+                    },
+                },
+            },
+            new GeneratedDocument
+            {
+                Root = new GeneratedXmlNode
+                {
+                    Name = "root",
+                    Attribute = new Dictionary<string, GeneratedXmlAttribute>
+                    {
+                        ["A]B"] = new() { Name = "A]B", Value = "right-bracket" },
+                        ["A\\]B"] = new() { Name = "A\\]B", Value = "right-escaped-bracket" },
+                        ["#0"] = new() { Name = "#0", Value = "right-hash" },
+                    },
+                },
+            },
+        };
+
+        var result = ParallelCompareApi.Compare(models);
+        var root = result.AsGeneratedView()!;
+        var entries = result.GetDiffEntries();
+        var bracketSelector = ExtractSelector(FindDiffPathByLeftValue(entries, "left-bracket"));
+        var escapedBracketSelector = ExtractSelector(FindDiffPathByLeftValue(entries, "left-escaped-bracket"));
+        var hashSelector = ExtractSelector(FindDiffPathByLeftValue(entries, "left-hash"));
+
+        Assert.Equal("left-bracket", root.Root.Attribute[bracketSelector].Value[0]);
+        Assert.Equal("right-bracket", root.Root.Attribute[bracketSelector].Value[1]);
+        Assert.Equal("left-escaped-bracket", root.Root.Attribute[escapedBracketSelector].Value[0]);
+        Assert.Equal("right-escaped-bracket", root.Root.Attribute[escapedBracketSelector].Value[1]);
+        Assert.Equal("left-hash", root.Root.Attribute[hashSelector].Value[0]);
+        Assert.Equal("right-hash", root.Root.Attribute[hashSelector].Value[1]);
     }
 
     [Fact]
@@ -419,6 +496,46 @@ public sealed class GeneratedProjectionE2ETests
         var exception = Assert.Throws<ArgumentException>(() => result.AsGeneratedView());
 
         Assert.Contains("compare result nodes", exception.Message, StringComparison.Ordinal);
+    }
+
+    private static string FindDiffPathByLeftValue(IReadOnlyList<ParallelDiffEntry> entries, string leftValue)
+    {
+        return Assert.Single(
+            entries,
+            entry => entry.Path.StartsWith("Root.Attribute[", StringComparison.Ordinal)
+                && entry.Path.EndsWith("].Value", StringComparison.Ordinal)
+                && entry.Values.Count > 0
+                && string.Equals(entry.Values[0].Value as string, leftValue, StringComparison.Ordinal)).Path;
+    }
+
+    private static string ExtractSelector(string path)
+    {
+        var selectorStart = path.IndexOf('[', StringComparison.Ordinal);
+        Assert.True(selectorStart >= 0);
+
+        var escaping = false;
+        for (var index = selectorStart + 1; index < path.Length; index++)
+        {
+            var current = path[index];
+            if (escaping)
+            {
+                escaping = false;
+                continue;
+            }
+
+            if (current == '\\')
+            {
+                escaping = true;
+                continue;
+            }
+
+            if (current == ']')
+            {
+                return path[(selectorStart + 1)..index];
+            }
+        }
+
+        throw new InvalidOperationException($"Path '{path}' does not contain a closed selector.");
     }
 
     private sealed class FakeGeneratedParallel : Parallel<GeneratedDataset>

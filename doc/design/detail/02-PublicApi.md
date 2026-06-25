@@ -753,6 +753,8 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
 - generated container は key union 順の index でアクセスできる（例: `root.Scores[0][1]`）
 - `NodeMeta.KeyText` を持つ generated container child は key text でもアクセスできる（例: `root.Groups["1"]` / `root.Root.Attribute["id"]`）
+- key text indexer は raw key text と、`GetDiffEntries().Path` の bracket 内に現れる XPath-like escaped discriminator text の両方を受け付ける
+- key text indexer は有効な XPath-like escape を含む入力では escaped discriminator を unescape した lookup を raw lookup より優先し、見つからない場合だけ raw lookup に fallback する
 - key text indexer は `StringComparer.Ordinal` で lookup し、繰り返し利用時に線形探索を繰り返さない
 - key text が存在しない場合は `KeyNotFound` の `CompareExecutionException` を送出する
 - class / struct 型の object member は nested generated view として直接辿れる（例: `root.Root.Name[0]`）

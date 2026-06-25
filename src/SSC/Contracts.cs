@@ -23,6 +23,7 @@ public enum CompareIssueCode
     DuplicateCompareKeyDetected,
     ModelIndexOutOfRange,
     ReflectionMetadataBuildFailed,
+    KeyNotFound,
 }
 
 public sealed class CompareIssue
