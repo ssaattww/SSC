@@ -54,13 +54,15 @@
 29. `GenerateParallelViewAttribute` を追加し、生成対象の明示契約を定義したか
 30. Source Generator で `AsGeneratedView()` と型付き view を生成できるか
 31. generated API で `list index -> model index` アクセスを再現できるか
-32. generated API の範囲外 index が `ModelIndexOutOfRange` で失敗するか
-33. `AsDynamic()` の既存挙動が回帰していないか
-34. 複数 namespace / nested type / internal type で生成コードがコンパイルできるか
-35. `Count/KeyText` 衝突系と nullable value-path 系で dynamic 回帰がないか
+32. generated API で `key text -> generated view` アクセスを再現できるか
+33. generated API の範囲外 index が `ModelIndexOutOfRange` で失敗するか
+34. generated API の missing key が `KeyNotFound` で失敗するか
+35. `AsDynamic()` の既存挙動が回帰していないか
+36. 複数 namespace / nested type / internal type で生成コードがコンパイルできるか
+37. `Count/KeyText` 衝突系と nullable value-path 系で dynamic 回帰がないか
 
 ## 9. Difference Traversal
 
-36. `HasDifferences()` が leaf/object/container の各 node で subtree 差分を正しく判定するか
-37. `GetDirectChildren()` が scalar/object member を `Nodes.Count == 1`、container member を正規化済み child 集合として返すか
-38. `GetDirectChildren()` の `ParallelChildSet` 順序と `Nodes` 順序が既存 property / key union 契約を崩していないか
+38. `HasDifferences()` が leaf/object/container の各 node で subtree 差分を正しく判定するか
+39. `GetDirectChildren()` が scalar/object member を `Nodes.Count == 1`、container member を正規化済み child 集合として返すか
+40. `GetDirectChildren()` の `ParallelChildSet` 順序と `Nodes` 順序が既存 property / key union 契約を崩していないか

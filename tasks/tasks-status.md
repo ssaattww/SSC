@@ -4,7 +4,19 @@
 
 ## In Progress
 
-- なし
+- T-087: generated projection list の key text indexer 追加
+  - Status: 設計中（CustomXML の `Attribute` のように key union 済みの generated container を、ordinal index だけでなく key text で直接参照できるようにする）
+  - Phase: Phase 2
+  - Estimate: S
+  - Depends on:
+    - T-084 Source Generator の object member 展開不足修正
+    - T-085 gist `XmlCustom` 同等 E2E 比較の修正
+  - Exit Criteria:
+    - `ParallelGeneratedList<TElement, TView>` で `this[string keyText]` による key access ができる
+    - `root.Root.Attribute["id"].Value[0]` のように CustomXML の attribute を key で参照できる
+    - missing key は `CompareExecutionException` と専用 `CompareIssueCode` で失敗する
+    - key access は繰り返し利用時に線形探索を避ける
+    - TDD、実装修正、検証、sub-agent review、PR 更新が完了している
 
 ## Backlog
 

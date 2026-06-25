@@ -143,6 +143,7 @@ public sealed class ParallelDiffValue
 - indexer の範囲外アクセスは `ModelIndexOutOfRange`
 - dynamic list index の範囲外アクセスも `ModelIndexOutOfRange`
 - generated list index の範囲外アクセスも `ModelIndexOutOfRange`
+- generated list の key text indexer で key が見つからない場合は `KeyNotFound`
 - `AllPresent == Values.All(v => v != null かつ Missing でない)`
 - `AnyPresent == Values.Any(v => Missing でない)`
 - `HasDifferences()` は current node 自体、または配下 subtree のいずれかに差分があれば `true`
@@ -737,6 +738,8 @@ var rightStateAt200 = root.Groups[0].Items[1].MetricA.GetState(1); // Missing
 var leftLabel = root.Groups[0].Items[0].Detail.Label[0]; // direct nested object view
 var leftLabelViaSelector = root.Groups[0].Items[0].Detail.Select(x => x.Label)[0]; // compatible nested value path
 var nodeCount = root.Groups[0].Items[0].NodeMeta.Count;
+var group1 = root.Groups["1"];
+var idAttributeValue = root.Root.Attribute["id"].Value[0];
 
 // model 単位で list を選択（Missing slot を除外）
 var leftGroups = root.Groups.SelectModel(0);
@@ -748,7 +751,10 @@ var leftGroupIdAt0 = leftGroups[0].GroupId[0];
 - generated view で取得する公開 `ValueState` の意味は `AsDynamic()` と同一
 - 投影切替の入口は `CompareResult` 拡張に統一する
 - generated API の node メタ情報は `NodeMeta` 配下に分離し、モデル同名メンバーと衝突させない
-- Dictionary も List と同様に key union 順の index でアクセスする（例: `root.Scores[0][1]`）
+- generated container は key union 順の index でアクセスできる（例: `root.Scores[0][1]`）
+- `NodeMeta.KeyText` を持つ generated container child は key text でもアクセスできる（例: `root.Groups["1"]` / `root.Root.Attribute["id"]`）
+- key text indexer は `StringComparer.Ordinal` で lookup し、繰り返し利用時に線形探索を繰り返さない
+- key text が存在しない場合は `KeyNotFound` の `CompareExecutionException` を送出する
 - class / struct 型の object member は nested generated view として直接辿れる（例: `root.Root.Name[0]`）
 - object member view は互換導線として `Select(...)` も提供し、既存の nested value path 利用を維持する
 - `SelectModel(modelIndex)` は指定 model で `Missing` でない要素のみを返し、順序は key union 順を維持する

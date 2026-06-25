@@ -12,8 +12,9 @@
 
 ## Phase 2: 詳細設計確定
 
-- Status: Done
+- Status: In Progress
 - Notes:
+  - T-087 で generated projection list の key text indexer を設計中
   - T-076 で XPath-like path access と差分表示 helper の public API 設計を追加し、実装単位を T-077 から T-082 へ分割した
   - `doc/draft/DetailDesignDraft.md` に粒度基準・章別必須項目・仕様確定結果を追記
   - Draft/非Draft を `doc/draft` と `doc/design` に分離
@@ -31,8 +32,9 @@
 
 ## Phase 3: 実装
 
-- Status: Done
+- Status: In Progress
 - Notes:
+  - T-087 の設計完了後、generated projection list へ key text indexer を実装する
   - T-085 を完了し、gist `XmlCustom.cs` と同等の E2E で `Document` 同士の比較が成功することを検証し、key なし sequence を ordinal 比較として扱う修正を sub-agent 実装で完了した
   - T-085 では `CompareConfiguration.MissingCompareKeyListPolicy` の既定値を `AlignByIndex` に変更し、旧来の skip + error は `SkipAndRecordError` 明示時の opt-in とした
   - T-084 を完了し、gist `YXml.cs` と生成済み `global_Document.ParallelGenerated.g.cs` の Source Generator 出力を根拠に、`Document.Root` 配下の generated member 展開不足を regression test で再現して修正した

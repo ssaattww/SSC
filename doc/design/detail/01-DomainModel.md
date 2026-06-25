@@ -112,6 +112,8 @@ var keyText = typedRoot.Groups[0].Items[0].NodeMeta.KeyText;
 
 - `dynamic` 非依存で IDE 補完を利用できる
 - list index 範囲外は `ModelIndexOutOfRange`
+- key union 済み container は `Groups["1"]` / `Attribute["id"]` のように `NodeMeta.KeyText` と同じ key text で参照できる
+- key が見つからない場合は `KeyNotFound` の `CompareExecutionException` を返す
 - node メタ情報は `NodeMeta` 配下（`NodeMeta.Count` / `NodeMeta.KeyText`）で参照する
 - 投影切替の入口は `CompareResult` 拡張（`AsDynamic()` / `AsGeneratedView()`）に統一する
 - 直下 child 探索は generated 専用型ではなく `IParallelNode` 共通面で扱う
