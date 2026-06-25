@@ -4,15 +4,54 @@
 
 ## In Progress
 
-- なし
+なし
 
 ## Backlog
 
-- なし
+なし
 
 ## Done
 
-- T-087: generated projection list の key text indexer 追加
+- T-087: generated projection dictionary key 型 access follow-up
+  - Status: 完了（Dictionary member を string key text 限定ではなく、通常の Dictionary に近い key 型 indexer で参照できるようにした）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-084 Source Generator の object member 展開不足修正
+    - T-085 gist `XmlCustom` 同等 E2E 比較の修正
+  - Exit Criteria:
+    - Dictionary member が `ParallelGeneratedDictionary<TKey, TElement, TView>` として生成される
+    - `root.Root.Attribute["id"].Value[0]` のような string key dictionary access ができる
+    - `root.Scores[100][0]` のような non-string key dictionary access ができる
+    - `GetDiffEntries().Path` の bracket discriminator は `ByPathKey(discriminator)` で参照できる
+    - Dictionary の key union 順 access は `AtIndex(index)` で維持される
+    - missing key は `CompareExecutionException` と `CompareIssueCode.KeyNotFound` で失敗する
+    - TDD、実装修正、検証、sub-agent review、PR 更新が完了している
+  - Output:
+    - PR #40
+    - `src/SSC.Generators/ParallelViewGenerator.cs`
+    - `src/SSC/GeneratedProjectionRuntime.cs`
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/GeneratedProjectionE2ETests.cs`
+    - `tests/SSC.E2E.Tests/XmlCustomGeneratedCompareE2ETests.cs`
+    - `doc/design/detail/01-DomainModel.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `reports/task-t-087-followup-dictionary-key-20260625135623.md`
+    - `reports/task-t-087-followup-dictionary-key-review-20260625140236.md`
+    - `reports/task-t-087-followup-dictionary-key-review-r2-20260625141147.md`
+    - `reports/task-t-087-followup-dictionary-key-review-r3-20260625141638.md`
+  - Verification:
+    - TDD 赤確認: `root.Scores[100]` が ordinal index access として解決され、範囲外で失敗
+    - TDD 赤確認: case-insensitive string key と DateTime normalized key が `KeyNotFound` で失敗
+    - `dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj --configuration Release --filter "FullyQualifiedName~XmlCustomGeneratedCompareE2ETests|FullyQualifiedName~GeneratedProjectionE2ETests"` 成功（15 件）
+    - `dotnet test SSC.sln --configuration Release` 成功（E2E 71 件 / Unit 29 件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - `npm run lint:md` は `Missing script: "lint:md"` のため unsupported
+    - gpt-5.5 high review / re-review sub-agent 実施、最終指摘なし
+
+- T-087: generated projection list の key text indexer 追加（初回実装）
   - Status: 完了（CustomXML の `Attribute` のように key union 済みの generated container を、ordinal index だけでなく key text と diff path selector で直接参照できるようにした）
   - Phase: Phase 3
   - Estimate: S

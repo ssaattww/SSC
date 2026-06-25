@@ -40,8 +40,8 @@ public sealed class GeneratedProjectionE2ETests
         var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
 
         Assert.Equal("root", root.Root.Name[0]);
-        Assert.Equal("right", root.Root.Attribute[0].Value[1]);
-        Assert.Equal(ValueState.Mismatched, root.Root.Attribute[0].Value.GetState(0));
+        Assert.Equal("right", root.Root.Attribute["id"].Value[1]);
+        Assert.Equal(ValueState.Mismatched, root.Root.Attribute["id"].Value.GetState(0));
         Assert.Equal(1, root.Root.Range.StartLine[0]);
         Assert.Equal(4, root.Root.Range.EndLine[1]);
     }
@@ -171,8 +171,110 @@ public sealed class GeneratedProjectionE2ETests
         Assert.Equal(1.0, root.Groups["1"].Items["100"].MetricA[0]);
         Assert.Equal(10, root.Scores["A"][0]);
 
-        Assert.Equal(10, root.Scores[0][0]);
-        Assert.Equal(20, root.Scores[0][1]);
+        Assert.Equal(10, root.Scores.AtIndex(0)[0]);
+        Assert.Equal(20, root.Scores.AtIndex(0)[1]);
+    }
+
+    [Fact]
+    public void Compare_GeneratedProjection_DictionaryIntKeyAccess_UsesRawKey()
+    {
+        // Intent: generated dictionary access は ordinal ではなく Dictionary<TKey,TValue> と同じ key 型で引ける。
+        var models = new[]
+        {
+            new GeneratedIntScoreDataset
+            {
+                Scores = new Dictionary<int, int>
+                {
+                    [100] = 10,
+                    [200] = 11,
+                },
+            },
+            new GeneratedIntScoreDataset
+            {
+                Scores = new Dictionary<int, int>
+                {
+                    [100] = 20,
+                    [300] = 21,
+                },
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        Assert.Equal(10, root.Scores[100][0]);
+        Assert.Equal(20, root.Scores[100][1]);
+        Assert.Equal(ValueState.Missing, root.Scores[200].GetState(1));
+
+        var exception = Assert.Throws<CompareExecutionException>(() =>
+        {
+            var _ = root.Scores[999];
+        });
+
+        Assert.Equal(CompareIssueCode.KeyNotFound, exception.Code);
+    }
+
+    [Fact]
+    public void Compare_GeneratedProjection_DictionaryStringKeyAccess_UsesConfiguredKeyComparison()
+    {
+        // Intent: generated dictionary access は compare runtime と同じ string key comparer を使う。
+        var models = new[]
+        {
+            new GeneratedDataset
+            {
+                Scores = new Dictionary<string, int>
+                {
+                    ["A"] = 10,
+                },
+            },
+            new GeneratedDataset
+            {
+                Scores = new Dictionary<string, int>
+                {
+                    ["a"] = 20,
+                },
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(
+            models,
+            new CompareConfiguration { StringKeyComparison = StringComparison.OrdinalIgnoreCase }).AsGeneratedView()!;
+
+        Assert.Equal(10, root.Scores["A"][0]);
+        Assert.Equal(20, root.Scores["A"][1]);
+        Assert.Equal(10, root.Scores["a"][0]);
+        Assert.Equal(20, root.Scores["a"][1]);
+    }
+
+    [Fact]
+    public void Compare_GeneratedProjection_DictionaryDateTimeKeyAccess_UsesNormalizedKey()
+    {
+        // Intent: generated dictionary access は compare runtime と同じ DateTime UTC 正規化 key を使う。
+        var localKey = new DateTime(2026, 6, 25, 9, 0, 0, DateTimeKind.Local);
+        var utcKey = localKey.ToUniversalTime();
+        var models = new[]
+        {
+            new GeneratedDateTimeScoreDataset
+            {
+                Scores = new Dictionary<DateTime, int>
+                {
+                    [localKey] = 10,
+                },
+            },
+            new GeneratedDateTimeScoreDataset
+            {
+                Scores = new Dictionary<DateTime, int>
+                {
+                    [utcKey] = 20,
+                },
+            },
+        };
+
+        var root = ParallelCompareApi.Compare(models).AsGeneratedView()!;
+
+        Assert.Equal(10, root.Scores[localKey][0]);
+        Assert.Equal(20, root.Scores[localKey][1]);
+        Assert.Equal(10, root.Scores[utcKey][0]);
+        Assert.Equal(20, root.Scores[utcKey][1]);
     }
 
     [Fact]
@@ -241,12 +343,12 @@ public sealed class GeneratedProjectionE2ETests
         var escapedBracketSelector = ExtractSelector(FindDiffPathByLeftValue(entries, "left-escaped-bracket"));
         var hashSelector = ExtractSelector(FindDiffPathByLeftValue(entries, "left-hash"));
 
-        Assert.Equal("left-bracket", root.Root.Attribute[bracketSelector].Value[0]);
-        Assert.Equal("right-bracket", root.Root.Attribute[bracketSelector].Value[1]);
-        Assert.Equal("left-escaped-bracket", root.Root.Attribute[escapedBracketSelector].Value[0]);
-        Assert.Equal("right-escaped-bracket", root.Root.Attribute[escapedBracketSelector].Value[1]);
-        Assert.Equal("left-hash", root.Root.Attribute[hashSelector].Value[0]);
-        Assert.Equal("right-hash", root.Root.Attribute[hashSelector].Value[1]);
+        Assert.Equal("left-bracket", root.Root.Attribute.ByPathKey(bracketSelector).Value[0]);
+        Assert.Equal("right-bracket", root.Root.Attribute.ByPathKey(bracketSelector).Value[1]);
+        Assert.Equal("left-escaped-bracket", root.Root.Attribute.ByPathKey(escapedBracketSelector).Value[0]);
+        Assert.Equal("right-escaped-bracket", root.Root.Attribute.ByPathKey(escapedBracketSelector).Value[1]);
+        Assert.Equal("left-hash", root.Root.Attribute.ByPathKey(hashSelector).Value[0]);
+        Assert.Equal("right-hash", root.Root.Attribute.ByPathKey(hashSelector).Value[1]);
     }
 
     [Fact]
@@ -589,6 +691,18 @@ public sealed class GeneratedDataset
     public Dictionary<string, int> Scores { get; init; } = new(StringComparer.Ordinal);
 
     public IEnumerable<GeneratedFieldChild>? FieldChildren;
+}
+
+[GenerateParallelView]
+public sealed class GeneratedIntScoreDataset
+{
+    public Dictionary<int, int> Scores { get; init; } = [];
+}
+
+[GenerateParallelView]
+public sealed class GeneratedDateTimeScoreDataset
+{
+    public Dictionary<DateTime, int> Scores { get; init; } = [];
 }
 
 public sealed class GeneratedFieldChild

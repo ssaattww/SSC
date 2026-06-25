@@ -10,15 +10,27 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     private readonly Dictionary<string, IParallelNode> _memberNodes = new(StringComparer.Ordinal);
     private readonly List<string> _directChildOrder = [];
 
-    internal ParallelNode(T?[] values, NodePresenceState[] states, string? keyText, bool isScalarNode = false)
+    internal ParallelNode(
+        T?[] values,
+        NodePresenceState[] states,
+        string? keyText,
+        object? keyValue = null,
+        IEqualityComparer<object>? keyComparer = null,
+        bool isScalarNode = false)
     {
         _values = values;
         _states = states;
         _isScalarNode = isScalarNode;
         KeyText = keyText;
+        KeyValue = keyValue;
+        KeyComparer = keyComparer;
     }
 
     public string? KeyText { get; }
+
+    internal object? KeyValue { get; }
+
+    internal IEqualityComparer<object>? KeyComparer { get; }
 
     public int Count => _values.Length;
 

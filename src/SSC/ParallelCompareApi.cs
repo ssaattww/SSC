@@ -59,7 +59,7 @@ public static class ParallelCompareApi
             slots[index] = new NodeSlot(models[index], NodePresenceState.PresentValue);
         }
 
-        var root = (ParallelNode<T>)BuildNode(typeof(T), slots, typeof(T).Name, context, keyText: null);
+        var root = (ParallelNode<T>)BuildNode(typeof(T), slots, typeof(T).Name, context, keyText: null, keyValue: null, keyComparer: null);
         return BuildResult(root, context.Issues, config);
     }
 
@@ -74,12 +74,19 @@ public static class ParallelCompareApi
         };
     }
 
-    private static IParallelNode BuildNode(Type nodeType, NodeSlot[] slots, string path, CompareContext context, string? keyText)
+    private static IParallelNode BuildNode(
+        Type nodeType,
+        NodeSlot[] slots,
+        string path,
+        CompareContext context,
+        string? keyText,
+        object? keyValue,
+        IEqualityComparer<object>? keyComparer)
     {
         var generic = BuildNodeMethod.MakeGenericMethod(nodeType);
         try
         {
-            return (IParallelNode)generic.Invoke(null, [slots, path, context, keyText])!;
+            return (IParallelNode)generic.Invoke(null, [slots, path, context, keyText, keyValue, keyComparer])!;
         }
         catch (TargetInvocationException ex) when (ex.InnerException is CompareInputException)
         {
@@ -91,7 +98,13 @@ public static class ParallelCompareApi
         }
     }
 
-    private static IParallelNode BuildNodeGeneric<TNode>(NodeSlot[] slots, string path, CompareContext context, string? keyText)
+    private static IParallelNode BuildNodeGeneric<TNode>(
+        NodeSlot[] slots,
+        string path,
+        CompareContext context,
+        string? keyText,
+        object? keyValue,
+        IEqualityComparer<object>? keyComparer)
     {
         var typedValues = new TNode?[slots.Length];
         var states = new NodePresenceState[slots.Length];
@@ -105,7 +118,7 @@ public static class ParallelCompareApi
         }
 
         var isScalarNode = IsScalarType(typeof(TNode));
-        var node = new ParallelNode<TNode>(typedValues, states, keyText, isScalarNode);
+        var node = new ParallelNode<TNode>(typedValues, states, keyText, keyValue, keyComparer, isScalarNode);
         if (isScalarNode)
         {
             if (context.IsTraceEnabled)
@@ -156,7 +169,7 @@ public static class ParallelCompareApi
                 continue;
             }
 
-            var memberNode = BuildNode(property.MemberType, memberSlots, propertyPath, context, keyText: null);
+            var memberNode = BuildNode(property.MemberType, memberSlots, propertyPath, context, keyText: null, keyValue: null, keyComparer: null);
             node.SetMemberNode(property.Name, memberNode);
         }
 
@@ -307,7 +320,9 @@ public static class ParallelCompareApi
                 slots,
                 path,
                 context,
-                keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key));
+                keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key),
+                keyValue: key,
+                keyComparer: comparer);
             children.Add(childNode);
         }
 
@@ -486,7 +501,9 @@ public static class ParallelCompareApi
                 slots,
                 path,
                 context,
-                keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key));
+                keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key),
+                keyValue: key,
+                keyComparer: comparer);
             children.Add(childNode);
         }
 
@@ -563,7 +580,14 @@ public static class ParallelCompareApi
                 slots[modelIndex] = value is null ? NodeSlot.PresentNull : NodeSlot.PresentValue(value);
             }
 
-            children.Add(BuildNode(elementType, slots, path, context, keyText: itemIndex.ToString(CultureInfo.InvariantCulture)));
+            children.Add(BuildNode(
+                elementType,
+                slots,
+                path,
+                context,
+                keyText: itemIndex.ToString(CultureInfo.InvariantCulture),
+                keyValue: null,
+                keyComparer: null));
         }
 
         return children;

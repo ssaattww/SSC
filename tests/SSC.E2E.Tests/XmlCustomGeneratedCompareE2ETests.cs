@@ -44,12 +44,11 @@ public sealed class XmlCustomGeneratedCompareE2ETests
 
         Assert.Equal("root", root.Root.Name[0]);
         Assert.Equal("same", root.Root.Attribute["id"].Value[0]);
-        Assert.Equal("same", root.Root.Attribute[0].Value[0]);
-        Assert.Equal("right", root.Root.Attribute[1].Value[1]);
-        Assert.Equal(ValueState.Mismatched, root.Root.Attribute[1].Value.GetState(0));
-        Assert.True(root.Root.Attribute[0].Range.StartLine[0] > 0);
+        Assert.Equal("right", root.Root.Attribute["source"].Value[1]);
+        Assert.Equal(ValueState.Mismatched, root.Root.Attribute["source"].Value.GetState(0));
+        Assert.True(root.Root.Attribute["id"].Range.StartLine[0] > 0);
         Assert.Equal("section", root.Root.ChildrenOfNode[0].Name[0]);
-        Assert.Equal("intro", root.Root.ChildrenOfNode[0].Attribute[0].Value[1]);
+        Assert.Equal("intro", root.Root.ChildrenOfNode[0].Attribute["name"].Value[1]);
     }
 }
 
