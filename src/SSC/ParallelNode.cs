@@ -5,6 +5,7 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     private readonly T?[] _values;
     private readonly NodePresenceState[] _states;
     private readonly bool _isScalarNode;
+    private readonly bool _hasRuntimeTypeMismatch;
     private readonly Dictionary<string, IReadOnlyList<IParallelNode>> _children = new(StringComparer.Ordinal);
     private readonly Dictionary<string, NodePresenceState[]> _containerPresenceStates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IParallelNode> _memberNodes = new(StringComparer.Ordinal);
@@ -21,6 +22,7 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         _values = values;
         _states = states;
         _isScalarNode = isScalarNode;
+        _hasRuntimeTypeMismatch = DetectRuntimeTypeMismatch(values, states);
         KeyText = keyText;
         KeyValue = keyValue;
         KeyComparer = keyComparer;
@@ -31,6 +33,8 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     internal object? KeyValue { get; }
 
     internal IEqualityComparer<object>? KeyComparer { get; }
+
+    internal bool HasRuntimeTypeMismatch => _hasRuntimeTypeMismatch;
 
     public int Count => _values.Length;
 
@@ -83,6 +87,11 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         if (_states.Length <= 1)
         {
             return ValueState.Missing;
+        }
+
+        if (_hasRuntimeTypeMismatch)
+        {
+            return ValueState.Mismatched;
         }
 
         if (!_isScalarNode)
@@ -164,6 +173,11 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
             return false;
         }
 
+        if (_hasRuntimeTypeMismatch)
+        {
+            return true;
+        }
+
         if (_isScalarNode)
         {
             for (var modelIndex = 0; modelIndex < _states.Length; modelIndex++)
@@ -214,7 +228,7 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
 
     public IReadOnlyList<ParallelChildSet> GetDirectChildren()
     {
-        if (_directChildOrder.Count == 0)
+        if (_hasRuntimeTypeMismatch || _directChildOrder.Count == 0)
         {
             return Array.Empty<ParallelChildSet>();
         }
@@ -302,6 +316,34 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         {
             _directChildOrder.Add(memberName);
         }
+    }
+
+    private static bool DetectRuntimeTypeMismatch(
+        IReadOnlyList<T?> values,
+        IReadOnlyList<NodePresenceState> states)
+    {
+        Type? runtimeType = null;
+        for (var index = 0; index < states.Count; index++)
+        {
+            if (states[index] != NodePresenceState.PresentValue || values[index] is null)
+            {
+                continue;
+            }
+
+            var currentType = values[index]!.GetType();
+            if (runtimeType is null)
+            {
+                runtimeType = currentType;
+                continue;
+            }
+
+            if (runtimeType != currentType)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool HasPresenceMismatch(IReadOnlyList<NodePresenceState> states)
