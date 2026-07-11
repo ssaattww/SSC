@@ -51,6 +51,44 @@ E2=[null,(3,30)]
 - 実行時型が未対応コンテナの場合 `UnsupportedContainerType`
 - trace 有効時は declared type と runtime type、materialize 件数、再判定結果を記録する
 
+### 4.1 Polymorphic Sequence Element Rules
+
+`IEnumerable<Base>` の aligned element に `DerivedA` / `DerivedB` が入る場合、公開 node の generic 型と、比較対象メンバーを探索する型を分離する。
+
+- 公開 node の generic 型は宣言要素型を維持する
+  - 例: `ParallelNode<Base>`
+  - `GetChildren<Base>(...)` の既存型付きアクセスを維持する
+- `PresentValue` の runtime 型が全 model で同一の場合、その runtime 型の comparable member を再帰比較する
+  - `DerivedA` vs `DerivedA`: `DerivedA` の public property / field を比較する
+  - `DerivedA` vs `Missing`: `DerivedA` の型情報を使用し、既存の presence 差分を優先する
+  - `DerivedA` vs `null`: `DerivedA` の型情報を使用し、既存の value/null 差分を優先する
+- `PresentValue` に複数の runtime 型が混在する場合、要素 node 自身を `Mismatched` とする
+  - 例: `DerivedA` vs `DerivedB`
+  - 派生型固有メンバーへは再帰しない
+  - `GetDiffEntries()` は aligned element path に node entry を生成する
+  - 型違いは通常差分であり、`CompareIssue` や `HasError` の対象にしない
+- 派生型固有メンバーの union を作って大量の `Missing` 差分へ展開しない
+- runtime 派生型にだけ存在する `CompareKey` は探索しない。alignment 規則は宣言要素型に基づく既存契約を維持する
+
+例:
+
+```text
+declared element type = Item
+
+Node    vs Node       -> Node の member を再帰比較
+Content vs Content    -> Content の member を再帰比較
+Node    vs Content    -> element 自身の runtime 型差分
+Node    vs null       -> value/null 差分
+Node    vs Missing    -> presence 差分
+```
+
+trace では、公開 node 型と member 探索型を区別できるようにする。
+
+```text
+phase=node path=Document.Root.Children nodeType=Item comparisonType=Content nodeKind=Object keyText=0
+phase=node path=Document.Root.Children nodeType=Item comparisonType=Item nodeKind=RuntimeTypeMismatch runtimeTypes=Content,Node keyText=0
+```
+
 ## 5. Unsupported Containers
 
 - `IAsyncEnumerable<T>`
