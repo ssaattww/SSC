@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-06-25
+- Updated: 2026-07-11
 
 ## In Progress
 
@@ -11,6 +11,39 @@
 なし
 
 ## Done
+
+- T-090: polymorphic sequence の runtime 型比較
+  - Status: 完了（runtime派生型比較を実装し、レビュー指摘のXML documentation不足を修正して再検証・再レビューした）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-085 gist `XmlCustom` 同等 E2E 比較の修正
+  - Exit Criteria:
+    - 基底型 sequence の同一 runtime 派生型メンバー差分を再帰検出できる
+    - 異なる runtime 型は要素 node 自身の通常差分として扱い、派生メンバーへ再帰しない
+    - null / Missing、key alignment、dynamic projection の既存契約を維持する
+    - 新規・変更 internal API と新規 E2E テストに必要な XML documentation がある
+    - 全テスト、format、diff check、sub-agent 再レビューが成功する
+  - Output:
+    - PR #43
+    - `src/SSC/ParallelCompareApi.cs`
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/PolymorphicSequenceE2ETests.cs`
+    - `tests/SSC.E2E.Tests/PolymorphicDynamicSequenceE2ETests.cs`
+    - `doc/design/detail/03-ContainerRules.md`
+    - `Design/BreakingChanges.md`
+    - `reports/task-t-090-polymorphic-sequence-runtime-type-design-20260711.md`
+    - `reports/task-t-090-review-fix-implementation-20260711192823.md`
+    - `reports/task-t-090-review-fix-verification-20260711193158.md`
+    - `reports/task-t-090-review-fix-rereview-20260711193527.md`
+  - Verification:
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 31件 / E2E 81件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - XML documentation standards validation 成功
+    - Markdown lint は repository wiring 不在のため unsupported
+    - `gpt-5.6-terra / medium` implementation agent でレビュー指摘を修正
+    - `gpt-5.6-sol / high` reviewer の再レビューで指摘なし
 
 - T-089: generated object view の `ToString()` で元モデルの表示を model slot 別に返す
   - Status: 完了（generated object view / direct scalar generated member / `Select(...)` 派生 value / dynamic materialized path の `ToString()` を node 表示へ委譲した）

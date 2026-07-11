@@ -11,6 +11,16 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     private readonly Dictionary<string, IParallelNode> _memberNodes = new(StringComparer.Ordinal);
     private readonly List<string> _directChildOrder = [];
 
+    /// <summary>
+    /// Initializes a comparison node from aligned model values and presence states, optionally treating differing non-null runtime types as a mismatch.
+    /// </summary>
+    /// <param name="values">Values aligned by model index.</param>
+    /// <param name="states">Presence states aligned with <paramref name="values"/>.</param>
+    /// <param name="keyText">Display text for the key that identifies this node, when one exists.</param>
+    /// <param name="keyValue">Raw key value used to align keyed collection elements, when one exists.</param>
+    /// <param name="keyComparer">Comparer used for <paramref name="keyValue"/>, when keyed alignment requires one.</param>
+    /// <param name="isScalarNode"><see langword="true"/> when this node compares values directly rather than child members.</param>
+    /// <param name="detectRuntimeTypeMismatch"><see langword="true"/> to mark aligned present values with different runtime types as mismatched.</param>
     internal ParallelNode(
         T?[] values,
         NodePresenceState[] states,
@@ -35,6 +45,9 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
 
     internal IEqualityComparer<object>? KeyComparer { get; }
 
+    /// <summary>
+    /// Gets whether aligned present values have differing runtime types and must be reported as a node-level mismatch without descending into members.
+    /// </summary>
     internal bool HasRuntimeTypeMismatch => _hasRuntimeTypeMismatch;
 
     public int Count => _values.Length;
@@ -319,6 +332,12 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         }
     }
 
+    /// <summary>
+    /// Determines whether the aligned present values contain more than one non-null runtime type.
+    /// </summary>
+    /// <param name="values">Values aligned by model index.</param>
+    /// <param name="states">Presence states aligned with <paramref name="values"/>.</param>
+    /// <returns><see langword="true"/> when at least two present non-null values have different runtime types; otherwise, <see langword="false"/>.</returns>
     private static bool DetectRuntimeTypeMismatch(
         IReadOnlyList<T?> values,
         IReadOnlyList<NodePresenceState> states)

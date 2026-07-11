@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-06-25
+- Updated: 2026-07-11
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -37,6 +37,7 @@
 
 - Status: Done
 - Notes:
+  - T-090 の polymorphic sequence runtime 型比較とレビュー指摘の XML documentation 修正を完了した
   - T-089 を完了し、generated object view / direct scalar generated member / `Select(...)` 派生 value / dynamic materialized path の `ToString()` を underlying node 表示へ委譲した
   - T-088 を完了し、`ParallelNode<T>` と generated value の `ToString()` を Diff と同じ value/state 表示へ改善した
   - T-087 follow-up を完了し、Dictionary member の generated access を string key text 限定から key 型 indexer へ拡張した
@@ -150,6 +151,7 @@
 
 - Status: Done
 - Notes:
+  - T-090 は Release 112テスト、format、diff check、standards validation、`gpt-5.6-sol / high` 再レビューに成功した
   - T-089 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-088 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
   - T-087 follow-up で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
