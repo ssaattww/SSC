@@ -81,12 +81,15 @@ public static class ParallelCompareApi
         CompareContext context,
         string? keyText,
         object? keyValue,
-        IEqualityComparer<object>? keyComparer)
+        IEqualityComparer<object>? keyComparer,
+        Type? comparisonType = null)
     {
         var generic = BuildNodeMethod.MakeGenericMethod(nodeType);
         try
         {
-            return (IParallelNode)generic.Invoke(null, [slots, path, context, keyText, keyValue, keyComparer])!;
+            return (IParallelNode)generic.Invoke(
+                null,
+                [slots, path, context, keyText, keyValue, keyComparer, comparisonType ?? nodeType])!;
         }
         catch (TargetInvocationException ex) when (ex.InnerException is CompareInputException)
         {
@@ -104,7 +107,8 @@ public static class ParallelCompareApi
         CompareContext context,
         string? keyText,
         object? keyValue,
-        IEqualityComparer<object>? keyComparer)
+        IEqualityComparer<object>? keyComparer,
+        Type comparisonType)
     {
         var typedValues = new TNode?[slots.Length];
         var states = new NodePresenceState[slots.Length];
@@ -117,23 +121,53 @@ public static class ParallelCompareApi
                 : default;
         }
 
-        var isScalarNode = IsScalarType(typeof(TNode));
+        var isScalarNode = IsScalarType(comparisonType);
         var node = new ParallelNode<TNode>(typedValues, states, keyText, keyValue, keyComparer, isScalarNode);
+        if (node.HasRuntimeTypeMismatch)
+        {
+            if (context.IsTraceEnabled)
+            {
+                context.Trace(
+                    "node",
+                    path,
+                    ("nodeType", typeof(TNode)),
+                    ("comparisonType", comparisonType),
+                    ("nodeKind", "RuntimeTypeMismatch"),
+                    ("runtimeTypes", FormatRuntimeTypes(slots)),
+                    ("keyText", keyText));
+            }
+
+            return node;
+        }
+
         if (isScalarNode)
         {
             if (context.IsTraceEnabled)
             {
-                context.Trace("node", path, ("nodeType", typeof(TNode)), ("nodeKind", "Scalar"), ("keyText", keyText));
+                context.Trace(
+                    "node",
+                    path,
+                    ("nodeType", typeof(TNode)),
+                    ("comparisonType", comparisonType),
+                    ("nodeKind", "Scalar"),
+                    ("keyText", keyText));
             }
+
             return node;
         }
 
         if (context.IsTraceEnabled)
         {
-            context.Trace("node", path, ("nodeType", typeof(TNode)), ("nodeKind", "Object"), ("keyText", keyText));
+            context.Trace(
+                "node",
+                path,
+                ("nodeType", typeof(TNode)),
+                ("comparisonType", comparisonType),
+                ("nodeKind", "Object"),
+                ("keyText", keyText));
         }
 
-        foreach (var property in TypeMetadataResolver.GetComparableMembers(typeof(TNode)))
+        foreach (var property in TypeMetadataResolver.GetComparableMembers(comparisonType))
         {
             var propertyPath = $"{path}.{property.Name}";
             if (context.IsTraceEnabled)
@@ -503,7 +537,8 @@ public static class ParallelCompareApi
                 context,
                 keyText: keyTexts.TryGetValue(key, out var keyText) ? keyText : KeyToText(key),
                 keyValue: key,
-                keyComparer: comparer);
+                keyComparer: comparer,
+                comparisonType: ResolveRuntimeComparisonType(elementType, slots));
             children.Add(childNode);
         }
 
@@ -587,10 +622,55 @@ public static class ParallelCompareApi
                 context,
                 keyText: itemIndex.ToString(CultureInfo.InvariantCulture),
                 keyValue: null,
-                keyComparer: null));
+                keyComparer: null,
+                comparisonType: ResolveRuntimeComparisonType(elementType, slots)));
         }
 
         return children;
+    }
+
+    private static Type ResolveRuntimeComparisonType(Type declaredType, IReadOnlyList<NodeSlot> slots)
+    {
+        Type? runtimeType = null;
+        for (var index = 0; index < slots.Count; index++)
+        {
+            var slot = slots[index];
+            if (slot.State != NodePresenceState.PresentValue || slot.Value is null)
+            {
+                continue;
+            }
+
+            var currentType = slot.Value.GetType();
+            if (!declaredType.IsAssignableFrom(currentType))
+            {
+                return declaredType;
+            }
+
+            if (runtimeType is null)
+            {
+                runtimeType = currentType;
+                continue;
+            }
+
+            if (runtimeType != currentType)
+            {
+                return declaredType;
+            }
+        }
+
+        return runtimeType ?? declaredType;
+    }
+
+    private static string FormatRuntimeTypes(IReadOnlyList<NodeSlot> slots)
+    {
+        var runtimeTypes = slots
+            .Where(slot => slot.State == NodePresenceState.PresentValue && slot.Value is not null)
+            .Select(slot => slot.Value!.GetType().ToString())
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(typeName => typeName, StringComparer.Ordinal)
+            .ToArray();
+
+        return runtimeTypes.Length == 0 ? "<none>" : string.Join(",", runtimeTypes);
     }
 
     private static IEnumerable<(object? Key, object? Value)> EnumerateDictionary(object rawContainer)
