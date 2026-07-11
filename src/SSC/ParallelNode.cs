@@ -17,12 +17,13 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
         string? keyText,
         object? keyValue = null,
         IEqualityComparer<object>? keyComparer = null,
-        bool isScalarNode = false)
+        bool isScalarNode = false,
+        bool detectRuntimeTypeMismatch = false)
     {
         _values = values;
         _states = states;
         _isScalarNode = isScalarNode;
-        _hasRuntimeTypeMismatch = DetectRuntimeTypeMismatch(values, states);
+        _hasRuntimeTypeMismatch = detectRuntimeTypeMismatch && DetectRuntimeTypeMismatch(values, states);
         KeyText = keyText;
         KeyValue = keyValue;
         KeyComparer = keyComparer;
