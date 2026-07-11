@@ -70,7 +70,7 @@ public sealed class ParallelDiffPathPattern
     public static ParallelDiffPathPattern Parse(string pattern);
 
     public static bool TryParse(
-        string pattern,
+        string? pattern,
         out ParallelDiffPathPattern? parsedPattern);
 
     public bool IsMatch(string path);
@@ -96,16 +96,19 @@ public static class ParallelDiffEntryPathExtensions
 
 ## 6. パターン構文
 
-既存 XPath-like path の root-relative grammar を基礎とし、selector に `[*]` を追加する。
+既存 XPath-like path の root-relative grammar を基礎とし、selector に `[*]` と `*` の escape を追加する。
 
 ```text
 pattern          = segment *( "." segment )
 segment          = member-name [ selector-pattern ]
-selector-pattern = exact-selector / any-selector
+selector-pattern = exact-selector / any-selector / escaped-asterisk-selector
 any-selector     = "[*]"
+escaped-asterisk-selector = "[\\*]"
 ```
 
 `[*]` は、その segment に selector が存在する任意の child に一致する。
+
+`[\*]` は `*` をエスケープして通常文字の key として扱う。`[*]` の wildcard と区別される。既存の `\]`、`\\`、`\#` の escape 規則も維持する。
 
 一致対象:
 
@@ -149,7 +152,7 @@ Boards[A].Files[No1/ygx].Document.Root.Children[0].Attribute[CreatedAt].Value
 ## 8. 実装方針
 
 - 候補 path の解析には既存 `XPathLikePathParser` を再利用する
-- pattern parser は既存 grammar と escape 規則を維持しつつ `[*]` だけを追加解釈する
+- pattern parser は既存 grammar と escape 規則を維持しつつ `[*]` と `[\*]` を追加解釈する
 - 文字列の `StartsWith`、`Contains`、正規表現変換では判定しない
 - `ParallelDiffEntry` 本体には `IsIgnored` 等の状態を追加しない
 - `IEnumerable<ParallelDiffEntry>` を書き換える拡張は追加せず、標準 LINQ の `Where` と `PathMatches` を組み合わせる
@@ -161,15 +164,18 @@ Boards[A].Files[No1/ygx].Document.Root.Children[0].Attribute[CreatedAt].Value
 
 - exact member/key path を解析できる
 - `[*]` を解析できる
+- `[\*]` が `*` をエスケープして通常文字の key として扱う
 - ordinal selector `[#0]` を exact selector として解析できる
-- bracket 内の dot と既存 escape を維持する
+- bracket 内の dot と既存の `\]`、`\\`、`\#` escape を維持する
 - 空文字、未閉じ bracket、空 selector、二重 selector、不正 escape を拒否する
+- `TryParse(null)` は `false` とし、`Parse(null)` と `IsMatch(null)` は `ArgumentNullException` とする
 
 ### 9.2 match
 
 - 任意 board key に一致する
 - 任意 file key に一致する
 - `[*]` が key selector と ordinal selectorの両方に一致する
+- `[\*]` が `*` をエスケープして通常文字の key として扱い、他の key には一致しない
 - exact key と exact ordinal を区別する
 - member 名違い、segment 数違い、selector 有無違いを拒否する
 - 不正な候補 path に対して `false` を返す
@@ -179,6 +185,7 @@ Boards[A].Files[No1/ygx].Document.Root.Children[0].Attribute[CreatedAt].Value
 - `.Where(entry => !entry.PathMatches(pattern))` で対象差分だけ除外できる
 - 元の `IReadOnlyList<ParallelDiffEntry>` の件数と内容は変化しない
 - `CompareResult<T>.Issues` と `Root.HasDifferences()` は変化しない
+- `PathMatches(null entry, ...)` と `PathMatches(..., null pattern)` は `ArgumentNullException` とする
 
 ### 9.4 `CompareIgnore` 回帰
 

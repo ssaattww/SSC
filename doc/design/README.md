@@ -16,6 +16,7 @@
 - `detail/07-NonFunctional.md`
 - `detail/08-ImplementationChecklist.md`
 - `detail/09-ValueStateBehavior.md`
+- `detail/10-DiffEntryPathFilter.md`
 
 ## Notes
 

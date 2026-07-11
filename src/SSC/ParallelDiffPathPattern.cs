@@ -17,7 +17,7 @@ public sealed class ParallelDiffPathPattern
     /// <summary>
     /// 指定した文字列を差分 path pattern として解析します。
     /// </summary>
-    /// <param name="pattern">解析する root-relative path pattern。</param>
+    /// <param name="pattern">解析する root-relative path pattern。<see langword="null"/> の場合は解析に失敗します。</param>
     /// <returns>解析済み pattern。</returns>
     /// <exception cref="ArgumentNullException"><paramref name="pattern"/> が <see langword="null"/> の場合。</exception>
     /// <exception cref="FormatException"><paramref name="pattern"/> が pattern grammar に適合しない場合。</exception>
@@ -91,6 +91,12 @@ public sealed class ParallelDiffPathPattern
         return true;
     }
 
+    /// <summary>
+    /// 一つの pattern segment を既存 path grammar または selector wildcard grammar として解析します。
+    /// </summary>
+    /// <remarks>
+    /// <c>[*]</c> は任意 selector を表し、<c>[\*]</c> は <c>*</c> をエスケープして通常文字の key として扱います。
+    /// </remarks>
     private static bool TryParsePatternSegment(string rawSegment, out PatternSegment segment)
     {
         segment = null!;
@@ -134,7 +140,10 @@ public sealed class ParallelDiffPathPattern
             return true;
         }
 
-        if (!XPathLikePathParser.TryParse(rawSegment, out var exactPath)
+        var exactSegmentText = selectorText == "\\*"
+            ? string.Concat(rawSegment.AsSpan(0, selectorStart + 1), "*]")
+            : rawSegment;
+        if (!XPathLikePathParser.TryParse(exactSegmentText, out var exactPath)
             || exactPath is null
             || exactPath.Segments.Count != 1)
         {
@@ -153,6 +162,12 @@ public sealed class ParallelDiffPathPattern
         return true;
     }
 
+    /// <summary>
+    /// selector 内の escape を考慮して root-relative pattern を segment 文字列へ分割します。
+    /// </summary>
+    /// <remarks>
+    /// selector が閉じた後の追加 selector や未閉じ selector を拒否し、既存 XPath-like path の境界規則を維持します。
+    /// </remarks>
     private static bool TrySplitSegments(string pattern, out List<string> segments)
     {
         segments = [];
@@ -239,6 +254,9 @@ public sealed class ParallelDiffPathPattern
 
         public PatternSelector? Selector { get; }
 
+        /// <summary>
+        /// member 名と selector の両方を比較して、候補 segment がこの pattern segment に一致するか判定します。
+        /// </summary>
         public bool IsMatch(XPathLikePathSegment candidate)
         {
             if (!string.Equals(MemberName, candidate.MemberName, StringComparison.Ordinal))
@@ -269,11 +287,19 @@ public sealed class ParallelDiffPathPattern
 
         public XPathLikePathSelector? ExactSelector { get; }
 
+        /// <summary>
+        /// 指定した selector を保持し、wildcard を使わない exact selector pattern を生成します。
+        /// </summary>
+        /// <param name="selector">生成した pattern が照合時に比較する selector。</param>
+        /// <returns>指定した <paramref name="selector"/> を exact selector として保持する pattern。</returns>
         public static PatternSelector Exact(XPathLikePathSelector selector)
         {
             return new PatternSelector(matchesAny: false, selector);
         }
 
+        /// <summary>
+        /// wildcard または exact selector の規則で候補 selector が一致するか判定します。
+        /// </summary>
         public bool IsMatch(XPathLikePathSelector candidate)
         {
             if (MatchesAny)
@@ -310,6 +336,7 @@ public static class ParallelDiffEntryPathExtensions
     /// <param name="entry">判定する差分 entry。</param>
     /// <param name="pattern">照合する path pattern。</param>
     /// <returns>一致する場合は <see langword="true"/>。</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="entry"/> または <paramref name="pattern"/> が <see langword="null"/> の場合。</exception>
     public static bool PathMatches(
         this ParallelDiffEntry entry,
         ParallelDiffPathPattern pattern)

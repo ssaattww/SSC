@@ -12,6 +12,46 @@
 
 ## Done
 
+- T-092: PR #45 差分パスのLINQフィルターをレビューし、指摘を解消する
+  - Status: 完了（初回レビュー4件と再レビュー1件を解消し、独立検証・同一レビュアー再レビューに合格した）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-077 XPath-like path parser と public result 型の追加
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+  - Exit Criteria:
+    - PR #45 の public API、path pattern grammar、matching semantics、例外契約、設計書、テストを独立レビューする
+    - blocking finding を TDD で修正し、必要な happy path・境界・error path をテストで保証する
+    - 新規・変更する関数および public/protected/internal API の XML documentation を自然な日本語にする
+    - `[*]` はwildcard、`[\*]` は `*` をエスケープして通常のkey文字として扱う契約を実装・設計・テストで一致させる
+    - public contract と番号衝突を解消した差分path filter設計書を一致させ、`doc/design/README.md` の索引へ追加する
+    - breaking change の有無を判断し、必要な場合は `Design/BreakingChanges.md` に記録する
+    - 全テスト、format、diff check、coding standards validation、独立再レビューが成功する
+    - PR #45 の branch に修正、追跡、report を commit・push する
+  - Output:
+    - PR #45
+    - `doc/design/detail/10-DiffEntryPathFilter.md`
+    - `src/SSC/ParallelDiffPathPattern.cs`
+    - `tests/SSC.Unit.Tests/ParallelDiffPathPatternUnitTests.cs`
+    - `reports/task-t-092-initial-review-20260711221140.md`
+    - `reports/task-t-092-review-fix-implementation-20260711222105.md`
+    - `reports/task-t-092-review-fix-verification-20260711222629.md`
+    - `reports/task-t-092-review-fix-implementation-r2-20260711222941.md`
+    - `reports/task-t-092-review-fix-verification-r2-20260711223108.md`
+    - `reports/task-t-092-review-fix-rereview-20260711223300.md`
+    - `reports/task-t-092-review-fix-implementation-r3-20260711223708.md`
+    - `reports/task-t-092-review-fix-rereview-r2-20260711223811.md`
+  - Verification:
+    - TDD赤確認: `[\*]` が未対応でfocused test 21件中1件失敗
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 52件 / E2E 81件、計133件）
+    - focused unit test 21件成功
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - 日本語XML documentation standards validation 成功
+    - Markdown lintはrepository wiring不在のためfocused/fullともunsupported
+    - `gpt-5.6-terra / medium` implementation agentで修正
+    - `gpt-5.6-sol / high` の同一reviewerで最終指摘なし
+
 - T-091: T-090で追加したXML documentationを日本語化する
   - Status: 完了（PR #43由来のXML documentationを日本語化し、非コメント差分なしを検証した）
   - Phase: Phase 3
