@@ -3,12 +3,12 @@ using SSC;
 namespace SSC.E2E.Tests;
 
 /// <summary>
-/// Verifies dynamic projections for sequences whose declared element type differs from their runtime types.
+/// 宣言された要素型と実行時型が異なるシーケンスの動的プロジェクションを検証します。
 /// </summary>
 public sealed class PolymorphicDynamicSequenceE2ETests
 {
     /// <summary>
-    /// Verifies that a dynamic projection exposes runtime members for a polymorphic sequence and preserves their mismatch states.
+    /// 動的プロジェクションがポリモーフィックなシーケンスの実行時メンバーを公開し、その不一致状態を保持することを検証します。
     /// </summary>
     [Fact]
     public void Compare_DynamicProjection_RuntimeDerivedPolymorphicSequence_UsesRuntimeMembers()
@@ -48,44 +48,44 @@ public sealed class PolymorphicDynamicSequenceE2ETests
     }
 
     /// <summary>
-    /// Represents a test root that exposes a polymorphic detail object.
+    /// ポリモーフィックな詳細オブジェクトを公開するテストルートを表します。
     /// </summary>
     public sealed class DynamicRoot
     {
         /// <summary>
-        /// Gets the polymorphic detail object projected dynamically by the test.
+        /// テストが動的プロジェクションで公開するポリモーフィックな詳細オブジェクトを取得します。
         /// </summary>
         public DynamicBase Detail { get; init; } = null!;
     }
 
     /// <summary>
-    /// Defines the declared base type for the dynamic detail object.
+    /// 動的な詳細オブジェクトの宣言上の基底型を定義します。
     /// </summary>
     public abstract class DynamicBase;
 
     /// <summary>
-    /// Represents the dynamic detail type that contains polymorphic items.
+    /// ポリモーフィックな要素を含む動的な詳細型を表します。
     /// </summary>
     public sealed class DynamicDetail : DynamicBase
     {
         /// <summary>
-        /// Gets the polymorphic items exposed through the dynamic projection.
+        /// 動的プロジェクションを通じて公開するポリモーフィックな要素を取得します。
         /// </summary>
         public List<DynamicItem> Items { get; init; } = [];
     }
 
     /// <summary>
-    /// Defines the declared base type for dynamic polymorphic items.
+    /// 動的なポリモーフィック要素の宣言上の基底型を定義します。
     /// </summary>
     public abstract class DynamicItem;
 
     /// <summary>
-    /// Represents a dynamic polymorphic item with text content.
+    /// テキスト内容を持つ動的なポリモーフィック要素を表します。
     /// </summary>
     public sealed class DynamicContent : DynamicItem
     {
         /// <summary>
-        /// Gets the text exposed through the dynamic projection.
+        /// 動的プロジェクションを通じて公開するテキストを取得します。
         /// </summary>
         public string Text { get; init; } = string.Empty;
     }

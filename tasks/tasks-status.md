@@ -12,6 +12,35 @@
 
 ## Done
 
+- T-091: T-090で追加したXML documentationを日本語化する
+  - Status: 完了（PR #43由来のXML documentationを日本語化し、非コメント差分なしを検証した）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-090 polymorphic sequence の runtime 型比較
+  - Exit Criteria:
+    - PR #43で追加したproduction/testのXML documentationが自然な日本語になっている
+    - XML tag、`paramref`、`see`、識別子、runtime契約、テスト意図を変更しない
+    - runtimeロジック、assertion、test dataに差分がない
+    - 全テスト、format、diff check、独立reviewが成功する
+  - Output:
+    - `src/SSC/ParallelNode.cs`
+    - `tests/SSC.E2E.Tests/PolymorphicSequenceE2ETests.cs`
+    - `tests/SSC.E2E.Tests/PolymorphicDynamicSequenceE2ETests.cs`
+    - `reports/task-t-091-japanese-xml-comments-implementation-20260711200933.md`
+    - `reports/task-t-091-japanese-xml-comments-verification-20260711200934.md`
+    - `reports/task-t-091-japanese-xml-comments-review-20260711200934.md`
+  - Verification:
+    - 対象3ファイルに英語XML本文の残存なし
+    - XML documentationを除外すると`origin/main`と同一
+    - XML整形式確認成功
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 31件 / E2E 81件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - Markdown lintはrepository wiring不在のためunsupported
+    - `gpt-5.6-terra / medium` implementation agentで実装
+    - parentと同じ`gpt-5.6-sol / high` reviewerで指摘なし
+
 - T-090: polymorphic sequence の runtime 型比較
   - Status: 完了（runtime派生型比較を実装し、レビュー指摘のXML documentation不足を修正して再検証・再レビューした）
   - Phase: Phase 3

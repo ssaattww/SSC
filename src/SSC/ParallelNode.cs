@@ -12,15 +12,15 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     private readonly List<string> _directChildOrder = [];
 
     /// <summary>
-    /// Initializes a comparison node from aligned model values and presence states, optionally treating differing non-null runtime types as a mismatch.
+    /// 位置合わせ済みのモデル値と存在状態から比較ノードを初期化し、必要に応じてnull以外の実行時型の違いを不一致として扱います。
     /// </summary>
-    /// <param name="values">Values aligned by model index.</param>
-    /// <param name="states">Presence states aligned with <paramref name="values"/>.</param>
-    /// <param name="keyText">Display text for the key that identifies this node, when one exists.</param>
-    /// <param name="keyValue">Raw key value used to align keyed collection elements, when one exists.</param>
-    /// <param name="keyComparer">Comparer used for <paramref name="keyValue"/>, when keyed alignment requires one.</param>
-    /// <param name="isScalarNode"><see langword="true"/> when this node compares values directly rather than child members.</param>
-    /// <param name="detectRuntimeTypeMismatch"><see langword="true"/> to mark aligned present values with different runtime types as mismatched.</param>
+    /// <param name="values">モデルインデックスで位置合わせした値。</param>
+    /// <param name="states"><paramref name="values"/>と位置合わせした存在状態。</param>
+    /// <param name="keyText">存在する場合にこのノードを識別するキーの表示テキスト。</param>
+    /// <param name="keyValue">存在する場合にキー付きコレクション要素の位置合わせに使用する生のキー値。</param>
+    /// <param name="keyComparer">キーによる位置合わせで必要な場合に<paramref name="keyValue"/>に使用する比較子。</param>
+    /// <param name="isScalarNode">このノードが子メンバーではなく値を直接比較する場合は<see langword="true"/>。</param>
+    /// <param name="detectRuntimeTypeMismatch">実行時型が異なる位置合わせ済みの存在値を不一致として記録する場合は<see langword="true"/>。</param>
     internal ParallelNode(
         T?[] values,
         NodePresenceState[] states,
@@ -46,7 +46,7 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     internal IEqualityComparer<object>? KeyComparer { get; }
 
     /// <summary>
-    /// Gets whether aligned present values have differing runtime types and must be reported as a node-level mismatch without descending into members.
+    /// 位置合わせ済みの存在値に異なる実行時型があり、メンバーへ下降せずノードレベルの不一致として報告する必要があるかを取得します。
     /// </summary>
     internal bool HasRuntimeTypeMismatch => _hasRuntimeTypeMismatch;
 
@@ -333,11 +333,11 @@ public sealed class ParallelNode<T> : Parallel<T>, IParallelNode, IParallelNodeI
     }
 
     /// <summary>
-    /// Determines whether the aligned present values contain more than one non-null runtime type.
+    /// 位置合わせ済みの存在値に複数のnull以外の実行時型が含まれるかを判定します。
     /// </summary>
-    /// <param name="values">Values aligned by model index.</param>
-    /// <param name="states">Presence states aligned with <paramref name="values"/>.</param>
-    /// <returns><see langword="true"/> when at least two present non-null values have different runtime types; otherwise, <see langword="false"/>.</returns>
+    /// <param name="values">モデルインデックスで位置合わせした値。</param>
+    /// <param name="states"><paramref name="values"/>と位置合わせした存在状態。</param>
+    /// <returns>存在するnull以外の値のうち少なくとも2つの実行時型が異なる場合は<see langword="true"/>。それ以外の場合は<see langword="false"/>。</returns>
     private static bool DetectRuntimeTypeMismatch(
         IReadOnlyList<T?> values,
         IReadOnlyList<NodePresenceState> states)
