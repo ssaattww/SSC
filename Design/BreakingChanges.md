@@ -1,5 +1,26 @@
 # Breaking Changes
 
+## 2026-07-11
+
+### T-090 polymorphic sequence の runtime 型比較
+
+- 対象:
+  - 基底型で宣言された sequence member
+  - 例: `IEnumerable<Item>` に `Node` / `Content` が格納されるモデル
+- 変更種別:
+  - public runtime behavior の変更
+- 影響:
+  - 従来は sequence の宣言要素型だけで比較対象メンバーを探索していたため、基底型に比較可能なメンバーが無い場合、派生型固有メンバーの差分が `GetDiffEntries()` に現れなかった
+  - T-090 以降は aligned slot の runtime 型が同一なら、そのruntime型のpublic property / fieldを再帰比較する
+  - aligned slot のruntime型が異なる場合は、派生メンバーへ展開せず要素node自身を `Mismatched` として返す
+  - 従来0件だった差分が新たに返るため、diff entry件数やpathを厳密に固定している利用コードは期待値更新が必要になる可能性がある
+- 背景:
+  - YXmlの `Node.Children : IEnumerable<Item>` では実値が `Node` / `Content` であり、`Content.Text` や `Node.Attribute` の差分が比較木構築時に欠落していたため
+- 互換性:
+  - public API shapeは変更しない
+  - child nodeのgeneric型は引き続き宣言要素型を維持し、`GetChildren<Item>(...)` の既存アクセスを保持する
+  - sequence alignment、`CompareKey`、null、Missingの既存規則は変更しない
+
 ## 2026-06-25
 
 ### T-089 generated object view `ToString()` の表示変更
