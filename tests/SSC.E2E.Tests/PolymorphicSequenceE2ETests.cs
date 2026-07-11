@@ -3,12 +3,12 @@ using SSC;
 namespace SSC.E2E.Tests;
 
 /// <summary>
-/// Verifies comparison behavior for sequences whose declared element type differs from their runtime types.
+/// 宣言された要素型と実行時型が異なるシーケンスの比較動作を検証します。
 /// </summary>
 public sealed class PolymorphicSequenceE2ETests
 {
     /// <summary>
-    /// Verifies that aligned elements with the same derived type compare their runtime members while retaining the declared node type.
+    /// 同じ派生型を持つ位置合わせ済み要素が、宣言されたノード型を保持しながら実行時メンバーを比較することを検証します。
     /// </summary>
     [Fact]
     public void Compare_WhenAlignedElementsShareDerivedType_UsesRuntimeMembersAndPreservesDeclaredNodeType()
@@ -46,7 +46,7 @@ public sealed class PolymorphicSequenceE2ETests
     }
 
     /// <summary>
-    /// Verifies that nested elements with matching derived types compare runtime members recursively.
+    /// 一致する派生型を持つ入れ子要素が実行時メンバーを再帰的に比較することを検証します。
     /// </summary>
     [Fact]
     public void Compare_WhenNestedElementsShareDerivedTypes_UsesRuntimeMembersRecursively()
@@ -90,7 +90,7 @@ public sealed class PolymorphicSequenceE2ETests
     }
 
     /// <summary>
-    /// Verifies that aligned elements with different runtime types report an element mismatch without comparing child members.
+    /// 実行時型が異なる位置合わせ済み要素が、子メンバーを比較せず要素の不一致を報告することを検証します。
     /// </summary>
     [Fact]
     public void Compare_WhenAlignedElementsHaveDifferentRuntimeTypes_ReportsElementDifferenceWithoutDescending()
@@ -130,7 +130,7 @@ public sealed class PolymorphicSequenceE2ETests
     }
 
     /// <summary>
-    /// Verifies that null and missing polymorphic elements retain their established presence-state behavior.
+    /// nullおよび欠損のポリモーフィック要素が既存の存在状態の動作を維持することを検証します。
     /// </summary>
     [Fact]
     public void Compare_WhenPolymorphicElementIsNullOrMissing_PreservesExistingPresenceStates()
@@ -177,7 +177,7 @@ public sealed class PolymorphicSequenceE2ETests
     }
 
     /// <summary>
-    /// Verifies that keyed elements with matching derived types retain key alignment while comparing runtime members.
+    /// 一致する派生型を持つキー付き要素が、キーによる位置合わせを維持しながら実行時メンバーを比較することを検証します。
     /// </summary>
     [Fact]
     public void Compare_WhenKeyedElementsShareDerivedType_PreservesKeyAlignmentAndUsesRuntimeMembers()
@@ -211,7 +211,7 @@ public sealed class PolymorphicSequenceE2ETests
     }
 
     /// <summary>
-    /// Verifies that trace output identifies both the declared node type and the runtime comparison type.
+    /// トレース出力が宣言されたノード型と実行時の比較型の両方を識別することを検証します。
     /// </summary>
     [Fact]
     public void Compare_WhenTraceEnabled_ReportsDeclaredNodeAndRuntimeComparisonTypes()
@@ -244,80 +244,80 @@ public sealed class PolymorphicSequenceE2ETests
     }
 
     /// <summary>
-    /// Represents a test root that exposes polymorphic sequence items.
+    /// ポリモーフィックなシーケンス要素を公開するテストルートを表します。
     /// </summary>
     public sealed class PolymorphicRoot
     {
         /// <summary>
-        /// Gets the polymorphic items compared by the sequence tests.
+        /// シーケンステストで比較するポリモーフィックな要素を取得します。
         /// </summary>
         public List<PolymorphicItem?> Items { get; init; } = [];
     }
 
     /// <summary>
-    /// Defines the declared base type for polymorphic sequence items.
+    /// ポリモーフィックなシーケンス要素の宣言上の基底型を定義します。
     /// </summary>
     public abstract class PolymorphicItem
     {
     }
 
     /// <summary>
-    /// Represents a polymorphic item with a name and nested polymorphic children.
+    /// 名前と入れ子のポリモーフィックな子要素を持つ要素を表します。
     /// </summary>
     public sealed class PolymorphicNode : PolymorphicItem
     {
         /// <summary>
-        /// Gets the name compared for this polymorphic node.
+        /// このポリモーフィックノードで比較する名前を取得します。
         /// </summary>
         public string Name { get; init; } = string.Empty;
 
         /// <summary>
-        /// Gets the nested polymorphic items compared recursively.
+        /// 再帰的に比較する入れ子のポリモーフィックな要素を取得します。
         /// </summary>
         public List<PolymorphicItem?> Children { get; init; } = [];
     }
 
     /// <summary>
-    /// Represents a polymorphic item with text content.
+    /// テキスト内容を持つポリモーフィックな要素を表します。
     /// </summary>
     public sealed class PolymorphicContent : PolymorphicItem
     {
         /// <summary>
-        /// Gets the text compared for this polymorphic content item.
+        /// このポリモーフィックな内容要素で比較するテキストを取得します。
         /// </summary>
         public string Text { get; init; } = string.Empty;
     }
 
     /// <summary>
-    /// Represents a test root that exposes keyed polymorphic sequence items.
+    /// キー付きポリモーフィックなシーケンス要素を公開するテストルートを表します。
     /// </summary>
     public sealed class KeyedPolymorphicRoot
     {
         /// <summary>
-        /// Gets the keyed polymorphic items compared by the sequence tests.
+        /// シーケンステストで比較するキー付きポリモーフィックな要素を取得します。
         /// </summary>
         public List<KeyedPolymorphicItem> Items { get; init; } = [];
     }
 
     /// <summary>
-    /// Defines the declared base type for keyed polymorphic sequence items.
+    /// キー付きポリモーフィックなシーケンス要素の宣言上の基底型を定義します。
     /// </summary>
     public abstract class KeyedPolymorphicItem
     {
         /// <summary>
-        /// Gets the key used to align polymorphic items between compared models.
+        /// 比較するモデル間でポリモーフィックな要素を位置合わせするキーを取得します。
         /// </summary>
         [CompareKey]
         public int Id { get; init; }
     }
 
     /// <summary>
-    /// Represents a keyed polymorphic item with a value compared after key alignment.
+    /// キーによる位置合わせ後に値を比較するキー付きポリモーフィックな要素を表します。
     /// </summary>
     public sealed class KeyedPolymorphicValue : KeyedPolymorphicItem
     {
         /// <summary>
-        /// Gets the value compared for the keyed polymorphic item.
+        /// キー付きポリモーフィックな要素で比較する値を取得します。
         /// </summary>
         public int Value { get; init; }
     }
