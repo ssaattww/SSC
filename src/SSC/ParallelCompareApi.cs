@@ -89,7 +89,16 @@ public static class ParallelCompareApi
         {
             return (IParallelNode)generic.Invoke(
                 null,
-                [slots, path, context, keyText, keyValue, keyComparer, comparisonType ?? nodeType])!;
+                [
+                    slots,
+                    path,
+                    context,
+                    keyText,
+                    keyValue,
+                    keyComparer,
+                    comparisonType ?? nodeType,
+                    comparisonType is not null,
+                ])!;
         }
         catch (TargetInvocationException ex) when (ex.InnerException is CompareInputException)
         {
@@ -108,7 +117,8 @@ public static class ParallelCompareApi
         string? keyText,
         object? keyValue,
         IEqualityComparer<object>? keyComparer,
-        Type comparisonType)
+        Type comparisonType,
+        bool detectRuntimeTypeMismatch)
     {
         var typedValues = new TNode?[slots.Length];
         var states = new NodePresenceState[slots.Length];
@@ -122,7 +132,14 @@ public static class ParallelCompareApi
         }
 
         var isScalarNode = IsScalarType(comparisonType);
-        var node = new ParallelNode<TNode>(typedValues, states, keyText, keyValue, keyComparer, isScalarNode);
+        var node = new ParallelNode<TNode>(
+            typedValues,
+            states,
+            keyText,
+            keyValue,
+            keyComparer,
+            isScalarNode,
+            detectRuntimeTypeMismatch);
         if (node.HasRuntimeTypeMismatch)
         {
             if (context.IsTraceEnabled)
