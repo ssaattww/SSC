@@ -37,6 +37,7 @@
 
 - Status: Done
 - Notes:
+  - T-092でPR #45の差分パスLINQフィルターをレビューし、`*` escape、XML documentation、nullable契約、設計grammar・索引、境界・回帰テストの指摘を解消した
   - T-091でT-090追加分のXML documentationを日本語化した
   - T-090 の polymorphic sequence runtime 型比較とレビュー指摘の XML documentation 修正を完了した
   - T-089 を完了し、generated object view / direct scalar generated member / `Select(...)` 派生 value / dynamic materialized path の `ToString()` を underlying node 表示へ委譲した
@@ -152,6 +153,7 @@
 
 - Status: Done
 - Notes:
+  - T-092はRelease 133テスト、focused 21テスト、format、diff check、coding standards validation、`gpt-5.6-sol / high`同一レビュアー再レビューに成功した
   - T-091はRelease 112テスト、format、diff check、XML整形式、非コメント差分照合、独立reviewに成功した
   - T-090 は Release 112テスト、format、diff check、standards validation、`gpt-5.6-sol / high` 再レビューに成功した
   - T-089 で `dotnet test SSC.sln --configuration Release`、`dotnet format SSC.sln --verify-no-changes`、`git diff --check` が成功した（Markdown lint は missing script のため unsupported）
