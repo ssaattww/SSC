@@ -59,10 +59,10 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void SegmentFactories_RejectNullAndInvalidSelectorValues()
     {
-        Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Member(null!));
-        Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Key(null!, "A"));
-        Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Ordinal(null!, 0));
-        Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Key("Items", null!));
+        Assert.Throws<ArgumentNullException>(() => ParallelDiffPathSegment.Member(null!));
+        Assert.Throws<ArgumentNullException>(() => ParallelDiffPathSegment.Key(null!, "A"));
+        Assert.Throws<ArgumentNullException>(() => ParallelDiffPathSegment.Ordinal(null!, 0));
+        Assert.Throws<ArgumentNullException>(() => ParallelDiffPathSegment.Key("Items", null!));
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Key("Items", string.Empty));
         Assert.Throws<ArgumentOutOfRangeException>(() => ParallelDiffPathSegment.Ordinal("Items", -1));
     }
@@ -97,10 +97,10 @@ public sealed class ParallelDiffPathProjectionUnitTests
 
         var projection = Assert.Single(result.GetDiffEntryPathProjections(projector));
 
-        Assert.Equal("Items[#0].Name", projection.Entry.Path);
-        Assert.Equal("Items[#0]", projection.Entry.ParentPath);
-        Assert.Equal("Entry[#0].Name", projection.ProjectedPath);
-        Assert.Equal("Entry[#0]", projection.ProjectedParentPath);
+        Assert.Equal("Items[0].Name", projection.Entry.Path);
+        Assert.Equal("Items[0]", projection.Entry.ParentPath);
+        Assert.Equal("Entry[0].Name", projection.ProjectedPath);
+        Assert.Equal("Entry[0]", projection.ProjectedParentPath);
         Assert.NotNull(projection.Entry.Node);
         Assert.Same(projection.Entry.Node, result.GetNodeByPath(projection.Entry.Path));
 
@@ -139,8 +139,8 @@ public sealed class ParallelDiffPathProjectionUnitTests
 
         var projection = Assert.Single(result.GetDiffEntryPathProjections(projector));
 
-        Assert.Equal("Entry[#0]", projection.ProjectedPath);
-        Assert.Equal("Entry[#0]", projection.ProjectedParentPath);
+        Assert.Equal("Entry[0]", projection.ProjectedPath);
+        Assert.Equal("Entry[0]", projection.ProjectedParentPath);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
         var exception = Assert.Throws<InvalidOperationException>(
             () => result.GetDiffEntryPathProjections(projector));
 
-        Assert.Contains("Items[#0].Name", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Items[0].Name", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
