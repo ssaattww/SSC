@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-07-11
+- Updated: 2026-07-18
 
 ## In Progress
 
@@ -11,6 +11,56 @@
 なし
 
 ## Done
+
+- T-093: PR #47 差分entryの利用側定義path投影APIをレビューし、指摘を解消する
+  - Status: 完了（初回レビュー6件と再レビュー2件を解消し、独立検証・同一レビュアー最終レビューに合格した）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-079 通常 node 差分の `GetDiffEntries()` 追加
+    - T-086 `ParallelDiffEntry` の親 path / 親 node 追加
+    - T-092 差分path patternと設計索引の整備
+  - Exit Criteria:
+    - 空文字列の `CompareKey` でも既存 `GetDiffEntries()` が例外化せず、base互換の標準pathを返す回帰testを先に追加して修正する
+    - PR #47で追加した全test、test class、共用fixture/test doubleに自然な日本語XML documentationを追加する
+    - 新規・変更したpublic/protected/internal APIと実装境界に自然な日本語XML documentationを追加する
+    - README、`02-PublicApi.md`、設計索引へ利用側定義path投影APIの導線と重要契約を反映する
+    - `ContainerPresence` と空文字列keyのlegacy標準pathに対する解決保証外、および `ProjectedParentPath == null` の意味を設計・XML documentation・testで一致させる
+    - breaking changeを残さず、`Design/BreakingChanges.md`への追記不要であることを確認する
+    - focused test、全test、format、diff check、Markdown lint分類、独立検証、同一reviewer再レビューが成功する
+    - PR #47のbranchへ追跡、report、修正をcommit・pushする
+  - Output:
+    - PR #47
+    - `README.md`
+    - `doc/design/README.md`
+    - `doc/design/detail/02-PublicApi.md`
+    - `doc/design/detail/11-DiffEntryCustomPath.md`
+    - `src/SSC/Internal/ParallelDiffPathFormatter.cs`
+    - `src/SSC/ParallelDiffPathProjection.cs`
+    - `src/SSC/ParallelDiffPathSegments.cs`
+    - `src/SSC/ParallelPathAccessExtensions.cs`
+    - `tests/SSC.Unit.Tests/ParallelDiffPathProjectionUnitTests.cs`
+    - `tests/SSC.E2E.Tests/ParallelDiffPathProjectionE2ETests.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `reports/pr-47-review-summary-20260718165406.md`
+    - `reports/task-t-093-review-fix-implementation-20260718171654.md`
+    - `reports/task-t-093-review-fix-implementation-r2-20260718172729.md`
+    - `reports/task-t-093-review-fix-implementation-r3-20260718173852.md`
+    - `reports/task-t-093-review-fix-verification-20260718172334.md`
+    - `reports/task-t-093-review-fix-verification-r2-20260718172917.md`
+    - `reports/task-t-093-review-fix-verification-r3-20260718174130.md`
+    - `reports/task-t-093-review-fix-rereview-20260718173115.md`
+    - `reports/task-t-093-review-fix-rereview-r2-20260718174334.md`
+  - Verification:
+    - TDD赤確認: 空文字列keyで既存 `GetDiffEntries()` が `ArgumentException` を送出
+    - focused unit test 21件成功
+    - focused E2E test 7件成功
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 74件 / E2E 88件、計162件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - working tree / staged tree の `git diff --check` 成功
+    - Markdown lintはrepository wiring不在のためfocused/fullともunsupported
+    - `gpt-5.6-terra / medium` implementation・独立検証agentで修正と検証を実施
+    - `gpt-5.6-sol / high` の同一reviewerで最終指摘なし
 
 - T-092: PR #45 差分パスのLINQフィルターをレビューし、指摘を解消する
   - Status: 完了（初回レビュー4件と再レビュー1件を解消し、独立検証・同一レビュアー再レビューに合格した）

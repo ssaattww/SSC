@@ -110,6 +110,11 @@ public static class ParallelPathAccessExtensions
 
     public static IReadOnlyList<ParallelDiffEntry> GetDiffEntries<T>(
         this CompareResult<T> result);
+
+    public static IReadOnlyList<ParallelDiffEntryPathProjection>
+        GetDiffEntryPathProjections<T>(
+            this CompareResult<T> result,
+            IParallelDiffPathProjector projector);
 }
 
 public sealed class ParallelDiffEntry
@@ -137,6 +142,19 @@ public sealed class ParallelDiffValue
     public ValueState State { get; }
 
     public override string ToString();
+}
+
+public interface IParallelDiffPathProjector
+{
+    ParallelDiffPathSegmentProjection Project(
+        ParallelDiffPathProjectionContext context);
+}
+
+public sealed class ParallelDiffEntryPathProjection
+{
+    public ParallelDiffEntry Entry { get; }
+    public string ProjectedPath { get; }
+    public string? ProjectedParentPath { get; }
 }
 ```
 
@@ -367,6 +385,9 @@ model index が範囲外の場合は、既存 node indexer と同じく `ModelIn
 返却値は構造化データとし、表示専用 string API にはしない。
 ただし `ParallelDiffEntry` と `ParallelDiffValue` は人間確認用の `ToString()` を必ず実装する。
 
+`GetDiffEntryPathProjections<T>(this CompareResult<T> result, IParallelDiffPathProjector projector)` は、標準差分 entry と投影器が生成した利用側定義 path の組を返す。
+`ProjectedPath` は node lookup の住所ではなく、重複を許容する。全 segment を省略して空 path になる場合は `InvalidOperationException` とし、投影器が送出した例外はそのまま伝播する。
+
 #### 4.2.2.2 Path Grammar
 
 XPath-like path は root からの相対 path を基本とする。
@@ -443,7 +464,8 @@ key text が `#<digits>` 形式そのものの場合は、先頭の `#` を esca
 - `child.KeyText == null` の場合だけ `#<ordinal>` を使う
 - root type 名は生成 path には含めない
 
-`Kind == Node` の diff entry で生成される path は、同一 `CompareResult<T>` 内で `GetNodeByPath(path)` に渡すと同じ node を解決できなければならない。
+`Kind == Node` の diff entry で生成される path は、同一 `CompareResult<T>` 内で `GetNodeByPath(path)` に渡すと通常は同じ node を解決できなければならない。
+ただし、空文字列のCompareKeyによる既存base互換の`Name[]`形式は文字列互換を優先して維持するlegacy selectorであり、既存parserでは解釈できないためnode解決を保証しない。
 同時に、entry の親 path / 親 node も traversal 中に保持し、利用者が `Path` を文字列分割して親へ戻る必要がないようにする。
 
 empty container の presence mismatch のように child node が存在しない差分は、
@@ -459,13 +481,15 @@ empty container の presence mismatch のように child node が存在しない
 
 - `Path`
   - XPath-like path
-  - `Kind == Node` では `GetNodeByPath(Path)` で同じ node を解決できる
+  - `Kind == Node` では通常 `GetNodeByPath(Path)` で同じ node を解決できる
+  - 空文字列のCompareKeyによる既存base互換の`Name[]`形式はlookup保証外
   - `Kind == ContainerPresence` では container member の位置を表すが、node 解決は保証しない
 - `ParentPath`
   - 親 node の XPath-like path
   - root 直下の diff entry では `null`
   - `Kind == Node` / `Kind == ContainerPresence` のどちらでも同じ規則で設定する
-  - `ParentPath != null` の場合、同一 `CompareResult<T>` 内で `GetNodeByPath(ParentPath)` に渡すと `ParentNode` と同じ node を解決できる
+  - `ParentPath != null` の場合、通常は同一 `CompareResult<T>` 内で `GetNodeByPath(ParentPath)` に渡すと `ParentNode` と同じ node を解決できる
+  - 空文字列のCompareKeyによる既存base互換の`Name[]`形式ではlookup保証外
 - `Kind`
   - `Node`: `IParallelNode` に対応する差分
   - `ContainerPresence`: child node を持たない container presence mismatch

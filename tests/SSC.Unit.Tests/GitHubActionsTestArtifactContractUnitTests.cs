@@ -1,7 +1,13 @@
 namespace SSC.Unit.Tests;
 
+/// <summary>
+/// pull request workflow のテスト artifact 契約を検証します。
+/// </summary>
 public sealed class GitHubActionsTestArtifactContractUnitTests
 {
+    /// <summary>
+    /// pull request workflow がレビュー用の保持期間付き TRX artifact を公開することを確認します。
+    /// </summary>
     [Fact]
     public void PullRequestWorkflow_PublishesRetainedTrxArtifactForChatGptReview()
     {

@@ -23,6 +23,9 @@ public interface IParallelDiffPathProjector
 /// </summary>
 public sealed class ParallelDiffPathProjectionContext
 {
+    /// <summary>
+    /// 差分 entry の投影処理で祖先と現在位置の文脈を生成します。
+    /// </summary>
     internal ParallelDiffPathProjectionContext(
         IReadOnlyList<ParallelDiffPathNodeContext> ancestors,
         ParallelDiffPathNodeContext current)
@@ -49,6 +52,9 @@ public sealed class ParallelDiffPathProjectionContext
 /// </summary>
 public sealed class ParallelDiffPathNodeContext
 {
+    /// <summary>
+    /// 差分 entry の投影処理で現在 segment の node 文脈を生成します。
+    /// </summary>
     internal ParallelDiffPathNodeContext(
         ParallelDiffPathSegment standardSegment,
         IParallelNode parentNode,
@@ -179,6 +185,9 @@ public readonly struct ParallelDiffPathSegmentProjection
 /// </summary>
 public sealed class ParallelDiffEntryPathProjection
 {
+    /// <summary>
+    /// 標準差分 entry と投影済み path の組を生成します。
+    /// </summary>
     internal ParallelDiffEntryPathProjection(
         ParallelDiffEntry entry,
         string projectedPath,
@@ -204,6 +213,10 @@ public sealed class ParallelDiffEntryPathProjection
     /// <summary>
     /// 標準 parent path と同じ segment 範囲へ投影器を適用した path を取得します。
     /// </summary>
+    /// <remarks>
+    /// root 直下の entry に加え、標準 parent path の範囲にあるすべての segment を投影器が省略した場合も
+    /// <see langword="null"/> です。
+    /// </remarks>
     public string? ProjectedParentPath { get; }
 }
 

@@ -79,7 +79,9 @@ Items[#0].Name
 
 標準 path は SSC の比較 tree 上の位置を表す。
 
-- `GetNodeByPath()` で node を取得できる
+- `Kind == Node` の entry では `GetNodeByPath()` で同じ node を取得できる
+- 空文字列のCompareKeyによる既存base互換の`Name[]`形式は文字列を維持するlegacy selectorであり、既存parserでは解釈できないためnodeとparent pathの解決を保証しない
+- `Kind == ContainerPresence` の entry は public node に対応しないため、`GetNodeByPath()` による解決を保証しない
 - `ParallelDiffEntry.Path` と `ParallelDiffEntry.ParentPath` に使用される
 - 既存 `ParallelDiffEntry.PathMatches()` の照合対象になる
 - `ParallelDiffEntry.ToString()` の表示に使用される
@@ -755,11 +757,11 @@ entry.PathMatches(pattern);
 - `Entry.Values`
 - `Entry.ToString()`
 
-標準 node path は引き続き解決できる。
+`Kind == Node` の標準 node path は、空文字列のCompareKeyによる既存base互換の`Name[]`形式を除き、引き続き解決できる。
 
 ```csharp
-projection.Entry.Node ==
-    result.GetNodeByPath(projection.Entry.Path);
+projection.Entry.Kind == ParallelDiffEntryKind.Node
+    && projection.Entry.Node == result.GetNodeByPath(projection.Entry.Path);
 ```
 
 利用側定義 path にはこの契約を適用しない。
@@ -780,6 +782,7 @@ Value
 ### 8.3 Parent path
 
 `ProjectedParentPath` は、標準 `ParentPath` と同じ segment 範囲へ投影器を適用して生成する。
+root 直下の entry に加え、標準 parent path の範囲にあるすべての segment を `Omit()` した場合も `null` とする。
 
 標準 path:
 
@@ -1240,6 +1243,8 @@ result.GetStateByPath(path, modelIndex);
 - parent path
 - node 参照
 
+空文字列のCompareKeyによる既存base互換の`Name[]`形式も標準path文字列として維持する。この形式は新しいgrammarではなく既存parserで解釈できないlegacy selectorであるため、nodeおよびparent pathのlookup保証には含めない。
+
 ### 12.3 `ParallelDiffEntry.ToString()`
 
 既存どおり `ParallelDiffEntry.Path`、つまり標準 path を表示する。
@@ -1248,10 +1253,11 @@ result.GetStateByPath(path, modelIndex);
 
 ### 12.4 標準 path の解決可能性
 
-次の既存契約を維持する。
+`Kind == Node` の entry について、空文字列のCompareKeyによる既存base互換の`Name[]`形式を除き、次の既存契約を維持する。`Kind == ContainerPresence` は public node を持たないため、この解決可能性を保証しない。`Name[]`は文字列互換を優先する既存parser非対応のlegacy selectorであり、`Path`と`ParentPath`のlookupを保証しない。
 
 ```csharp
-entry.Node == result.GetNodeByPath(entry.Path);
+entry.Kind == ParallelDiffEntryKind.Node
+    && entry.Node == result.GetNodeByPath(entry.Path);
 ```
 
 利用側定義 path にはこの契約を適用しない。

@@ -3,14 +3,28 @@ using System.Text;
 
 namespace SSC.Internal;
 
+/// <summary>
+/// 標準差分 path と利用側定義 path を共通の grammar で文字列化します。
+/// </summary>
 internal static class ParallelDiffPathFormatter
 {
+    /// <summary>
+    /// すべての segment を連結して path 文字列を生成します。
+    /// </summary>
+    /// <param name="segments">文字列化する segment。</param>
+    /// <returns>生成した path 文字列。</returns>
     public static string Format(IReadOnlyList<ParallelDiffPathSegment> segments)
     {
         ArgumentNullException.ThrowIfNull(segments);
         return Format(segments, segments.Count);
     }
 
+    /// <summary>
+    /// 先頭から指定件数の segment を連結して path 文字列を生成します。
+    /// </summary>
+    /// <param name="segments">文字列化する segment。</param>
+    /// <param name="count">文字列化する先頭 segment の件数。</param>
+    /// <returns>生成した path 文字列。</returns>
     public static string Format(
         IReadOnlyList<ParallelDiffPathSegment> segments,
         int count)

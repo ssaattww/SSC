@@ -2,8 +2,14 @@ using SSC;
 
 namespace SSC.Unit.Tests;
 
+/// <summary>
+/// 差分 entry path の投影契約を検証します。
+/// </summary>
 public sealed class ParallelDiffPathProjectionUnitTests
 {
+    /// <summary>
+    /// 各種 segment factory が期待どおりの選択子を生成することを確認します。
+    /// </summary>
     [Fact]
     public void SegmentFactories_CreateMemberKeyAndOrdinalSegments()
     {
@@ -27,6 +33,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Equal(2, ordinal.Selector.Value.Ordinal);
     }
 
+    /// <summary>
+    /// member 名を変更しても選択子が維持されることを確認します。
+    /// </summary>
     [Fact]
     public void WithMemberName_PreservesSelectors()
     {
@@ -44,6 +53,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Equal(3, ordinal.Selector.Value.Ordinal);
     }
 
+    /// <summary>
+    /// path grammar で表現できない member 名を拒否することを確認します。
+    /// </summary>
     [Theory]
     [InlineData("")]
     [InlineData("A.B")]
@@ -56,6 +68,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Ordinal(memberName, 0));
     }
 
+    /// <summary>
+    /// null と不正な選択子値を拒否することを確認します。
+    /// </summary>
     [Fact]
     public void SegmentFactories_RejectNullAndInvalidSelectorValues()
     {
@@ -67,6 +82,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Throws<ArgumentOutOfRangeException>(() => ParallelDiffPathSegment.Ordinal("Items", -1));
     }
 
+    /// <summary>
+    /// 維持、置換、省略の投影結果を生成できることを確認します。
+    /// </summary>
     [Fact]
     public void ProjectionFactories_RepresentKeepReplaceAndOmit()
     {
@@ -85,6 +103,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Throws<ArgumentNullException>(() => ParallelDiffPathSegmentProjection.Replace(null!));
     }
 
+    /// <summary>
+    /// segment を置換し、走査文脈を投影器へ渡すことを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_ReplacesSegmentAndProvidesTraversalContext()
     {
@@ -124,6 +145,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
             });
     }
 
+    /// <summary>
+    /// 末尾 segment を省略した場合に親 path と同じ path を許容することを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_OmitsLeafAndAllowsPathToEqualParentPath()
     {
@@ -143,6 +167,27 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Equal("Entry[0]", projection.ProjectedParentPath);
     }
 
+    /// <summary>
+    /// 標準 parent path の範囲にある全 segment を省略した場合に投影 parent path が null になることを確認します。
+    /// </summary>
+    [Fact]
+    public void GetDiffEntryPathProjections_ReturnsNullProjectedParentPathWhenAllParentSegmentsAreOmitted()
+    {
+        var result = CreateSingleOrdinalResult();
+        var projector = new RecordingProjector(context =>
+            context.Current.StandardSegment.MemberName == "Items"
+                ? ParallelDiffPathSegmentProjection.Omit()
+                : ParallelDiffPathSegmentProjection.KeepStandard());
+
+        var projection = Assert.Single(result.GetDiffEntryPathProjections(projector));
+
+        Assert.Equal("Name", projection.ProjectedPath);
+        Assert.Null(projection.ProjectedParentPath);
+    }
+
+    /// <summary>
+    /// 全 segment を省略した空の投影 path を拒否することを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_RejectsAnEmptyProjectedPath()
     {
@@ -155,6 +200,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Contains("Items[0].Name", exception.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// container presence entry の文脈に null node を渡すことを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_ProvidesNullNodeForContainerPresenceEntry()
     {
@@ -176,6 +224,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Same(result.Root, context.Current.ParentNode);
     }
 
+    /// <summary>
+    /// 投影された key text を path grammar に従って escape することを確認します。
+    /// </summary>
     [Theory]
     [InlineData("A]B", "Alias[A\\]B].Name")]
     [InlineData("A\\B", "Alias[A\\\\B].Name")]
@@ -196,6 +247,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Equal(expectedPath, projection.ProjectedPath);
     }
 
+    /// <summary>
+    /// 投影 path の照合が標準 path の照合を変更しないことを確認します。
+    /// </summary>
     [Fact]
     public void ProjectionPathMatches_UsesProjectedPathWithoutChangingStandardMatching()
     {
@@ -212,6 +266,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.False(projection.Entry.PathMatches(projectedPattern));
     }
 
+    /// <summary>
+    /// 複数 entry による重複した投影 path を保持することを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_PreservesDuplicateProjectedPaths()
     {
@@ -249,6 +306,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
             projections.Select(projection => projection.Entry.Path).ToArray());
     }
 
+    /// <summary>
+    /// 投影処理が標準差分 entry を変更しないことを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_DoesNotChangeStandardDiffEntries()
     {
@@ -269,6 +329,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Equal(before.Select(ToEntrySnapshot), after.Select(ToEntrySnapshot));
     }
 
+    /// <summary>
+    /// 引数を検証し、投影器の例外をそのまま伝播することを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_ValidatesArgumentsAndPropagatesProjectorExceptions()
     {
@@ -285,6 +348,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
                 () => result.GetDiffEntryPathProjections(throwingProjector)));
     }
 
+    /// <summary>
+    /// root を持たない比較結果では空の投影一覧を返すことを確認します。
+    /// </summary>
     [Fact]
     public void GetDiffEntryPathProjections_ReturnsEmptyWhenResultHasNoRoot()
     {
@@ -315,18 +381,30 @@ public sealed class ParallelDiffPathProjectionUnitTests
         return $"{entry.Path}|{entry.ParentPath ?? "<root>"}|{entry.Kind}|{entry}";
     }
 
+    /// <summary>
+    /// 投影文脈を記録し、指定された規則で投影結果を返すテスト用投影器です。
+    /// </summary>
     private sealed class RecordingProjector : IParallelDiffPathProjector
     {
         private readonly Func<ParallelDiffPathProjectionContext, ParallelDiffPathSegmentProjection> _project;
 
+        /// <summary>
+        /// 指定した投影規則を使用するテスト用投影器を生成します。
+        /// </summary>
         public RecordingProjector(
             Func<ParallelDiffPathProjectionContext, ParallelDiffPathSegmentProjection> project)
         {
             _project = project;
         }
 
+        /// <summary>
+        /// 投影時に受け取った文脈を取得します。
+        /// </summary>
         public List<ParallelDiffPathProjectionContext> Contexts { get; } = [];
 
+        /// <summary>
+        /// 文脈を記録してから、指定された投影規則の結果を返します。
+        /// </summary>
         public ParallelDiffPathSegmentProjection Project(
             ParallelDiffPathProjectionContext context)
         {
@@ -335,31 +413,64 @@ public sealed class ParallelDiffPathProjectionUnitTests
         }
     }
 
+    /// <summary>
+    /// ordinal container を持つテスト用文書です。
+    /// </summary>
     public sealed class OrdinalDocument
     {
+        /// <summary>
+        /// 順序で識別されるテスト用項目の一覧を取得または設定します。
+        /// </summary>
         public List<OrdinalItem> Items { get; init; } = [];
     }
 
+    /// <summary>
+    /// ordinal container 内のテスト用項目です。
+    /// </summary>
     public sealed class OrdinalItem
     {
+        /// <summary>
+        /// 差分を発生させるテスト用の名称を取得または設定します。
+        /// </summary>
         public string Name { get; init; } = string.Empty;
     }
 
+    /// <summary>
+    /// optional container の存在差分を表すテスト用文書です。
+    /// </summary>
     public sealed class OptionalDocument
     {
+        /// <summary>
+        /// container presence差分を表す任意の順序付き項目一覧を取得または設定します。
+        /// </summary>
         public List<OrdinalItem>? Items { get; init; }
     }
 
+    /// <summary>
+    /// key 付き container を持つテスト用文書です。
+    /// </summary>
     public sealed class KeyedDocument
     {
+        /// <summary>
+        /// 比較 key を持つテスト用項目の一覧を取得または設定します。
+        /// </summary>
         public List<KeyedItem> Items { get; init; } = [];
     }
 
+    /// <summary>
+    /// key 付き container 内のテスト用項目です。
+    /// </summary>
     public sealed class KeyedItem
     {
+        /// <summary>
+        /// container要素を位置合わせする比較 key を取得または設定します。
+        /// </summary>
         [CompareKey]
         public string Id { get; init; } = string.Empty;
 
+        /// <summary>
+        /// 差分を発生させるテスト用の名称を取得または設定します。
+        /// </summary>
         public string Name { get; init; } = string.Empty;
     }
 }

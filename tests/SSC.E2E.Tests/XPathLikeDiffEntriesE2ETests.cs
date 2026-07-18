@@ -86,6 +86,35 @@ public sealed class XPathLikeDiffEntriesE2ETests
         AssertResolvablePath(entries, result, "Items[\\#0].Label", "Items[\\#0]");
     }
 
+    /// <summary>
+    /// 空文字列の比較 key を持つ要素が標準 path と値を返し、そのlegacy pathのnode lookupを保証しないことを確認します。
+    /// </summary>
+    [Fact]
+    public void GetDiffEntries_ReturnsEntryForEmptyCompareKey()
+    {
+        var result = ParallelCompareApi.Compare(
+        [
+            new EscapedKeyDataset
+            {
+                Items = [new EscapedKeyItem { ItemId = string.Empty, Label = "left" }],
+            },
+            new EscapedKeyDataset
+            {
+                Items = [new EscapedKeyItem { ItemId = string.Empty, Label = "right" }],
+            },
+        ]);
+
+        var entry = Assert.Single(result.GetDiffEntries());
+
+        Assert.Equal("Items[].Label", entry.Path);
+        Assert.Equal("Items[]", entry.ParentPath);
+        Assert.Null(result.GetNodeByPath(entry.Path));
+        Assert.NotNull(entry.ParentPath);
+        Assert.Null(result.GetNodeByPath(entry.ParentPath!));
+        Assert.Equal("left", entry.Values[0].Value);
+        Assert.Equal("right", entry.Values[1].Value);
+    }
+
     [Fact]
     public void GetDiffEntries_ReturnsContainerPresenceForEmptyListMissingOnOneSide()
     {

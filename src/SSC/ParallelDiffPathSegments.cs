@@ -46,11 +46,17 @@ public readonly struct ParallelDiffPathSelector
     /// </summary>
     public int? Ordinal { get; }
 
+    /// <summary>
+    /// 内部で生成した比較 key 文字列から key 選択子を生成します。
+    /// </summary>
     internal static ParallelDiffPathSelector FromKey(string keyText)
     {
         return new ParallelDiffPathSelector(ParallelDiffPathSelectorKind.Key, keyText, null);
     }
 
+    /// <summary>
+    /// 内部で生成した並び順から ordinal 選択子を生成します。
+    /// </summary>
     internal static ParallelDiffPathSelector FromOrdinal(int ordinal)
     {
         return new ParallelDiffPathSelector(ParallelDiffPathSelectorKind.Ordinal, null, ordinal);
@@ -111,6 +117,22 @@ public sealed class ParallelDiffPathSegment
     public static ParallelDiffPathSegment Key(string memberName, string keyText)
     {
         ArgumentException.ThrowIfNullOrEmpty(keyText);
+        return new ParallelDiffPathSegment(memberName, ParallelDiffPathSelector.FromKey(keyText));
+    }
+
+    /// <summary>
+    /// 標準差分 path の生成用に、空文字列を含む比較 key で container 要素を識別する segment を生成します。
+    /// </summary>
+    /// <param name="memberName">container member 名。</param>
+    /// <param name="keyText">比較処理が生成した比較 key の文字列表現。</param>
+    /// <returns>標準差分 path 用の segment。</returns>
+    /// <remarks>
+    /// この内部経路は既存比較結果の標準 path 互換性を維持するためだけに使用します。
+    /// 公開 <see cref="Key(string, string)"/> の空文字列拒否契約は変更しません。
+    /// </remarks>
+    internal static ParallelDiffPathSegment StandardKey(string memberName, string keyText)
+    {
+        ArgumentNullException.ThrowIfNull(keyText);
         return new ParallelDiffPathSegment(memberName, ParallelDiffPathSelector.FromKey(keyText));
     }
 

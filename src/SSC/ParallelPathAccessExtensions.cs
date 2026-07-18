@@ -239,7 +239,7 @@ public static class ParallelPathAccessExtensions
                 var childNode = childSet.Nodes[ordinal];
                 var segment = childNode.KeyText is null
                     ? ParallelDiffPathSegment.Ordinal(childSet.Name, ordinal)
-                    : ParallelDiffPathSegment.Key(childSet.Name, childNode.KeyText);
+                    : ParallelDiffPathSegment.StandardKey(childSet.Name, childNode.KeyText);
 
                 PushFrame(segment, parentNode, childNode, childSet.Nodes);
                 try
