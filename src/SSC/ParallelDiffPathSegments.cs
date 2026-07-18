@@ -143,6 +143,16 @@ public sealed class ParallelDiffPathSegment
         return new ParallelDiffPathSegment(memberName, Selector);
     }
 
+    internal static ParallelDiffPathSegment StandardKey(
+        string memberName,
+        string keyText)
+    {
+        ArgumentNullException.ThrowIfNull(keyText);
+        return new ParallelDiffPathSegment(
+            memberName,
+            ParallelDiffPathSelector.FromKey(keyText));
+    }
+
     private static void ValidateMemberName(string memberName)
     {
         ArgumentException.ThrowIfNullOrEmpty(memberName);
