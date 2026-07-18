@@ -133,7 +133,7 @@ public sealed class ParallelDiffPathProjectionE2ETests
         Assert.Same(originalRoot, result.Root);
         Assert.Same(originalIssues, result.Issues);
         Assert.Equal(originalHasError, result.HasError);
-        Assert.True(result.Root!.HasDifferences());
+        Assert.True(Assert.IsAssignableFrom<IParallelNode>(result.Root).HasDifferences());
     }
 
     [Fact]
@@ -193,19 +193,9 @@ public sealed class ParallelDiffPathProjectionE2ETests
         };
     }
 
-    private static object ToEntrySnapshot(ParallelDiffEntry entry)
+    private static string ToEntrySnapshot(ParallelDiffEntry entry)
     {
-        return new
-        {
-            entry.Path,
-            entry.ParentPath,
-            entry.Kind,
-            entry.ParentNode,
-            entry.Node,
-            Values = entry.Values
-                .Select(value => new { value.ModelIndex, value.Value, value.State })
-                .ToArray(),
-        };
+        return $"{entry.Path}|{entry.ParentPath ?? "<root>"}|{entry.Kind}|{entry}";
     }
 
     private sealed class CommonNamePathProjector : IParallelDiffPathProjector
