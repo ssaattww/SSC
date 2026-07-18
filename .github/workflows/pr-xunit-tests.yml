@@ -7,48 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  projection-tests:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: Run focused projection tests
-        shell: bash
-        run: |
-          set +e
-          dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj \
-            --configuration Release \
-            --filter FullyQualifiedName~ParallelDiffPathProjectionUnitTests \
-            --verbosity normal > projection-test.log 2>&1
-          unit_status=$?
-          dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj \
-            --configuration Release \
-            --filter FullyQualifiedName~ParallelDiffPathProjectionE2ETests \
-            --verbosity normal >> projection-test.log 2>&1
-          e2e_status=$?
-          cat projection-test.log
-          if [[ $unit_status -ne 0 || $e2e_status -ne 0 ]]; then
-            exit 1
-          fi
-
-      - name: Upload focused projection test log
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: projection-test-log
-          path: projection-test.log
-          if-no-files-found: error
-          retention-days: 1
-
   dotnet-tests:
     runs-on: ubuntu-latest
     permissions:
