@@ -1,5 +1,4 @@
 using SSC;
-using SSC.Internal;
 
 namespace SSC.Unit.Tests;
 
@@ -29,29 +28,20 @@ public sealed class ParallelDiffPathProjectionUnitTests
     }
 
     [Fact]
-    public void WithMemberName_PreservesKeySelector()
+    public void WithMemberName_PreservesSelectors()
     {
-        var standard = ParallelDiffPathSegment.Key("Items", "A");
+        var key = ParallelDiffPathSegment.Key("Items", "A").WithMemberName("Entries");
+        var ordinal = ParallelDiffPathSegment.Ordinal("Children", 3).WithMemberName("Child");
 
-        var projected = standard.WithMemberName("Entries");
+        Assert.Equal("Entries", key.MemberName);
+        Assert.NotNull(key.Selector);
+        Assert.Equal(ParallelDiffPathSelectorKind.Key, key.Selector.Value.Kind);
+        Assert.Equal("A", key.Selector.Value.KeyText);
 
-        Assert.Equal("Entries", projected.MemberName);
-        Assert.NotNull(projected.Selector);
-        Assert.Equal(ParallelDiffPathSelectorKind.Key, projected.Selector.Value.Kind);
-        Assert.Equal("A", projected.Selector.Value.KeyText);
-    }
-
-    [Fact]
-    public void WithMemberName_PreservesOrdinalSelector()
-    {
-        var standard = ParallelDiffPathSegment.Ordinal("Children", 3);
-
-        var projected = standard.WithMemberName("Child");
-
-        Assert.Equal("Child", projected.MemberName);
-        Assert.NotNull(projected.Selector);
-        Assert.Equal(ParallelDiffPathSelectorKind.Ordinal, projected.Selector.Value.Kind);
-        Assert.Equal(3, projected.Selector.Value.Ordinal);
+        Assert.Equal("Child", ordinal.MemberName);
+        Assert.NotNull(ordinal.Selector);
+        Assert.Equal(ParallelDiffPathSelectorKind.Ordinal, ordinal.Selector.Value.Kind);
+        Assert.Equal(3, ordinal.Selector.Value.Ordinal);
     }
 
     [Theory]
@@ -67,16 +57,11 @@ public sealed class ParallelDiffPathProjectionUnitTests
     }
 
     [Fact]
-    public void SegmentFactories_RejectNullMemberName()
+    public void SegmentFactories_RejectNullAndInvalidSelectorValues()
     {
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Member(null!));
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Key(null!, "A"));
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Ordinal(null!, 0));
-    }
-
-    [Fact]
-    public void KeyAndOrdinalFactories_RejectInvalidSelectorValues()
-    {
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Key("Items", null!));
         Assert.Throws<ArgumentException>(() => ParallelDiffPathSegment.Key("Items", string.Empty));
         Assert.Throws<ArgumentOutOfRangeException>(() => ParallelDiffPathSegment.Ordinal("Items", -1));
@@ -101,9 +86,9 @@ public sealed class ParallelDiffPathProjectionUnitTests
     }
 
     [Fact]
-    public void GetDiffEntryPathProjections_ReplacesSegmentAndKeepsStandardEntryResolvable()
+    public void GetDiffEntryPathProjections_ReplacesSegmentAndProvidesTraversalContext()
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var projector = new RecordingProjector(context =>
             context.Current.StandardSegment.MemberName == "Items"
                 ? ParallelDiffPathSegmentProjection.Replace(
@@ -142,7 +127,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_OmitsLeafAndAllowsPathToEqualParentPath()
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var projector = new RecordingProjector(context =>
             context.Current.StandardSegment.MemberName switch
             {
@@ -161,7 +146,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_RejectsAnEmptyProjectedPath()
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var projector = new RecordingProjector(_ => ParallelDiffPathSegmentProjection.Omit());
 
         var exception = Assert.Throws<InvalidOperationException>(
@@ -173,12 +158,11 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_ProvidesNullNodeForContainerPresenceEntry()
     {
-        var root = new FakeRootNode();
-        root.SetChildren(
-            "Items",
-            [],
-            [NodePresenceState.PresentValue, NodePresenceState.Missing]);
-        var result = new CompareResult<FakeRoot> { Root = root };
+        var result = ParallelCompareApi.Compare(
+        [
+            new OptionalDocument { Items = [] },
+            new OptionalDocument { Items = null },
+        ]);
         var projector = new RecordingProjector(_ => ParallelDiffPathSegmentProjection.KeepStandard());
 
         var projection = Assert.Single(result.GetDiffEntryPathProjections(projector));
@@ -189,7 +173,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
         Assert.Null(projection.ProjectedParentPath);
         Assert.Null(context.Current.Node);
         Assert.Empty(context.Current.Siblings);
-        Assert.Same(root, context.Current.ParentNode);
+        Assert.Same(result.Root, context.Current.ParentNode);
     }
 
     [Theory]
@@ -200,7 +184,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
         string keyText,
         string expectedPath)
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var projector = new RecordingProjector(context =>
             context.Current.StandardSegment.MemberName == "Items"
                 ? ParallelDiffPathSegmentProjection.Replace(
@@ -215,7 +199,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void ProjectionPathMatches_UsesProjectedPathWithoutChangingStandardMatching()
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var projector = new RecordingProjector(context =>
             context.Current.StandardSegment.MemberName == "Items"
                 ? ParallelDiffPathSegmentProjection.Replace(
@@ -231,15 +215,25 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_PreservesDuplicateProjectedPaths()
     {
-        var firstLeaf = new FakeNode("left-a", ValueState.Mismatched);
-        var firstItem = new FakeNode(new object(), ValueState.Mismatched, keyText: "A");
-        firstItem.SetMember("Name", firstLeaf);
-        var secondLeaf = new FakeNode("left-b", ValueState.Mismatched);
-        var secondItem = new FakeNode(new object(), ValueState.Mismatched, keyText: "B");
-        secondItem.SetMember("Name", secondLeaf);
-        var root = new FakeRootNode();
-        root.SetChildren("Items", [firstItem, secondItem]);
-        var result = new CompareResult<FakeRoot> { Root = root };
+        var result = ParallelCompareApi.Compare(
+        [
+            new KeyedDocument
+            {
+                Items =
+                [
+                    new KeyedItem { Id = "A", Name = "left-a" },
+                    new KeyedItem { Id = "B", Name = "left-b" },
+                ],
+            },
+            new KeyedDocument
+            {
+                Items =
+                [
+                    new KeyedItem { Id = "A", Name = "right-a" },
+                    new KeyedItem { Id = "B", Name = "right-b" },
+                ],
+            },
+        ]);
         var projector = new RecordingProjector(context =>
             context.Current.StandardSegment.MemberName == "Items"
                 ? ParallelDiffPathSegmentProjection.Replace(
@@ -258,7 +252,7 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_DoesNotChangeStandardDiffEntries()
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var before = result.GetDiffEntries();
         var projector = new RecordingProjector(context =>
             context.Current.StandardSegment.MemberName == "Items"
@@ -278,12 +272,12 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_ValidatesArgumentsAndPropagatesProjectorExceptions()
     {
-        var result = CreateSingleItemResult();
+        var result = CreateSingleOrdinalResult();
         var projectorException = new InvalidOperationException("projector failure");
         var throwingProjector = new RecordingProjector(_ => throw projectorException);
 
         Assert.Throws<ArgumentNullException>(
-            () => ParallelPathAccessExtensions.GetDiffEntryPathProjections<FakeRoot>(null!, throwingProjector));
+            () => ParallelPathAccessExtensions.GetDiffEntryPathProjections<OrdinalDocument>(null!, throwingProjector));
         Assert.Throws<ArgumentNullException>(() => result.GetDiffEntryPathProjections(null!));
         Assert.Same(
             projectorException,
@@ -294,36 +288,31 @@ public sealed class ParallelDiffPathProjectionUnitTests
     [Fact]
     public void GetDiffEntryPathProjections_ReturnsEmptyWhenResultHasNoRoot()
     {
-        var result = new CompareResult<FakeRoot>();
+        var result = new CompareResult<OrdinalDocument>();
         var projector = new RecordingProjector(_ => ParallelDiffPathSegmentProjection.KeepStandard());
 
         Assert.Empty(result.GetDiffEntryPathProjections(projector));
         Assert.Empty(projector.Contexts);
     }
 
-    private static CompareResult<FakeRoot> CreateSingleItemResult()
+    private static CompareResult<OrdinalDocument> CreateSingleOrdinalResult()
     {
-        var nameNode = new FakeNode("left", ValueState.Mismatched);
-        var itemNode = new FakeNode(new object(), ValueState.Mismatched);
-        itemNode.SetMember("Name", nameNode);
-        var root = new FakeRootNode();
-        root.SetChildren("Items", [itemNode]);
-        return new CompareResult<FakeRoot> { Root = root };
+        return ParallelCompareApi.Compare(
+        [
+            new OrdinalDocument
+            {
+                Items = [new OrdinalItem { Name = "left" }],
+            },
+            new OrdinalDocument
+            {
+                Items = [new OrdinalItem { Name = "right" }],
+            },
+        ]);
     }
 
-    private static object ToEntrySnapshot(ParallelDiffEntry entry)
+    private static string ToEntrySnapshot(ParallelDiffEntry entry)
     {
-        return new
-        {
-            entry.Path,
-            entry.ParentPath,
-            entry.Kind,
-            entry.ParentNode,
-            entry.Node,
-            Values = entry.Values
-                .Select(value => new { value.ModelIndex, value.Value, value.State })
-                .ToArray(),
-        };
+        return $"{entry.Path}|{entry.ParentPath ?? "<root>"}|{entry.Kind}|{entry}";
     }
 
     private sealed class RecordingProjector : IParallelDiffPathProjector
@@ -346,157 +335,31 @@ public sealed class ParallelDiffPathProjectionUnitTests
         }
     }
 
-    private sealed class FakeRoot;
-
-    private class FakeNode : IParallelNode, IParallelNodeInternal
+    public sealed class OrdinalDocument
     {
-        private readonly object? _value;
-        private readonly ValueState _state;
-        private readonly Dictionary<string, IParallelNode> _members = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, IReadOnlyList<IParallelNode>> _children = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, IReadOnlyList<NodePresenceState>> _containerPresenceStates = new(StringComparer.Ordinal);
-
-        public FakeNode(object? value, ValueState state, string? keyText = null)
-        {
-            _value = value;
-            _state = state;
-            KeyText = keyText;
-        }
-
-        public int Count => 1;
-
-        public bool AllPresent => _state != ValueState.Missing;
-
-        public bool AnyPresent => _state != ValueState.Missing;
-
-        public string? KeyText { get; }
-
-        public Type ModelType => typeof(object);
-
-        public object? GetValue(int modelIndex)
-        {
-            ValidateIndex(modelIndex);
-            return _state == ValueState.Missing ? null : _value;
-        }
-
-        public ValueState GetState(int modelIndex)
-        {
-            ValidateIndex(modelIndex);
-            return _state;
-        }
-
-        public bool HasDifferences()
-        {
-            return _state == ValueState.Mismatched
-                || _members.Values.Any(node => node.HasDifferences())
-                || _children.Values.SelectMany(nodes => nodes).Any(node => node.HasDifferences())
-                || _containerPresenceStates.Values.Any(HasPresenceMismatch);
-        }
-
-        public IReadOnlyList<ParallelChildSet> GetDirectChildren()
-        {
-            var sets = new List<ParallelChildSet>();
-            sets.AddRange(_members.Select(pair =>
-                new ParallelChildSet(pair.Key, [pair.Value], pair.Value.HasDifferences())));
-            sets.AddRange(_children.Select(pair =>
-                new ParallelChildSet(
-                    pair.Key,
-                    pair.Value,
-                    HasPresenceMismatch(_containerPresenceStates[pair.Key])
-                        || pair.Value.Any(node => node.HasDifferences()))));
-            return sets;
-        }
-
-        public bool TryGetChildren(string memberName, out IReadOnlyList<IParallelNode> nodes)
-        {
-            return _children.TryGetValue(memberName, out nodes!);
-        }
-
-        public bool TryGetMemberNode(string memberName, out IParallelNode node)
-        {
-            return _members.TryGetValue(memberName, out node!);
-        }
-
-        public bool TryGetContainerPresenceStates(
-            string memberName,
-            out IReadOnlyList<NodePresenceState> states)
-        {
-            if (_containerPresenceStates.TryGetValue(memberName, out var containerStates))
-            {
-                states = containerStates;
-                return true;
-            }
-
-            states = Array.Empty<NodePresenceState>();
-            return false;
-        }
-
-        public NodePresenceState GetPresenceState(int modelIndex)
-        {
-            ValidateIndex(modelIndex);
-            return _state == ValueState.Missing
-                ? NodePresenceState.Missing
-                : NodePresenceState.PresentValue;
-        }
-
-        public void SetMember(string name, IParallelNode node)
-        {
-            _members[name] = node;
-        }
-
-        public void SetChildren(string name, IReadOnlyList<IParallelNode> nodes)
-        {
-            SetChildren(name, nodes, [NodePresenceState.PresentValue]);
-        }
-
-        public void SetChildren(
-            string name,
-            IReadOnlyList<IParallelNode> nodes,
-            IReadOnlyList<NodePresenceState> states)
-        {
-            _children[name] = nodes;
-            _containerPresenceStates[name] = states;
-        }
-
-        private static bool HasPresenceMismatch(IReadOnlyList<NodePresenceState> states)
-        {
-            if (states.Count <= 1)
-            {
-                return false;
-            }
-
-            var first = states[0];
-            for (var index = 1; index < states.Count; index++)
-            {
-                if (states[index] != first)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static void ValidateIndex(int modelIndex)
-        {
-            if (modelIndex == 0)
-            {
-                return;
-            }
-
-            throw new CompareExecutionException(
-                CompareIssueCode.ModelIndexOutOfRange,
-                $"modelIndex '{modelIndex}' is out of range for count '1'.");
-        }
+        public List<OrdinalItem> Items { get; init; } = [];
     }
 
-    private sealed class FakeRootNode : FakeNode, Parallel<FakeRoot>
+    public sealed class OrdinalItem
     {
-        public FakeRootNode()
-            : base(new FakeRoot(), ValueState.Matched)
-        {
-        }
+        public string Name { get; init; } = string.Empty;
+    }
 
-        public FakeRoot? this[int modelIndex] => (FakeRoot?)GetValue(modelIndex);
+    public sealed class OptionalDocument
+    {
+        public List<OrdinalItem>? Items { get; init; }
+    }
+
+    public sealed class KeyedDocument
+    {
+        public List<KeyedItem> Items { get; init; } = [];
+    }
+
+    public sealed class KeyedItem
+    {
+        [CompareKey]
+        public string Id { get; init; } = string.Empty;
+
+        public string Name { get; init; } = string.Empty;
     }
 }
