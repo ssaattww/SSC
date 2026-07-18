@@ -170,7 +170,6 @@ For `ParallelDiffEntryKind.Node`, `GetNodeByPath(entry.Path)` resolves the same 
 IReadOnlyList<ParallelDiffEntry> entries = result.GetDiffEntries();
 
 ParallelDiffEntry priceDiff = entries.Single(entry => entry.Path == "Items[2].Price");
-
 IParallelNode? sameNode = result.GetNodeByPath(priceDiff.Path);
 bool resolvesSameNode = ReferenceEquals(priceDiff.Node, sameNode); // true
 
@@ -196,7 +195,6 @@ CompareResult<OptionalProductModel> emptyContainerResult = ParallelCompareApi.Co
 IReadOnlyList<ParallelDiffEntry> containerEntries = emptyContainerResult.GetDiffEntries();
 ParallelDiffEntry containerDiff = containerEntries.Single(entry =>
     entry.Kind == ParallelDiffEntryKind.ContainerPresence);
-
 IParallelNode? unresolved = emptyContainerResult.GetNodeByPath(containerDiff.Path); // null
 
 Console.WriteLine(containerDiff);
@@ -207,6 +205,52 @@ public sealed class OptionalProductModel
     public List<ProductItem>? Items { get; init; }
 }
 ```
+
+## Custom Diff Entry Paths
+
+A standard path (canonical path) is the official comparison-tree address stored in `ParallelDiffEntry.Path`.
+A custom path is a caller-defined representation used for display, classification, and path-pattern filtering.
+Custom path projection never replaces the standard path, so node lookup continues to use `projection.Entry.Path`.
+
+Implement `IParallelDiffPathProjector` to keep, replace, or omit each standard path segment.
+The projection context exposes the current node, parent node, sibling nodes, ancestors, and the standard segment.
+
+```csharp
+public sealed class ProductPathProjector : IParallelDiffPathProjector
+{
+    public ParallelDiffPathSegmentProjection Project(
+        ParallelDiffPathProjectionContext context)
+    {
+        ParallelDiffPathSegment standard = context.Current.StandardSegment;
+
+        return standard.MemberName == "Items"
+            ? ParallelDiffPathSegmentProjection.Replace(
+                standard.WithMemberName("Products"))
+            : ParallelDiffPathSegmentProjection.KeepStandard();
+    }
+}
+
+IReadOnlyList<ParallelDiffEntryPathProjection> projections =
+    result.GetDiffEntryPathProjections(new ProductPathProjector());
+
+ParallelDiffEntryPathProjection projectedPrice = projections.Single(
+    projection => projection.Entry.Path == "Items[2].Price");
+
+Console.WriteLine(projectedPrice.Entry.Path);    // Items[2].Price
+Console.WriteLine(projectedPrice.ProjectedPath); // Products[2].Price
+
+ParallelDiffPathPattern pattern = ParallelDiffPathPattern.Parse(
+    "Products[*].Price");
+
+bool matchesCustomPath = projectedPrice.PathMatches(pattern); // true
+IParallelNode? standardNode = result.GetNodeByPath(projectedPrice.Entry.Path);
+```
+
+`WithMemberName()` preserves the existing selector. For example, `Items[2]` becomes `Products[2]`, while an ordinal selector such as `Items[#0]` becomes `Products[#0]`.
+The projector may inspect `context.Current.Node.GetValue(modelIndex)` when the custom name depends on runtime model values.
+Domain-specific rules, such as treating an XML node's `Name` property as the path name, belong in the caller's projector rather than SSC.
+
+See `doc/design/detail/11-DiffEntryCustomPath.md` for the responsibility boundary, terminology, API contract, and recursive-model example.
 
 ## Source Generator Example
 
