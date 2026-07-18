@@ -7,6 +7,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  projection-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run focused projection tests
+        shell: bash
+        run: |
+          dotnet test tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj \
+            --configuration Release \
+            --filter FullyQualifiedName~ParallelDiffPathProjectionUnitTests \
+            --verbosity minimal
+          dotnet test tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj \
+            --configuration Release \
+            --filter FullyQualifiedName~ParallelDiffPathProjectionE2ETests \
+            --verbosity minimal
+
   dotnet-tests:
     runs-on: ubuntu-latest
     permissions:
