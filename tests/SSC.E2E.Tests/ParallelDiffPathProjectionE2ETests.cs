@@ -5,7 +5,7 @@ namespace SSC.E2E.Tests;
 public sealed class ParallelDiffPathProjectionE2ETests
 {
     [Fact]
-    public void GetDiffEntryPathProjections_ProjectsRecursiveRuntimeNames()
+    public void GetDiffEntryPathProjections_PreservesStandardPathForRecursiveModel()
     {
         var result = ParallelCompareApi.Compare(
         [
@@ -16,8 +16,16 @@ public sealed class ParallelDiffPathProjectionE2ETests
         var projections = result.GetDiffEntryPathProjections(new NamedTreePathProjector());
 
         var projection = Assert.Single(projections);
-        Assert.NotNull(projection.Entry);
-        Assert.NotEmpty(projection.ProjectedPath);
+        Assert.Equal(
+            "Root.Children[#0].Children[#0].Fields[#0].Value",
+            projection.Entry.Path);
+        Assert.Equal(
+            "Root.Children[#0].Children[#0].Fields[#0]",
+            projection.Entry.ParentPath);
+        Assert.Same(projection.Entry.Node, result.GetNodeByPath(projection.Entry.Path));
+        Assert.Same(
+            projection.Entry.ParentNode,
+            result.GetNodeByPath(projection.Entry.ParentPath!));
     }
 
     private static Document CreateDocument(string value)
