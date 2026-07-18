@@ -13,16 +13,16 @@ public sealed class ParallelDiffPathProjectionE2ETests
         var projection = Assert.Single(result.GetDiffEntryPathProjections(projector));
 
         Assert.Equal(
-            "Root.Children[#0].Children[#0].Fields[#0].Value",
+            "Root.Children[0].Children[0].Fields[0].Value",
             projection.Entry.Path);
         Assert.Equal(
-            "Root.Children[#0].Children[#0].Fields[#0]",
+            "Root.Children[0].Children[0].Fields[0]",
             projection.Entry.ParentPath);
         Assert.Equal(
-            "Root.Child1[#0].Child2[#0].Attribute1[#0].Value",
+            "Root.Child1[0].Child2[0].Attribute1[0].Value",
             projection.ProjectedPath);
         Assert.Equal(
-            "Root.Child1[#0].Child2[#0].Attribute1[#0]",
+            "Root.Child1[0].Child2[0].Attribute1[0]",
             projection.ProjectedParentPath);
 
         Assert.NotNull(projection.Entry.Node);
@@ -56,10 +56,10 @@ public sealed class ParallelDiffPathProjectionE2ETests
             candidate => candidate.Entry.Path.EndsWith(".Value", StringComparison.Ordinal));
 
         Assert.Equal(
-            "Root.Children[#0].Children[#0].Fields[#0].Value",
+            "Root.Children[0].Children[0].Fields[0].Value",
             projection.Entry.Path);
         Assert.Equal(
-            "Root.Child1[#0].Children[#0].Attribute1[#0].Value",
+            "Root.Child1[0].Children[0].Attribute1[0].Value",
             projection.ProjectedPath);
     }
 
