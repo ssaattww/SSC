@@ -147,9 +147,9 @@ public sealed class ParallelDiffPathSegment
     {
         ArgumentException.ThrowIfNullOrEmpty(memberName);
 
-        if (memberName.Contains('.', StringComparison.Ordinal)
-            || memberName.Contains('[', StringComparison.Ordinal)
-            || memberName.Contains(']', StringComparison.Ordinal))
+        if (memberName.Contains('.')
+            || memberName.Contains('[')
+            || memberName.Contains(']'))
         {
             throw new ArgumentException(
                 "Diff path member name cannot contain '.', '[' or ']'.",
