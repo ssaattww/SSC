@@ -24,56 +24,21 @@ public sealed class ParallelDiffPathCompatibilityE2ETests
                 ],
             },
         ]);
+        var projector = new CapturingProjector();
 
         var entry = Assert.Single(result.GetDiffEntries());
         var projection = Assert.Single(
-            result.GetDiffEntryPathProjections(new KeepStandardProjector()));
+            result.GetDiffEntryPathProjections(projector));
 
         Assert.Equal("Items[].Value", entry.Path);
         Assert.Equal(entry.Path, projection.Entry.Path);
         Assert.Equal("Items[].Value", projection.ProjectedPath);
         Assert.Equal("Items[]", projection.ProjectedParentPath);
-        Assert.Equal(ParallelDiffPathSelectorKind.Key, Assert.Single(
-            new[]
-            {
-                GetItemSelector(projection),
-            }).Kind);
-        Assert.Equal(string.Empty, GetItemSelector(projection).KeyText);
-    }
-
-    private static ParallelDiffPathSelector GetItemSelector(
-        ParallelDiffEntryPathProjection projection)
-    {
-        var projector = new CapturingProjector();
-        _ = ParallelCompareApi.Compare(
-        [
-            new Dataset
-            {
-                Items =
-                [
-                    new Item { Id = string.Empty, Value = "left" },
-                ],
-            },
-            new Dataset
-            {
-                Items =
-                [
-                    new Item { Id = string.Empty, Value = "right" },
-                ],
-            },
-        ]).GetDiffEntryPathProjections(projector);
-
         Assert.NotNull(projector.ItemSelector);
-        return projector.ItemSelector.Value;
-    }
-
-    private sealed class KeepStandardProjector : IParallelDiffPathProjector
-    {
-        public ParallelDiffPathSegmentProjection Project(
-            ParallelDiffPathProjectionContext context)
-        {
-            return ParallelDiffPathSegmentProjection.KeepStandard();
-        }
+        Assert.Equal(
+            ParallelDiffPathSelectorKind.Key,
+            projector.ItemSelector.Value.Kind);
+        Assert.Equal(string.Empty, projector.ItemSelector.Value.KeyText);
     }
 
     private sealed class CapturingProjector : IParallelDiffPathProjector
