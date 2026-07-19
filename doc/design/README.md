@@ -17,6 +17,7 @@
 - `detail/08-ImplementationChecklist.md`
 - `detail/09-ValueStateBehavior.md`
 - `detail/10-DiffEntryPathFilter.md`
+- `detail/11-DiffEntryCustomPath.md`
 
 ## Notes
 

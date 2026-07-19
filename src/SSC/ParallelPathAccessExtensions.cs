@@ -53,13 +53,39 @@ public static class ParallelPathAccessExtensions
             return Array.Empty<ParallelDiffEntry>();
         }
 
-        var entries = new List<ParallelDiffEntry>();
-        foreach (var childSet in root.GetDirectChildren())
+        var collector = new DiffEntryCollector(projector: null);
+        collector.Collect(root);
+        return collector.Entries;
+    }
+
+    /// <summary>
+    /// 標準差分 entry と、指定した投影器で生成した利用側定義 path の組を返します。
+    /// </summary>
+    /// <typeparam name="T">比較対象 model の型。</typeparam>
+    /// <param name="result">比較結果。</param>
+    /// <param name="projector">標準 path segment の扱いを決定する投影器。</param>
+    /// <returns>標準差分 entry と利用側定義 path の一覧。</returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="result"/> または <paramref name="projector"/> が <see langword="null"/> の場合。
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// 1件の差分 entry に含まれるすべての segment が省略され、利用側定義 path が空になる場合。
+    /// </exception>
+    public static IReadOnlyList<ParallelDiffEntryPathProjection> GetDiffEntryPathProjections<T>(
+        this CompareResult<T> result,
+        IParallelDiffPathProjector projector)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(projector);
+
+        if (result.Root is not IParallelNode root)
         {
-            AddChildSetDiffEntries(entries, childSet, parentPath: string.Empty, root);
+            return Array.Empty<ParallelDiffEntryPathProjection>();
         }
 
-        return entries;
+        var collector = new DiffEntryCollector(projector);
+        collector.Collect(root);
+        return collector.Projections;
     }
 
     private static bool TryResolveSegment(IParallelNode current, XPathLikePathSegment segment, out IParallelNode next)
@@ -107,188 +133,335 @@ public static class ParallelPathAccessExtensions
         return next is not null;
     }
 
-    private static void AddNodeDiffEntries(
-        List<ParallelDiffEntry> entries,
-        IParallelNode node,
-        string path,
-        string? parentPath,
-        IParallelNode parentNode)
+    private sealed class DiffEntryCollector
     {
-        if (HasOwnPresenceMismatch(node))
+        private readonly IParallelDiffPathProjector? _projector;
+        private readonly List<DiffPathFrame> _frames = [];
+        private readonly List<ParallelDiffEntry> _entries = [];
+        private readonly List<ParallelDiffEntryPathProjection> _projections = [];
+
+        public DiffEntryCollector(IParallelDiffPathProjector? projector)
         {
-            entries.Add(CreateNodeEntry(path, parentPath, parentNode, node));
-            return;
+            _projector = projector;
         }
 
-        var childSets = node.GetDirectChildren();
-        if (childSets.Count == 0)
+        public IReadOnlyList<ParallelDiffEntry> Entries => _entries;
+
+        public IReadOnlyList<ParallelDiffEntryPathProjection> Projections => _projections;
+
+        public void Collect(IParallelNode root)
         {
-            if (node.HasDifferences())
+            foreach (var childSet in root.GetDirectChildren())
             {
-                entries.Add(CreateNodeEntry(path, parentPath, parentNode, node));
+                AddChildSetDiffEntries(childSet, root);
+            }
+        }
+
+        private void AddNodeDiffEntries(IParallelNode node)
+        {
+            if (HasOwnPresenceMismatch(node))
+            {
+                AddEntry(CreateNodeEntry(node));
+                return;
             }
 
-            return;
-        }
-
-        foreach (var childSet in childSets)
-        {
-            AddChildSetDiffEntries(entries, childSet, path, node);
-        }
-    }
-
-    private static void AddChildSetDiffEntries(
-        List<ParallelDiffEntry> entries,
-        ParallelChildSet childSet,
-        string parentPath,
-        IParallelNode parentNode)
-    {
-        if (!childSet.HasDifferences)
-        {
-            return;
-        }
-
-        if (parentNode is IParallelNodeInternal internalParent
-            && internalParent.TryGetMemberNode(childSet.Name, out var memberNode))
-        {
-            AddNodeDiffEntries(
-                entries,
-                memberNode,
-                CombinePath(parentPath, childSet.Name),
-                ToEntryParentPath(parentPath),
-                parentNode);
-            return;
-        }
-
-        if (childSet.Nodes.Count == 0)
-        {
-            if (parentNode is IParallelNodeInternal containerParent
-                && containerParent.TryGetContainerPresenceStates(childSet.Name, out var states))
+            var childSets = node.GetDirectChildren();
+            if (childSets.Count == 0)
             {
-                entries.Add(CreateContainerPresenceEntry(
-                    CombinePath(parentPath, childSet.Name),
-                    ToEntryParentPath(parentPath),
+                if (node.HasDifferences())
+                {
+                    AddEntry(CreateNodeEntry(node));
+                }
+
+                return;
+            }
+
+            foreach (var childSet in childSets)
+            {
+                AddChildSetDiffEntries(childSet, node);
+            }
+        }
+
+        private void AddChildSetDiffEntries(
+            ParallelChildSet childSet,
+            IParallelNode parentNode)
+        {
+            if (!childSet.HasDifferences)
+            {
+                return;
+            }
+
+            if (parentNode is IParallelNodeInternal internalParent
+                && internalParent.TryGetMemberNode(childSet.Name, out var memberNode))
+            {
+                PushFrame(
+                    ParallelDiffPathSegment.Member(childSet.Name),
                     parentNode,
-                    states));
+                    memberNode,
+                    childSet.Nodes);
+                try
+                {
+                    AddNodeDiffEntries(memberNode);
+                }
+                finally
+                {
+                    PopFrame();
+                }
+
+                return;
             }
 
-            return;
-        }
-
-        for (var ordinal = 0; ordinal < childSet.Nodes.Count; ordinal++)
-        {
-            var childNode = childSet.Nodes[ordinal];
-            var selector = childNode.KeyText is null
-                ? $"#{ordinal}"
-                : EscapeKeyText(childNode.KeyText);
-            AddNodeDiffEntries(
-                entries,
-                childNode,
-                CombinePath(parentPath, $"{childSet.Name}[{selector}]"),
-                ToEntryParentPath(parentPath),
-                parentNode);
-        }
-    }
-
-    private static ParallelDiffEntry CreateNodeEntry(
-        string path,
-        string? parentPath,
-        IParallelNode parentNode,
-        IParallelNode node)
-    {
-        var values = new ParallelDiffValue[node.Count];
-        for (var modelIndex = 0; modelIndex < node.Count; modelIndex++)
-        {
-            values[modelIndex] = new ParallelDiffValue
+            if (childSet.Nodes.Count == 0)
             {
-                ModelIndex = modelIndex,
-                Value = node.GetValue(modelIndex),
-                State = node.GetState(modelIndex),
+                if (parentNode is IParallelNodeInternal containerParent
+                    && containerParent.TryGetContainerPresenceStates(childSet.Name, out var states))
+                {
+                    PushFrame(
+                        ParallelDiffPathSegment.Member(childSet.Name),
+                        parentNode,
+                        node: null,
+                        Array.Empty<IParallelNode>());
+                    try
+                    {
+                        AddEntry(CreateContainerPresenceEntry(parentNode, states));
+                    }
+                    finally
+                    {
+                        PopFrame();
+                    }
+                }
+
+                return;
+            }
+
+            for (var ordinal = 0; ordinal < childSet.Nodes.Count; ordinal++)
+            {
+                var childNode = childSet.Nodes[ordinal];
+                var segment = childNode.KeyText is null
+                    ? ParallelDiffPathSegment.Ordinal(childSet.Name, ordinal)
+                    : ParallelDiffPathSegment.StandardKey(childSet.Name, childNode.KeyText);
+
+                PushFrame(segment, parentNode, childNode, childSet.Nodes);
+                try
+                {
+                    AddNodeDiffEntries(childNode);
+                }
+                finally
+                {
+                    PopFrame();
+                }
+            }
+        }
+
+        private void PushFrame(
+            ParallelDiffPathSegment standardSegment,
+            IParallelNode parentNode,
+            IParallelNode? node,
+            IReadOnlyList<IParallelNode> siblings)
+        {
+            _frames.Add(new DiffPathFrame(
+                standardSegment,
+                parentNode,
+                node,
+                siblings));
+        }
+
+        private void PopFrame()
+        {
+            _frames.RemoveAt(_frames.Count - 1);
+        }
+
+        private void AddEntry(ParallelDiffEntry entry)
+        {
+            if (_projector is null)
+            {
+                _entries.Add(entry);
+                return;
+            }
+
+            _projections.Add(CreateProjection(entry, _projector));
+        }
+
+        private ParallelDiffEntryPathProjection CreateProjection(
+            ParallelDiffEntry entry,
+            IParallelDiffPathProjector projector)
+        {
+            var nodeContexts = _frames
+                .Select(frame => new ParallelDiffPathNodeContext(
+                    frame.StandardSegment,
+                    frame.ParentNode,
+                    frame.Node,
+                    frame.Siblings))
+                .ToArray();
+            var projectedSegments = new List<ParallelDiffPathSegment>(_frames.Count);
+            var projectedParentSegmentCount = 0;
+
+            for (var index = 0; index < nodeContexts.Length; index++)
+            {
+                IReadOnlyList<ParallelDiffPathNodeContext> ancestors = index == 0
+                    ? Array.Empty<ParallelDiffPathNodeContext>()
+                    : nodeContexts[..index];
+                var context = new ParallelDiffPathProjectionContext(
+                    ancestors,
+                    nodeContexts[index]);
+                var projection = projector.Project(context);
+
+                switch (projection.Kind)
+                {
+                    case ParallelDiffPathSegmentProjectionKind.KeepStandard:
+                        projectedSegments.Add(nodeContexts[index].StandardSegment);
+                        break;
+                    case ParallelDiffPathSegmentProjectionKind.Replace:
+                        projectedSegments.Add(projection.Replacement
+                            ?? throw new InvalidOperationException(
+                                "Replace projection must contain a replacement segment."));
+                        break;
+                    case ParallelDiffPathSegmentProjectionKind.Omit:
+                        break;
+                    default:
+                        throw new InvalidOperationException(
+                            $"Unknown diff path segment projection kind '{projection.Kind}'.");
+                }
+
+                if (index == nodeContexts.Length - 2)
+                {
+                    projectedParentSegmentCount = projectedSegments.Count;
+                }
+            }
+
+            if (projectedSegments.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Projected diff path for standard path '{entry.Path}' cannot be empty.");
+            }
+
+            var projectedPath = ParallelDiffPathFormatter.Format(projectedSegments);
+            var projectedParentPath = nodeContexts.Length <= 1
+                || projectedParentSegmentCount == 0
+                    ? null
+                    : ParallelDiffPathFormatter.Format(
+                        projectedSegments,
+                        projectedParentSegmentCount);
+
+            return new ParallelDiffEntryPathProjection(
+                entry,
+                projectedPath,
+                projectedParentPath);
+        }
+
+        private ParallelDiffEntry CreateNodeEntry(IParallelNode node)
+        {
+            var values = new ParallelDiffValue[node.Count];
+            for (var modelIndex = 0; modelIndex < node.Count; modelIndex++)
+            {
+                values[modelIndex] = new ParallelDiffValue
+                {
+                    ModelIndex = modelIndex,
+                    Value = node.GetValue(modelIndex),
+                    State = node.GetState(modelIndex),
+                };
+            }
+
+            return new ParallelDiffEntry
+            {
+                Path = CreateStandardPath(),
+                ParentPath = CreateStandardParentPath(),
+                Kind = ParallelDiffEntryKind.Node,
+                ParentNode = _frames[^1].ParentNode,
+                Node = node,
+                Values = values,
             };
         }
 
-        return new ParallelDiffEntry
+        private ParallelDiffEntry CreateContainerPresenceEntry(
+            IParallelNode parentNode,
+            IReadOnlyList<NodePresenceState> states)
         {
-            Path = path,
-            ParentPath = parentPath,
-            Kind = ParallelDiffEntryKind.Node,
-            ParentNode = parentNode,
-            Node = node,
-            Values = values,
-        };
-    }
-
-    private static ParallelDiffEntry CreateContainerPresenceEntry(
-        string path,
-        string? parentPath,
-        IParallelNode parentNode,
-        IReadOnlyList<NodePresenceState> states)
-    {
-        var values = new ParallelDiffValue[states.Count];
-        for (var modelIndex = 0; modelIndex < states.Count; modelIndex++)
-        {
-            values[modelIndex] = new ParallelDiffValue
+            var values = new ParallelDiffValue[states.Count];
+            for (var modelIndex = 0; modelIndex < states.Count; modelIndex++)
             {
-                ModelIndex = modelIndex,
-                Value = null,
-                State = states[modelIndex] == NodePresenceState.Missing
-                    ? ValueState.Missing
-                    : ValueState.Mismatched,
+                values[modelIndex] = new ParallelDiffValue
+                {
+                    ModelIndex = modelIndex,
+                    Value = null,
+                    State = states[modelIndex] == NodePresenceState.Missing
+                        ? ValueState.Missing
+                        : ValueState.Mismatched,
+                };
+            }
+
+            return new ParallelDiffEntry
+            {
+                Path = CreateStandardPath(),
+                ParentPath = CreateStandardParentPath(),
+                Kind = ParallelDiffEntryKind.ContainerPresence,
+                ParentNode = parentNode,
+                Node = null,
+                Values = values,
             };
         }
 
-        return new ParallelDiffEntry
+        private string CreateStandardPath()
         {
-            Path = path,
-            ParentPath = parentPath,
-            Kind = ParallelDiffEntryKind.ContainerPresence,
-            ParentNode = parentNode,
-            Node = null,
-            Values = values,
-        };
-    }
+            var segments = _frames
+                .Select(frame => frame.StandardSegment)
+                .ToArray();
+            return ParallelDiffPathFormatter.Format(segments);
+        }
 
-    private static bool HasOwnPresenceMismatch(IParallelNode node)
-    {
-        if (node.Count <= 1 || node is not IParallelNodeInternal internalNode)
+        private string? CreateStandardParentPath()
         {
+            if (_frames.Count <= 1)
+            {
+                return null;
+            }
+
+            var segments = _frames
+                .Select(frame => frame.StandardSegment)
+                .ToArray();
+            return ParallelDiffPathFormatter.Format(segments, segments.Length - 1);
+        }
+
+        private static bool HasOwnPresenceMismatch(IParallelNode node)
+        {
+            if (node.Count <= 1 || node is not IParallelNodeInternal internalNode)
+            {
+                return false;
+            }
+
+            var first = internalNode.GetPresenceState(0);
+            for (var modelIndex = 1; modelIndex < node.Count; modelIndex++)
+            {
+                if (internalNode.GetPresenceState(modelIndex) != first)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
+    }
 
-        var first = internalNode.GetPresenceState(0);
-        for (var modelIndex = 1; modelIndex < node.Count; modelIndex++)
+    private sealed class DiffPathFrame
+    {
+        public DiffPathFrame(
+            ParallelDiffPathSegment standardSegment,
+            IParallelNode parentNode,
+            IParallelNode? node,
+            IReadOnlyList<IParallelNode> siblings)
         {
-            if (internalNode.GetPresenceState(modelIndex) != first)
-            {
-                return true;
-            }
+            StandardSegment = standardSegment;
+            ParentNode = parentNode;
+            Node = node;
+            Siblings = siblings;
         }
 
-        return false;
-    }
+        public ParallelDiffPathSegment StandardSegment { get; }
 
-    private static string CombinePath(string parentPath, string segment)
-    {
-        return string.IsNullOrEmpty(parentPath)
-            ? segment
-            : $"{parentPath}.{segment}";
-    }
+        public IParallelNode ParentNode { get; }
 
-    private static string? ToEntryParentPath(string parentPath)
-    {
-        return string.IsNullOrEmpty(parentPath) ? null : parentPath;
-    }
+        public IParallelNode? Node { get; }
 
-    private static string EscapeKeyText(string keyText)
-    {
-        var escaped = keyText.Replace("\\", "\\\\", StringComparison.Ordinal)
-            .Replace("]", "\\]", StringComparison.Ordinal);
-
-        if (escaped.Length > 0 && escaped[0] == '#')
-        {
-            return $"\\{escaped}";
-        }
-
-        return escaped;
+        public IReadOnlyList<IParallelNode> Siblings { get; }
     }
 }

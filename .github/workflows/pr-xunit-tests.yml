@@ -65,12 +65,86 @@ jobs:
         if: ${{ steps.discover.outputs.has_tests == 'true' }}
         shell: bash
         run: |
+          results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
+          rm -rf "$results_dir"
+          mkdir -p "$results_dir"
+          test_status=0
+
           while IFS= read -r project; do
             [[ -z "$project" ]] && continue
             echo "Testing: $project"
-            dotnet restore "$project"
-            dotnet test "$project" --configuration Release --no-restore --verbosity minimal
+
+            result_name="$(printf '%s' "${project%.csproj}" | sed -E 's#[^A-Za-z0-9._-]+#_#g')"
+            if ! dotnet restore "$project"; then
+              test_status=1
+              continue
+            fi
+
+            if ! dotnet test "$project" \
+              --configuration Release \
+              --no-restore \
+              --verbosity minimal \
+              --logger "trx;LogFileName=${result_name}.trx" \
+              --results-directory "$results_dir"; then
+              test_status=1
+            fi
           done <<< "${{ steps.discover.outputs.test_projects }}"
+
+          exit "$test_status"
+
+      - name: Create test result manifest
+        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        shell: bash
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TEST_PROJECTS: ${{ steps.discover.outputs.test_projects }}
+        run: |
+          results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
+          mkdir -p "$results_dir"
+
+          {
+            echo "# SSC .NET test results"
+            echo
+            echo "- Repository: \`$GITHUB_REPOSITORY\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Workflow run: \`$GITHUB_RUN_ID\`"
+            echo "- Run attempt: \`$GITHUB_RUN_ATTEMPT\`"
+            if [[ -n "${PR_NUMBER:-}" ]]; then
+              echo "- Pull request: \`#$PR_NUMBER\`"
+            fi
+            echo "- Authorization: The repository owner explicitly approved retaining these test results as a GitHub Actions artifact for ChatGPT-assisted review when this workflow behavior was added in PR #47."
+            echo
+            echo "## Test projects"
+            while IFS= read -r project; do
+              [[ -z "$project" ]] && continue
+              echo "- \`$project\`"
+            done <<< "$TEST_PROJECTS"
+            echo
+            echo "## Result files"
+
+            shopt -s nullglob
+            trx_files=("$results_dir"/*.trx)
+            if [[ ${#trx_files[@]} -eq 0 ]]; then
+              echo "- No TRX files were produced."
+            else
+              for trx_file in "${trx_files[@]}"; do
+                echo "- \`$(basename "$trx_file")\`"
+              done
+            fi
+          } > "$results_dir/manifest.md"
+
+          cat "$results_dir/manifest.md" >> "$GITHUB_STEP_SUMMARY"
+
+      # The repository owner explicitly approved retaining this artifact so
+      # ChatGPT-assisted review can inspect the same test evidence as maintainers.
+      - name: Upload .NET test results for ChatGPT review
+        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/test-results
+          if-no-files-found: error
+          retention-days: 7
 
       - name: No test projects found
         if: ${{ steps.discover.outputs.has_tests != 'true' }}

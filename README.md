@@ -164,7 +164,8 @@ ValueState rightState = result.GetStateByPath("Items[1].Price", 1);          // 
 ```
 
 `GetDiffEntries()` returns structured diff entries with path, kind, node, and per-model values.
-For `ParallelDiffEntryKind.Node`, `GetNodeByPath(entry.Path)` resolves the same node.
+For `ParallelDiffEntryKind.Node`, `GetNodeByPath(entry.Path)` normally resolves the same node.
+The legacy base-compatible empty compare-key selector (`[]`) preserves the standard path text but is not parseable for lookup, so node and parent-path lookup are not guaranteed for that case.
 
 ```csharp
 IReadOnlyList<ParallelDiffEntry> entries = result.GetDiffEntries();
@@ -207,6 +208,29 @@ public sealed class OptionalProductModel
     public List<ProductItem>? Items { get; init; }
 }
 ```
+
+Use `GetDiffEntryPathProjections()` when a report or filter needs consumer-defined path labels while retaining each standard diff entry.
+Implement `IParallelDiffPathProjector` and keep, replace, or omit each standard segment.
+
+```csharp
+public sealed class ReportPathProjector : IParallelDiffPathProjector
+{
+    public ParallelDiffPathSegmentProjection Project(ParallelDiffPathProjectionContext context)
+    {
+        return context.Current.StandardSegment.MemberName == "Items"
+            ? ParallelDiffPathSegmentProjection.Replace(
+                context.Current.StandardSegment.WithMemberName("Product"))
+            : ParallelDiffPathSegmentProjection.KeepStandard();
+    }
+}
+
+IReadOnlyList<ParallelDiffEntryPathProjection> projections =
+    result.GetDiffEntryPathProjections(new ReportPathProjector());
+```
+
+`ProjectedPath` is a display, classification, and filtering label, not a `GetNodeByPath()` address.
+Multiple entries may have the same projected path; use `projection.Entry.Path` to retain their standard locations.
+If a projector omits every segment, the call throws `InvalidOperationException`; exceptions thrown by the projector propagate to the caller.
 
 ## Source Generator Example
 

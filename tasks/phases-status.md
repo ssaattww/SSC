@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-07-11
+- Updated: 2026-07-18
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -37,6 +37,7 @@
 
 - Status: Done
 - Notes:
+  - T-093でPR #47の利用側定義path投影APIをレビューし、空文字列keyの後方互換、XML documentation、README・設計契約の指摘を解消した
   - T-092でPR #45の差分パスLINQフィルターをレビューし、`*` escape、XML documentation、nullable契約、設計grammar・索引、境界・回帰テストの指摘を解消した
   - T-091でT-090追加分のXML documentationを日本語化した
   - T-090 の polymorphic sequence runtime 型比較とレビュー指摘の XML documentation 修正を完了した
@@ -153,6 +154,7 @@
 
 - Status: Done
 - Notes:
+  - T-093はfocused unit 21件、focused E2E 7件、Release全162件、format、diff check、独立検証に成功し、`gpt-5.6-sol / high`同一reviewerの最終指摘なしを確認した（Markdown lintはrepository wiring不在のためunsupported）
   - T-092はRelease 133テスト、focused 21テスト、format、diff check、coding standards validation、`gpt-5.6-sol / high`同一レビュアー再レビューに成功した
   - T-091はRelease 112テスト、format、diff check、XML整形式、非コメント差分照合、独立reviewに成功した
   - T-090 は Release 112テスト、format、diff check、standards validation、`gpt-5.6-sol / high` 再レビューに成功した
