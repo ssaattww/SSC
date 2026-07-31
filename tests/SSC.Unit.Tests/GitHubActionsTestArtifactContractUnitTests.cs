@@ -18,6 +18,11 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
             "pr-xunit-tests.yml");
         var workflow = File.ReadAllText(workflowPath);
 
+        Assert.Contains("Prepare test diagnostic artifact", workflow);
+        Assert.Contains("-generator-restore.stdout.log", workflow);
+        Assert.Contains("-generator-restore.stderr.log", workflow);
+        Assert.Contains("-generator-build.stdout.log", workflow);
+        Assert.Contains("-generator-build.stderr.log", workflow);
         Assert.Contains("--logger \"trx;LogFileName=", workflow);
         Assert.Contains("--results-directory \"$results_dir\"", workflow);
         Assert.Contains("-restore.stdout.log", workflow);
@@ -36,7 +41,7 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
         Assert.Contains("Pull request head:", workflow);
         Assert.Contains("actions/upload-artifact@v4", workflow);
         Assert.Contains(
-            "if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}",
+            "if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}",
             workflow);
         Assert.Contains("retention-days: 7", workflow);
         Assert.Contains("manifest.md", workflow);
