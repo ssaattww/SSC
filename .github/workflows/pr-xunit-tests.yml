@@ -50,16 +50,49 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Prepare test diagnostic artifact
+        if: ${{ steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true' }}
+        shell: bash
+        run: |
+          results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
+          rm -rf "$results_dir"
+          mkdir -p "$results_dir/logs"
+
       - name: Restore and build source generators
         if: ${{ steps.discover.outputs.has_generators == 'true' }}
         shell: bash
         run: |
+          logs_dir="$GITHUB_WORKSPACE/artifacts/test-results/logs"
+          generator_status=0
+
           while IFS= read -r project; do
             [[ -z "$project" ]] && continue
             echo "Building generator: $project"
-            dotnet restore "$project"
-            dotnet build "$project" --configuration Release --no-restore --verbosity minimal
+
+            result_name="$(printf '%s' "${project%.csproj}" | sed -E 's#[^A-Za-z0-9._-]+#_#g')"
+            restore_stdout="$logs_dir/${result_name}-generator-restore.stdout.log"
+            restore_stderr="$logs_dir/${result_name}-generator-restore.stderr.log"
+            build_stdout="$logs_dir/${result_name}-generator-build.stdout.log"
+            build_stderr="$logs_dir/${result_name}-generator-build.stderr.log"
+
+            if ! dotnet restore "$project" \
+              > >(tee "$restore_stdout") \
+              2> >(tee "$restore_stderr" >&2); then
+              generator_status=1
+              continue
+            fi
+
+            if ! dotnet build "$project" \
+              --configuration Release \
+              --no-restore \
+              --verbosity minimal \
+              > >(tee "$build_stdout") \
+              2> >(tee "$build_stderr" >&2); then
+              generator_status=1
+            fi
           done <<< "${{ steps.discover.outputs.generator_projects }}"
+
+          exit "$generator_status"
 
       - name: Restore and run tests
         if: ${{ steps.discover.outputs.has_tests == 'true' }}
@@ -67,7 +100,6 @@ jobs:
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
           logs_dir="$results_dir/logs"
-          rm -rf "$results_dir"
           mkdir -p "$logs_dir"
           test_status=0
 
@@ -103,7 +135,7 @@ jobs:
           exit "$test_status"
 
       - name: Collect .NET diagnostic context
-        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
         shell: bash
         env:
           TEST_PROJECTS: ${{ steps.discover.outputs.test_projects }}
@@ -144,7 +176,7 @@ jobs:
             2> "$diagnostics_dir/project-list.stderr.log"
 
       - name: Create test result manifest
-        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
         shell: bash
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -194,7 +226,7 @@ jobs:
       # The repository owner explicitly approved retaining this artifact so
       # ChatGPT-assisted review can inspect the same test evidence as maintainers.
       - name: Upload .NET test results for ChatGPT review
-        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
         uses: actions/upload-artifact@v4
         with:
           name: ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}
