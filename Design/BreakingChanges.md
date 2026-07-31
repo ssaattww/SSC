@@ -75,7 +75,7 @@
 - 背景:
   - デバッグ時に `Parallel` node そのものから Diff と同様に値を確認できるようにするため
 - 備考:
-  - 機械処理では indexer / `GetState(modelIndex)` / scalar member access / Diff entry の structured data を使う
+  - 機械処理では indexer / `GetState(modelIndex)` / Diff entry の structured data を使う
 
 ### T-085 MissingCompareKeyListPolicy の既定値変更
 
