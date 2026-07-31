@@ -108,6 +108,7 @@ jobs:
         env:
           TEST_PROJECTS: ${{ steps.discover.outputs.test_projects }}
           GENERATOR_PROJECTS: ${{ steps.discover.outputs.generator_projects }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           diagnostics_dir="$GITHUB_WORKSPACE/artifacts/test-results/diagnostics"
           mkdir -p "$diagnostics_dir"
@@ -122,7 +123,10 @@ jobs:
 
           {
             echo "Repository: $GITHUB_REPOSITORY"
-            echo "Commit: $GITHUB_SHA"
+            echo "Workflow commit: $GITHUB_SHA"
+            if [[ -n "${PR_HEAD_SHA:-}" ]]; then
+              echo "Pull request head: $PR_HEAD_SHA"
+            fi
             echo "Workflow run: $GITHUB_RUN_ID"
             echo "Run attempt: $GITHUB_RUN_ATTEMPT"
             echo "Runner OS: $RUNNER_OS"
@@ -144,6 +148,7 @@ jobs:
         shell: bash
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           TEST_PROJECTS: ${{ steps.discover.outputs.test_projects }}
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
@@ -153,7 +158,10 @@ jobs:
             echo "# SSC .NET test results"
             echo
             echo "- Repository: \`$GITHUB_REPOSITORY\`"
-            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Workflow commit: \`$GITHUB_SHA\`"
+            if [[ -n "${PR_HEAD_SHA:-}" ]]; then
+              echo "- Pull request head: \`$PR_HEAD_SHA\`"
+            fi
             echo "- Workflow run: \`$GITHUB_RUN_ID\`"
             echo "- Run attempt: \`$GITHUB_RUN_ATTEMPT\`"
             if [[ -n "${PR_NUMBER:-}" ]]; then
