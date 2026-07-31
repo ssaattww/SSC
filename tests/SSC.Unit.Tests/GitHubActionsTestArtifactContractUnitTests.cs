@@ -6,10 +6,10 @@ namespace SSC.Unit.Tests;
 public sealed class GitHubActionsTestArtifactContractUnitTests
 {
     /// <summary>
-    /// pull request workflow がレビュー用の保持期間付き TRX artifact を公開することを確認します。
+    /// pull request workflow がレビュー用の保持期間付き診断 artifact を公開することを確認します。
     /// </summary>
     [Fact]
-    public void PullRequestWorkflow_PublishesRetainedTrxArtifactForChatGptReview()
+    public void PullRequestWorkflow_PublishesRetainedDiagnosticArtifactForChatGptReview()
     {
         var workflowPath = Path.Combine(
             FindRepositoryRoot(),
@@ -20,6 +20,16 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
 
         Assert.Contains("--logger \"trx;LogFileName=", workflow);
         Assert.Contains("--results-directory \"$results_dir\"", workflow);
+        Assert.Contains("-restore.stdout.log", workflow);
+        Assert.Contains("-restore.stderr.log", workflow);
+        Assert.Contains("-test.stdout.log", workflow);
+        Assert.Contains("-test.stderr.log", workflow);
+        Assert.Contains("dotnet-info.stdout.log", workflow);
+        Assert.Contains("dotnet-info.stderr.log", workflow);
+        Assert.Contains("git-status.stdout.log", workflow);
+        Assert.Contains("git-status.stderr.log", workflow);
+        Assert.Contains("runner-context.stdout.log", workflow);
+        Assert.Contains("project-list.stdout.log", workflow);
         Assert.Contains("actions/upload-artifact@v4", workflow);
         Assert.Contains(
             "if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}",
