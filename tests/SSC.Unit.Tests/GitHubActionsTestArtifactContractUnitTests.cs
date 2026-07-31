@@ -30,6 +30,10 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
         Assert.Contains("git-status.stderr.log", workflow);
         Assert.Contains("runner-context.stdout.log", workflow);
         Assert.Contains("project-list.stdout.log", workflow);
+        Assert.Contains(
+            "PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}",
+            workflow);
+        Assert.Contains("Pull request head:", workflow);
         Assert.Contains("actions/upload-artifact@v4", workflow);
         Assert.Contains(
             "if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}",
