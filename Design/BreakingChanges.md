@@ -7,17 +7,18 @@
 - 対象:
   - `ParallelDiffPathPattern.IsMatch(string)`
   - `ParallelDiffEntryPathExtensions.PathMatches(...)`
+  - `ParallelDiffEntryPathProjectionExtensions.PathMatches(...)`
 - 変更種別:
   - public runtime behavior の拡張
 - 影響:
   - 従来はpatternと候補pathのsegment数が同じ場合だけ一致した
   - Issue #48以降はpatternの全segmentが候補pathの先頭から一致すれば、候補側の残りsegmentを子孫pathとして許容する
-  - `Root.A` は `Root.A`、`Root.A.B`、`Root.A.Attribute[Width].Value` に一致する
+  - 標準pathと利用側定義pathの両方で、`Root.A` は `Root.A`、`Root.A.B`、`Root.A.Attribute[Width].Value` に一致する
   - segment単位で比較するため、`Root.A` は `Root.AA` と `Root.AA.B` には一致しない
 - 互換性:
   - public API shape、完全一致、selector、escape、例外契約は変更しない
   - patternより浅いpathと異なるsegmentは引き続き不一致
-  - 外部利用者が子孫pathを意図的に不一致として扱っていた場合、filter結果が変化する
+  - 標準pathまたは利用側定義pathで子孫pathを意図的に不一致として扱っていた場合、filter結果が変化する
 - 背景:
   - 祖先pathを一つ指定して、その配下の子node、属性、および値の差分をまとめて無視できる必要があるため
 
