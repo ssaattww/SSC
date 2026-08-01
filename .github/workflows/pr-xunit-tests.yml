@@ -429,7 +429,7 @@ jobs:
     if: ${{ always() && needs.dotnet-tests.result == 'success' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     concurrency:
-      group: coverage-pages
+      group: gh-pages
       cancel-in-progress: true
     permissions:
       contents: write
@@ -459,7 +459,7 @@ jobs:
           EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPORT_BRANCH: coverage-pages
+          REPORT_BRANCH: gh-pages
         run: |
           source_report="$RUNNER_TEMP/coverage-artifact/coverage/mobile/code-coverage.html"
           target_report="index.html"
