@@ -36,7 +36,7 @@ dotnet test <test-project> \
 
 ### スマートフォン
 
-PR本文の「Mobile coverage report」をタップします。`reports/code-coverage.html` をHTML preview経由で開くため、artifact ZIPのダウンロードや展開は不要です。
+PR本文の「Mobile coverage report」をタップします。専用`coverage-reports` branchの`reports/pr-<PR番号>/code-coverage.html`をHTML preview経由で開くため、artifact ZIPのダウンロードや展開は不要です。
 
 単一HTMLでは次を確認できます。
 
@@ -56,11 +56,11 @@ PR本文の「Mobile coverage report」をタップします。`reports/code-cov
 
 ## HTMLの自動更新とCI停止条件
 
-テストとcoverage生成が成功すると、専用jobがartifact内の単一HTMLを`reports/code-coverage.html`へコミットします。テストjobのtokenは`contents: read`のまま維持し、HTML反映jobだけに`contents: write`を付与します。fork由来のPRでは自動コミットしません。
+テストとcoverage生成が成功すると、専用jobがartifact内の単一HTMLを`coverage-reports` branchの`reports/pr-<PR番号>/code-coverage.html`へコミットします。PR branchへはコミットしません。テストjobのtokenは`contents: read`のまま維持し、HTML公開jobだけに`contents: write`を付与します。fork由来のPRでは公開しません。
 
-自動コミットのsubjectは`chore: update code coverage report`です。このコミットによってPR workflowがもう一度起動した場合、次のrunは通常のテストとcoverage生成を実施しますが、subjectを検出して追加コミットを作成しません。したがって、1回の通常更新に対してworkflow実行は最大2回で停止します。
+PR workflowのtriggerは`pull_request`であり、`coverage-reports` branchへのpushはPR HEADを変更しません。そのためcoverage公開によるPR workflowの再実行や無限CIは発生しません。PR current HEADに対する成功runをそのまま最終CI証跡として使用できます。
 
-また、HTML反映直前にremote branchのHEADが元のPR HEADと一致することを検査します。作業中にPR HEADが更新されていた場合は、古いcoverageをコミットせず、新しいHEAD側のrunへ処理を譲ります。
+また、HTML公開直前にremote PR branchのHEADが元のPR HEADと一致することを検査します。作業中にPR HEADが更新されていた場合は、古いcoverageを公開せず、新しいHEAD側のrunへ処理を譲ります。
 
 ## 通っていない関数を確認する方法
 
