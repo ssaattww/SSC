@@ -154,7 +154,7 @@
 
 - Status: In Progress
 - Notes:
-  - T-095でPR #51の現HEADを追加レビューし、main競合、HEAD一致CI、必要な修正を確認中
+  - T-095でPR #51を追加レビューし、PR51-NR-F001〜F005（main競合、task identity、CI、workflow diagnostics、test coverage）を修正中
   - T-093はfocused unit 21件、focused E2E 7件、Release全162件、format、diff check、独立検証に成功し、`gpt-5.6-sol / high`同一reviewerの最終指摘なしを確認した（Markdown lintはrepository wiring不在のためunsupported）
   - T-092はRelease 133テスト、focused 21テスト、format、diff check、coding standards validation、`gpt-5.6-sol / high`同一レビュアー再レビューに成功した
   - T-091はRelease 112テスト、format、diff check、XML整形式、非コメント差分照合、独立reviewに成功した

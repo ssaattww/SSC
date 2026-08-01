@@ -5,7 +5,7 @@
 ## In Progress
 
 - T-095: PR #51 を追加レビューし、必要な指摘を解消する
-  - Status: レビュー準備中（現HEAD、main競合、HEAD一致CIを確認中）
+  - Status: 初回レビュー指摘対応中（PR51-NR-F001〜F005）
   - Phase: Phase 4
   - Estimate: S
   - Depends on:
@@ -20,6 +20,13 @@
   - Output:
     - PR #51
     - `reports/task-t-095-pr-51-review-20260801161359.md`
+  - Review:
+    - reviewed HEAD `d4a9e3ea96ba3e554ccb89adc5251f6c72adbb5d`
+    - `gpt-5.6-sol / high` reviewer verdict `fail`
+    - Blocking: main競合7箇所、current-HEAD CI/check/artifactなし
+    - High: T-094 task identity衝突
+    - Medium: generator failure diagnostics不足、Missing/pattern検索test不足
+    - local validationはUnit 81件、E2E 88件、format、diff checkに成功
 
 ## Backlog
 
