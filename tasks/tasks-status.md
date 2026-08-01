@@ -5,7 +5,7 @@
 ## In Progress
 
 - T-095: PR #51 を追加レビューし、必要な指摘を解消する
-  - Status: normal review完了（pre-freeze commit、HEAD一致CI、独立最終レビュー待ち）
+  - Status: 独立最終レビュー指摘対応中（PR51-IFR-F001）
   - Phase: Phase 4
   - Estimate: S
   - Depends on:
@@ -24,7 +24,7 @@
     - `reports/task-t-095-pr-51-review-fix-verification-20260801163746.md`
     - `reports/task-t-095-pr-51-f004-fix-implementation-20260801164701.md`
     - `reports/task-t-095-pr-51-f004-rereview-20260801165222.md`
-    - `reports/task-t-095-pr-51-independent-final-review-20260801170040.md`（予約済み）
+    - `reports/task-t-095-pr-51-independent-final-review-20260801170040.md`（fail report、attestationではない）
   - Review:
     - reviewed HEAD `d4a9e3ea96ba3e554ccb89adc5251f6c72adbb5d`
     - `gpt-5.6-sol / high` reviewer verdict `fail`
@@ -55,6 +55,11 @@
     - end-of-Issue Skill-gap判断は`no skill action needed`
     - feedback分類は製品固有のworkflow contract test不足であり、新規feedback pointなし
     - repository-backed normal handoffは同一session・同一branchで継続するためnot applicable
+  - Independent Final Review:
+    - reviewed HEAD `36eeada49aa60bb6c5985278a589311c092791fa`
+    - `PR51-IFR-F001` Medium: artifactにcheckout済みsourceとGit metadataがなく、PR本文・T-096 exit criteria・実装reportと不一致
+    - HEAD一致CI run `30690908186`は成功したが、Artifact `8815629061`のZIP実体にsource payloadなし
+    - fresh `gpt-5.6-sol / high` reviewer verdict `fail`、report attestationは不許可
 - T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
   - Status: 対応中（PR49-FR1のfix verification合格。pre-freeze commit・matching-HEAD CI・fresh独立最終レビュー待ち）
   - Phase: Phase 3
