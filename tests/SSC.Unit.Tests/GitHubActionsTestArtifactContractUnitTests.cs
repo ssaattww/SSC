@@ -30,7 +30,10 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
         Assert.Contains("-generator-build.stdout.log", workflow);
         Assert.Contains("-generator-build.stderr.log", workflow);
         Assert.Contains("--logger \"trx;LogFileName=", workflow);
-        Assert.Contains("--results-directory \"$results_dir\"", workflow);
+        Assert.Contains(
+            "project_results_dir=\"$results_dir/test-runs/$result_name\"",
+            workflow);
+        Assert.Contains("--results-directory \"$project_results_dir\"", workflow);
         Assert.Contains("-restore.stdout.log", workflow);
         Assert.Contains("-restore.stderr.log", workflow);
         Assert.Contains("-test.stdout.log", workflow);
