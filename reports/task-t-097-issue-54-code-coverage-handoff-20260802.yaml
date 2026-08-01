@@ -2,14 +2,14 @@ schema_version: 3
 producer:
   skill: chat-implementation-worker
   mode: initial implementation
-  generated_at: 2026-08-02T08:47:00+09:00
+  generated_at: 2026-08-02T08:49:00+09:00
 repository: ssaattww/SSC
 issue_or_pr: "Issue #54 / PR #55"
 task_id: T-097
 branch: feature/issue-54-code-coverage
 base_ref: main
 target:
-  current_head: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
+  current_head: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
   reviewed_head: null
   commit_range: main...feature/issue-54-code-coverage
 authoritative_requirements:
@@ -90,11 +90,11 @@ files:
     - path_or_area: src/SSC and src/SSC.Generators production code
       reason: visualization requires no production API change
 commands:
-  - command: PR .NET Tests run 30723899019
+  - command: PR .NET Tests run 30724021274
     purpose: final-head test, coverage, gh-pages publication, and Pages deployment validation
     exit_code: 1
     result: partial
-    head_sha: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
+    head_sha: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
     evidence: tests, coverage, artifacts, and gh-pages publication succeeded; configure-pages failed because Pages is not enabled
   - command: PR .NET Tests run 30721897811
     purpose: earlier full test and coverage validation before mobile publication changes
@@ -106,18 +106,18 @@ tests:
   - name: SSC.Unit.Tests
     phase: final_head
     result: passed
-    head_sha: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
-    evidence: run 30723899019 dotnet-tests job success
+    head_sha: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
+    evidence: run 30724021274 dotnet-tests job success
   - name: SSC.E2E.Tests
     phase: final_head
     result: passed
-    head_sha: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
-    evidence: run 30723899019 dotnet-tests job success
+    head_sha: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
+    evidence: run 30724021274 dotnet-tests job success
 ci:
   required: true
   workflow: PR .NET Tests
-  run_id: 30723899019
-  head_sha: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
+  run_id: 30724021274
+  head_sha: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
   conclusion: failure
   stage_results:
     dotnet_tests: success
@@ -128,19 +128,19 @@ ci:
     pages_configuration: failure
     pages_deployment: skipped
   artifacts:
-    - id: 8825707275
-      name: ssc-pr-test-results-30723899019-1
-      digest: sha256:aac162378f0d9fa8d637f48e40ba94065f56f892baa4744a81eb1eba5d894997
+    - id: 8825744553
+      name: ssc-pr-test-results-30724021274-1
+      digest: sha256:12ca05a91e29b580c0fd3a2eff0adf11cd739e521b3293a7f9587b0bfc748d96
       purpose: tests, diagnostics, source, and coverage reports
-    - id: 8825706948
+    - id: 8825744291
       name: github-pages
-      digest: sha256:e8e3d92d0c98fe25ae7d80e3cf210eeb3efed61bb42b56d9c8dc45c2dc66682b
+      digest: sha256:521738411bb67b55398f98fd35e763fe3b74cee3842cf18e4810f1ac07400ca0
       purpose: Pages deployment payload
 implementation:
   outcome: blocked_on_repository_setting
-  final_head: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
+  final_head: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
   publication_branch: gh-pages
-  publication_source_head: 4cf6aadef0745a94a1565b0e13c66df9b1d5cfdd
+  publication_source_head: 034aad0cc2796ebc8f1f6bf2b8ddbd69c5bb2029
   blocked_items:
     - Enable GitHub Pages in repository Settings and set Source to GitHub Actions.
   summary:
@@ -214,13 +214,13 @@ next_action:
   instructions:
     - In repository Settings, open Pages.
     - Under Build and deployment, set Source to GitHub Actions.
-    - Rerun job 91432113189 or failed jobs for run 30723899019.
+    - Rerun job 91432429468 or failed jobs for run 30724021274.
     - Confirm Pages deployment and fixed URL.
     - Do not merge.
   required_attachments_or_references:
     - PR #55
     - Issue #54
-    - run 30723899019
+    - run 30724021274
   requested_authorized_actions:
     - read_repository
     - rerun_ci
