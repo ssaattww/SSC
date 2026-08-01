@@ -5,11 +5,11 @@
 ## In Progress
 
 - T-095: PR #51 を追加レビューし、必要な指摘を解消する
-  - Status: 初回レビュー指摘対応中（PR51-NR-F001〜F005）
+  - Status: 修正実装・ローカル検証完了（merge commit、HEAD一致CI、fix verification待ち）
   - Phase: Phase 4
   - Estimate: S
   - Depends on:
-    - T-094 Issue #50 投影済み差分pathからの値参照API
+    - T-096 Issue #50 投影済み差分pathからの値参照API（旧branch identity: T-094）
   - Exit Criteria:
     - `gpt-5.6-sol / high` のreviewerがPR #51の現HEADをレビューする
     - 必須指摘がある場合は `gpt-5.6-terra / high` のimplementation workerが修正する
@@ -20,6 +20,7 @@
   - Output:
     - PR #51
     - `reports/task-t-095-pr-51-review-20260801161359.md`
+    - `reports/task-t-095-pr-51-review-fix-implementation-20260801162816.md`
   - Review:
     - reviewed HEAD `d4a9e3ea96ba3e554ccb89adc5251f6c72adbb5d`
     - `gpt-5.6-sol / high` reviewer verdict `fail`
@@ -27,6 +28,55 @@
     - High: T-094 task identity衝突
     - Medium: generator failure diagnostics不足、Missing/pattern検索test不足
     - local validationはUnit 81件、E2E 88件、format、diff checkに成功
+  - Fix Implementation:
+    - `gpt-5.6-terra / high` implementation workerがPR51-NR-F001〜F005へ対応
+    - current mainを統合し、workflow 5箇所、phase 1箇所、task 1箇所の競合を解消
+    - Issue #50の正規task identityをT-096へ移し、旧branch T-094との対応を記録
+    - Missing slotとpattern検索matrix、workflow diagnostics契約testを追加
+    - focused 11件、Unit 97件、E2E 88件、format、diff checkに成功
+- T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
+  - Status: 対応中（PR49-FR1のfix verification合格。pre-freeze commit・matching-HEAD CI・fresh独立最終レビュー待ち）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-092 差分path patternと設計索引の整備
+    - T-093 利用側定義path投影APIと空文字列keyのlegacy標準path互換
+    - Issue #48 / PR #49 の祖先path一致実装
+  - Exit Criteria:
+    - `GetDiffEntries()` が生成する `Items[].Label` に `Items[*]` と有効な上位祖先patternが一致する失敗testをproduction修正前に追加する
+    - 外部入力としての不正な空selector path、selector境界、標準pathと利用側定義pathの分離契約を維持する
+    - legacy empty-key selectorをmatcherで扱う契約を設計・互換性記録・XML documentationと一致させる
+    - `PR49-FR1 [Medium][Required]` を同一finding identityでfix verificationする
+    - focused test、全test、format、diff check、Markdown lint分類、matching-HEAD CI、fresh独立最終レビューが完了する
+    - review、実装、検証、再レビュー、独立最終レビューの各reportをPR #49 branchへcommit・pushする
+  - Output:
+    - PR #49
+    - `src/SSC/Internal/XPathLikePathParser.cs`
+    - `src/SSC/ParallelDiffPathPattern.cs`
+    - `tests/SSC.Unit.Tests/ParallelDiffPathPatternAncestorUnitTests.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `doc/design/detail/10-DiffEntryPathFilter.md`
+    - `doc/design/detail/11-DiffEntryCustomPath.md`
+    - `Design/BreakingChanges.md`
+    - `reports/issue-48-codex-independent-final-review-audit-20260801.md`
+    - `reports/task-t-094-review-fix-implementation-20260801142313.md`
+    - `reports/task-t-094-review-fix-verification-20260801143017.md`
+    - `reports/task-t-094-review-fix-rereview-20260801143800.md`
+    - `reports/task-t-094-independent-final-review-20260801144134.md`（予約済み）
+  - Verification:
+    - TDD Red: 実際の `GetDiffEntries()` が生成した `Items[].Label` に `Items[*]` が一致せず、focused E2E 1件失敗
+    - focused Unit 12件、parser/pattern Unit 39件、focused E2E 1件成功
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 87件 / E2E 88件、計175件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - 日本語XML documentation、API surface、設計整合の独立検証成功
+    - Markdown lintはrepository wiring不在のためfocused/fullともunsupported
+    - `gpt-5.6-terra / high` implementation agentで修正
+    - 別の`gpt-5.6-terra / high` verification agentで独立検証
+    - source `gpt-5.6-sol / high` reviewerのfix verificationで`PR49-FR1` addressed、新規findingなし、`pass_with_held`
+    - end-of-Issue Skill-gap判断: `no skill action needed`。既存Skillでfinding検出からTDD修正、独立検証、同一reviewer確認まで実行可能
+    - feedback分類: 製品固有のempty-key matcher欠陥であり、新規feedback pointなし
+    - repository-backed normal handoff: 同一session・同一branchで最終レビューへ継続するためnot applicable
 
 ## Backlog
 
@@ -34,10 +84,13 @@
 
 ## Done
 
-- T-094: Issue #50 投影済み差分pathからの値参照APIを実装する
+- T-096: Issue #50 投影済み差分pathからの値参照APIを実装する
   - Status: 完了（レビュー指摘対応、README再構成、task追跡整合、最終HEAD一致CI確認まで完了）
   - Phase: Phase 3
   - Estimate: M
+  - Identity:
+    - current main上の正規task identityはT-096
+    - PR #51 branchで使用した旧identityはT-094であり、historical report本文とfilenameは監査証跡として変更しない
   - Depends on:
     - T-092 差分path patternと設計索引の整備
     - T-093 差分entryの利用側定義path投影API
@@ -59,6 +112,10 @@
     - `tests/SSC.Unit.Tests/Issue50ProjectedPathValueAccessTddTests.cs`
     - `doc/design/detail/12-DiffEntryProjectedPathValueAccess.md`
     - `reports/task-t-094-issue-50-projected-path-value-access-implementation-20260801.md`
+    - `reports/task-t-094-initial-review-202608011406.md`（旧branch identity: T-094）
+    - `reports/task-t-094-review-fix-implementation-202608011452.md`（旧branch identity: T-094）
+    - `reports/task-t-094-rereview-202608011557.md`（旧branch identity: T-094）
+    - `reports/task-t-094-rereview-r2-202608011604.md`（旧branch identity: T-094）
   - Verification:
     - TDD赤確認: `Count`、indexer、`GetState(int)` 未実装によるcompile error
     - 初回実装HEAD一致CI成功（E2E 88件 / Unit 80件）

@@ -64,18 +64,21 @@ public sealed class ParallelDiffPathPattern
     }
 
     /// <summary>
-    /// 指定した XPath-like path がこの pattern に一致するか判定します。
+    /// 指定した XPath-like path 自身、またはその祖先がこの pattern に一致するか判定します。
     /// </summary>
+    /// <remarks>
+    /// 空文字列の比較 key に対して <c>GetDiffEntries()</c> が生成する legacy 空 selector は、候補 path に限り空 key selector として照合します。
+    /// </remarks>
     /// <param name="path">照合する <see cref="ParallelDiffEntry.Path"/>。</param>
-    /// <returns>path 全体が一致する場合は <see langword="true"/>。</returns>
+    /// <returns>pattern の全 segment が path の先頭から一致する場合は <see langword="true"/>。</returns>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> が <see langword="null"/> の場合。</exception>
     public bool IsMatch(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        if (!XPathLikePathParser.TryParse(path, out var parsedPath)
+        if (!XPathLikePathParser.TryParseLegacyEmptyKeySelectorPath(path, out var parsedPath)
             || parsedPath is null
-            || parsedPath.Segments.Count != _segments.Count)
+            || parsedPath.Segments.Count < _segments.Count)
         {
             return false;
         }
@@ -331,11 +334,11 @@ public sealed class ParallelDiffPathPattern
 public static class ParallelDiffEntryPathExtensions
 {
     /// <summary>
-    /// 差分 entry の path が指定 pattern に一致するか判定します。
+    /// 差分 entry の path 自身、またはその祖先が指定 pattern に一致するか判定します。
     /// </summary>
     /// <param name="entry">判定する差分 entry。</param>
     /// <param name="pattern">照合する path pattern。</param>
-    /// <returns>一致する場合は <see langword="true"/>。</returns>
+    /// <returns>pattern が差分 path 自身または祖先に一致する場合は <see langword="true"/>。</returns>
     /// <exception cref="ArgumentNullException"><paramref name="entry"/> または <paramref name="pattern"/> が <see langword="null"/> の場合。</exception>
     public static bool PathMatches(
         this ParallelDiffEntry entry,

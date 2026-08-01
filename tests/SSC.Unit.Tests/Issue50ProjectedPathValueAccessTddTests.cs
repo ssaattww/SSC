@@ -30,6 +30,32 @@ public sealed class Issue50ProjectedPathValueAccessTddTests
     }
 
     /// <summary>
+    /// Missing の model slot でも projection の値と状態が元の entry と一致することを確認します。
+    /// </summary>
+    [Fact]
+    public void Projection_MissingSlotKeepsIndexerGetStateAndEntryValuesAligned()
+    {
+        var result = ParallelCompareApi.Compare(
+        [
+            new ListDocument
+            {
+                Items = [new ListItem { Name = "present" }],
+            },
+            new ListDocument(),
+        ]);
+
+        var projection = Assert.Single(
+            result.GetDiffEntryPathProjections(new KeepStandardProjector())
+                .Where(candidate => candidate.Entry.Path == "Items[0]"));
+
+        Assert.Equal(projection.Entry.Values[0].Value, projection[0]);
+        Assert.Equal(projection.Entry.Values[1].Value, projection[1]);
+        Assert.Equal(projection.Entry.Values[0].State, projection.GetState(0));
+        Assert.Equal(projection.Entry.Values[1].State, projection.GetState(1));
+        Assert.Equal(ValueState.Missing, projection.GetState(1));
+    }
+
+    /// <summary>
     /// 値と状態の参照で範囲外の model index を拒否することを確認します。
     /// </summary>
     [Theory]
@@ -135,6 +161,61 @@ public sealed class Issue50ProjectedPathValueAccessTddTests
     }
 
     /// <summary>
+    /// pattern 検索が一致しない投影を除外しつつ、同じ投影 path の重複と元の順序を保持することを確認します。
+    /// </summary>
+    [Fact]
+    public void PatternSearch_PreservesDuplicateProjectedPathsAndOriginalOrderAmongMixedMatches()
+    {
+        var matches = CreateMixedListResult().GetDiffEntryPathProjections(
+            new CollapseItemSelectorProjector(),
+            ParallelDiffPathPattern.Parse("Item.Name"));
+
+        Assert.Equal(2, matches.Count);
+        Assert.All(matches, match => Assert.Equal("Item.Name", match.ProjectedPath));
+        Assert.Equal(
+            ["Items[0].Name", "Items[1].Name"],
+            matches.Select(match => match.Entry.Path).ToArray());
+    }
+
+    /// <summary>
+    /// pattern 検索が既存の escape 規則を使用し、一致しない場合は空一覧を返すことを確認します。
+    /// </summary>
+    [Fact]
+    public void PatternSearch_UsesEscapedSelectorAndReturnsEmptyForNoMatch()
+    {
+        var result = ParallelCompareApi.Compare(
+        [
+            new KeyedDocument
+            {
+                Items =
+                [
+                    new KeyedListItem { Id = "*", Name = "before-asterisk" },
+                    new KeyedListItem { Id = "other", Name = "before-other" },
+                ],
+            },
+            new KeyedDocument
+            {
+                Items =
+                [
+                    new KeyedListItem { Id = "*", Name = "after-asterisk" },
+                    new KeyedListItem { Id = "other", Name = "after-other" },
+                ],
+            },
+        ]);
+        var projector = new KeepStandardProjector();
+
+        var escapedMatches = result.GetDiffEntryPathProjections(
+            projector,
+            ParallelDiffPathPattern.Parse("Items[\\*].Name"));
+
+        var escapedMatch = Assert.Single(escapedMatches);
+        Assert.Equal("Items[*].Name", escapedMatch.ProjectedPath);
+        Assert.Empty(result.GetDiffEntryPathProjections(
+            projector,
+            ParallelDiffPathPattern.Parse("Items[not-present].Name")));
+    }
+
+    /// <summary>
     /// 完全一致検索と pattern 検索が引数を検証することを確認します。
     /// </summary>
     [Fact]
@@ -169,6 +250,29 @@ public sealed class Issue50ProjectedPathValueAccessTddTests
         [
             new SampleDocument { Value = "before" },
             new SampleDocument { Value = "after" },
+        ]);
+    }
+
+    private static CompareResult<ListDocument> CreateMixedListResult()
+    {
+        return ParallelCompareApi.Compare(
+        [
+            new ListDocument
+            {
+                Items =
+                [
+                    new ListItem { Name = "before-name-a", Category = "before-category-a" },
+                    new ListItem { Name = "before-name-b", Category = "before-category-b" },
+                ],
+            },
+            new ListDocument
+            {
+                Items =
+                [
+                    new ListItem { Name = "after-name-a", Category = "after-category-a" },
+                    new ListItem { Name = "after-name-b", Category = "after-category-b" },
+                ],
+            },
         ]);
     }
 
@@ -214,6 +318,21 @@ public sealed class Issue50ProjectedPathValueAccessTddTests
 
     private sealed class ListItem
     {
+        public string? Name { get; init; }
+
+        public string? Category { get; init; }
+    }
+
+    private sealed class KeyedDocument
+    {
+        public IReadOnlyList<KeyedListItem> Items { get; init; } = [];
+    }
+
+    private sealed class KeyedListItem
+    {
+        [CompareKey]
+        public string Id { get; init; } = string.Empty;
+
         public string? Name { get; init; }
     }
 }

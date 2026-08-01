@@ -80,7 +80,7 @@ Items[#0].Name
 標準 path は SSC の比較 tree 上の位置を表す。
 
 - `Kind == Node` の entry では `GetNodeByPath()` で同じ node を取得できる
-- 空文字列のCompareKeyによる既存base互換の`Name[]`形式は文字列を維持するlegacy selectorであり、既存parserでは解釈できないためnodeとparent pathの解決を保証しない
+- 空文字列のCompareKeyによる既存base互換の`Name[]`形式は文字列を維持するlegacy selectorであり、通常のparserでは解釈できないためnodeとparent pathの解決を保証しない。ただし共有matcherの候補pathとしては空 key selector として扱われるため、`Name[*]` はこの形式の子孫pathに一致する
 - `Kind == ContainerPresence` の entry は public node に対応しないため、`GetNodeByPath()` による解決を保証しない
 - `ParallelDiffEntry.Path` と `ParallelDiffEntry.ParentPath` に使用される
 - 既存 `ParallelDiffEntry.PathMatches()` の照合対象になる
@@ -731,13 +731,29 @@ public static class ParallelDiffEntryPathProjectionExtensions
 
 この overload は `ProjectedPath` を照合する。
 
+Issue #48以降は完全一致に加え、patternの全segmentが `ProjectedPath` の先頭から一致する場合も、残りのsegmentを子孫pathとして許容する。
+
+```text
+Pattern:       Root.Child1[*]
+ProjectedPath: Root.Child1[0].Attribute1[0].Value
+Result:        match
+```
+
+member名とselectorはsegment単位で比較するため、文字列prefixが似ている別segmentには一致しない。
+
+```text
+Pattern:       Root.Child1[*]
+ProjectedPath: Root.Child10[0].Attribute1[0].Value
+Result:        no match
+```
+
 既存 overload は変更しない。
 
 ```csharp
 entry.PathMatches(pattern);
 ```
 
-既存 overload は引き続き `ParallelDiffEntry.Path`、つまり標準 path を照合する。
+既存 overload は引き続き `ParallelDiffEntry.Path`、つまり標準 path を照合する。投影用overloadの呼び出しによって標準pathの文字列または判定対象が利用側定義pathへ置き換わることはない。
 
 ## 8. 投影規則
 
@@ -1055,15 +1071,26 @@ Projected: Root.Child1[0].Child2[0].Attribute1[0].Value
 
 ### 9.4 Patternによる絞り込み
 
+特定leafまで指定する完全一致pattern:
+
 ```csharp
-ParallelDiffPathPattern pattern = ParallelDiffPathPattern.Parse(
+ParallelDiffPathPattern exactPattern = ParallelDiffPathPattern.Parse(
     "Root.Child1[*].Child2[*].Attribute1[*].Value");
+```
+
+祖先node配下をまとめて対象とするpattern:
+
+```csharp
+ParallelDiffPathPattern subtreePattern = ParallelDiffPathPattern.Parse(
+    "Root.Child1[*].Child2[*]");
 
 ParallelDiffEntryPathProjection[] matched = result
     .GetDiffEntryPathProjections(new NamedTreePathProjector())
-    .Where(projection => projection.PathMatches(pattern))
+    .Where(projection => projection.PathMatches(subtreePattern))
     .ToArray();
 ```
+
+`subtreePattern` は `Root.Child1[0].Child2[0]` 自身に加え、`Attribute1[0].Value` などの子孫segmentを持つ利用側定義pathにも一致する。
 
 標準 path に対する既存 filter も同時に利用できる。
 
@@ -1189,6 +1216,8 @@ Current   = 現在の node context
 
 利用側定義 path は既存 path grammar で文字列化するため、`ParallelDiffPathPattern` の既存 parser と matcher を再利用する。
 
+Issue #48の祖先一致規則も同じmatcherを経由して適用する。利用側定義path専用の別matcherまたは別のprefix判定は追加しない。
+
 新しい wildcard grammar は追加しない。
 
 ### 11.5 Comparison pipeline との分離
@@ -1220,17 +1249,20 @@ models
 
 ### 12.1 既存 API
 
-次の API の signature と挙動を変更しない。
+次の API のsignatureは変更しない。
 
 `signature` は、method名、引数、戻り値からなる公開形式を意味する。
 
 ```csharp
 result.GetDiffEntries();
 entry.PathMatches(pattern);
+projection.PathMatches(pattern);
 result.GetNodeByPath(path);
 result.GetValueByPath(path, modelIndex);
 result.GetStateByPath(path, modelIndex);
 ```
+
+Issue #48では2つの `PathMatches` overloadに同じ祖先一致規則を適用する。従来不一致だった子孫pathが一致するため、標準pathまたは利用側定義pathで子孫を意図的に残していたfilter結果は変化し得る。
 
 ### 12.2 標準 path
 
@@ -1307,6 +1339,8 @@ entry.Kind == ParallelDiffEntryKind.Node
 ### 13.5 Pattern matching
 
 - projection extension が `ProjectedPath` を照合する
+- projected ancestor patternがprojected descendant pathへ一致する
+- segment境界の異なるprojected sibling pathへ一致しない
 - 既存 entry extension が標準 `Path` を照合し続ける
 - `[*]` が projected key selector に一致する
 - `[*]` が projected ordinal selector に一致する
@@ -1340,6 +1374,8 @@ E2E:   6 tests
 Total: 26 tests
 ```
 
+Issue #48の指摘対応では、利用側定義pathに対する祖先一致、segment境界、および標準path判定の非影響を専用unit testで追加する。
+
 加えてrepository全体の既存testを実行し、標準 path、path access、path pattern、比較結果の回帰がないことを確認する。
 
 ## 14. 実装ファイル
@@ -1355,6 +1391,7 @@ src/SSC/Internal/
 
 tests/SSC.Unit.Tests/
   ParallelDiffPathProjectionUnitTests.cs
+  ParallelDiffPathProjectionAncestorUnitTests.cs
 
 tests/SSC.E2E.Tests/
   ParallelDiffPathProjectionE2ETests.cs
@@ -1387,6 +1424,8 @@ doc/design/detail/
 - 再帰 model でも runtime の意味名を使った利用側定義 path を生成できる
 - selector の種類と既存表現を維持できる
 - 利用側定義 path を既存 `ParallelDiffPathPattern` で絞り込める
+- 利用側定義 path の祖先patternで子孫差分をまとめて絞り込める
+- segment境界の異なる利用側定義 path に誤一致しない
 - XML 等の domain 固有規則が SSC production code に入らない
 - `CompareConfiguration`、metadata resolution、比較 tree 構築へ影響しない
 - 利用側定義 path の重複を許容し、標準 path でentryを識別できる
