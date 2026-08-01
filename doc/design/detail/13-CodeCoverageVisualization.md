@@ -36,7 +36,7 @@ dotnet test <test-project> \
 
 ### スマートフォン
 
-PR本文の「Mobile coverage report」をタップします。専用`coverage-reports` branchの`reports/pr-<PR番号>/code-coverage.html`をHTML preview経由で開くため、artifact ZIPのダウンロードや展開は不要です。
+PR本文またはActions Summaryの「Mobile coverage report」をタップします。GitHub Pagesの固定URLから単一HTMLを開くため、artifact ZIPのダウンロードや展開は不要です。公開URLは `https://ssaattww.github.io/SSC/` です。
 
 単一HTMLでは次を確認できます。
 
@@ -54,13 +54,26 @@ PR本文の「Mobile coverage report」をタップします。専用`coverage-r
 3. Job Summaryでline coverage、branch coverage、assembly別coverageを確認します。
 4. より詳細なReportGenerator画面が必要な場合だけartifactを取得し、`coverage/report/index.html` を開きます。
 
-## HTMLの自動更新とCI停止条件
+## HTMLの保存・公開とCI停止条件
 
-テストとcoverage生成が成功すると、専用jobがartifact内の単一HTMLを`coverage-reports` branchの`reports/pr-<PR番号>/code-coverage.html`へコミットします。PR branchへはコミットしません。テストjobのtokenは`contents: read`のまま維持し、HTML公開jobだけに`contents: write`を付与します。fork由来のPRでは公開しません。
+テストとcoverage生成が成功すると、専用jobが同じ単一HTMLを次の2箇所へ反映します。
 
-PR workflowのtriggerは`pull_request`であり、`coverage-reports` branchへのpushはPR HEADを変更しません。そのためcoverage公開によるPR workflowの再実行や無限CIは発生しません。PR current HEADに対する成功runをそのまま最終CI証跡として使用できます。
+- `coverage-pages` branch直下の`index.html`: リポジトリ内の永続的なレポート保存場所
+- GitHub Pages: スマートフォン向けの閲覧画面
 
-また、HTML公開直前にremote PR branchのHEADが元のPR HEADと一致することを検査します。作業中にPR HEADが更新されていた場合は、古いcoverageを公開せず、新しいHEAD側のrunへ処理を譲ります。
+PR番号をpathやbranch名へ含めず、常に最新の成功レポートを固定URLで公開します。`coverage-pages` branchには`source-head.txt`と`source-pr.txt`も保存し、どのPR HEADから生成したかを追跡できるようにします。
+
+PR branchへはコミットしません。テストjobのtokenは`contents: read`のまま維持し、公開jobだけに`contents: write`、`pages: write`、`id-token: write`を付与します。fork由来のPRでは公開しません。
+
+PR workflowのtriggerは`pull_request`のみです。`coverage-pages` branchへのpushはPR HEADを変更せず、workflowの再実行条件にも一致しません。そのためcoverage公開による再実行や無限CIは発生しません。公開jobには`coverage-pages`を単位とするconcurrencyも設定し、複数runの公開競合を抑止します。
+
+HTML公開直前にremote PR branchのHEADが元のPR HEADと一致することを検査します。作業中にPR HEADが更新されていた場合は、古いcoverageをbranchにもPagesにも公開せず、新しいHEAD側のrunへ処理を譲ります。
+
+### 採用経緯
+
+最初にPR branchの`reports/code-coverage.html`をActionsが自動更新する方式を試したが、bot commitでPR HEADが変わり、そのcommitに対するworkflowが`action_required`となった。PR HEAD一致CIの証跡が不安定になり、再実行制御を誤るとCI loopへつながるため採用しなかった。
+
+次にartifact ZIPと外部HTML previewを検討したが、スマートフォンでZIPを展開する負担と、第三者preview serviceへの依存が残った。最終的に、PR HEADを変更しない専用branchを保存場所とし、公式の`actions/upload-pages-artifact`と`actions/deploy-pages`で同じHTMLをGitHub Pagesへ公開する方式を採用した。
 
 ## 通っていない関数を確認する方法
 
