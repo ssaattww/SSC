@@ -171,7 +171,6 @@ jobs:
               cp "$coverage_file" \
                 "$coverage_raw_dir/${result_name}-${coverage_index}.cobertura.xml"
             done
-            unset copied_coverage_hashes
           done <<< "${{ steps.discover.outputs.test_projects }}"
 
           exit "$test_status"
@@ -182,9 +181,9 @@ jobs:
         shell: bash
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
           TEST_STEP_OUTCOME: ${{ steps.tests.outcome }}
           REPORTGENERATOR_VERSION: "5.5.10"
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
           coverage_dir="$results_dir/coverage"
@@ -270,18 +269,36 @@ jobs:
             exit 1
           fi
 
-          mobile_preview_url="https://htmlpreview.github.io/?https://github.com/$GITHUB_REPOSITORY/blob/coverage-reports/reports/pr-${PR_NUMBER:-manual}/code-coverage.html"
+          pages_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
 
           {
             echo "## SSC code coverage"
             echo
             echo "- Pull request head: \`${PR_HEAD_SHA:-not-a-pull-request}\`"
             echo "- Workflow commit: \`$GITHUB_SHA\`"
-            echo "- Mobile report after publication: [$mobile_preview_url]($mobile_preview_url)"
+            echo "- Mobile report after publication: [$pages_url]($pages_url)"
             echo "- Detailed line coverage: artifact \`ssc-pr-test-results-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT\`, file \`coverage/report/index.html\`"
             echo
             cat "$summary_markdown"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare GitHub Pages artifact
+        if: ${{ steps.coverage.outcome == 'success' }}
+        shell: bash
+        run: |
+          pages_dir="$GITHUB_WORKSPACE/artifacts/pages"
+          rm -rf "$pages_dir"
+          mkdir -p "$pages_dir"
+          cp "$GITHUB_WORKSPACE/artifacts/test-results/coverage/mobile/code-coverage.html" \
+            "$pages_dir/index.html"
+          touch "$pages_dir/.nojekyll"
+
+      - name: Upload GitHub Pages artifact
+        if: ${{ steps.coverage.outcome == 'success' }}
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: artifacts/pages
+          include-hidden-files: true
 
       - name: Collect .NET diagnostic context
         if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
@@ -411,14 +428,22 @@ jobs:
     needs: dotnet-tests
     if: ${{ always() && needs.dotnet-tests.result == 'success' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: coverage-pages
+      cancel-in-progress: true
     permissions:
       contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout PR head for publication
+      - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
 
       - name: Download coverage artifact
@@ -427,16 +452,17 @@ jobs:
           name: ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/coverage-artifact
 
-      - name: Publish mobile coverage report
+      - name: Publish report branch
+        id: publish
         shell: bash
         env:
           EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPORT_BRANCH: coverage-reports
+          REPORT_BRANCH: coverage-pages
         run: |
           source_report="$RUNNER_TEMP/coverage-artifact/coverage/mobile/code-coverage.html"
-          target_report="reports/pr-$PR_NUMBER/code-coverage.html"
+          target_report="index.html"
 
           if [[ ! -s "$source_report" ]]; then
             echo "Downloaded artifact does not contain the mobile coverage report." >&2
@@ -446,28 +472,42 @@ jobs:
           remote_pr_head="$(git ls-remote origin "refs/heads/$PR_HEAD_REF" | awk '{print $1}')"
           if [[ "$remote_pr_head" != "$EXPECTED_HEAD_SHA" ]]; then
             echo "PR HEAD moved from $EXPECTED_HEAD_SHA to $remote_pr_head; stale report will not be published."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          if git ls-remote --exit-code --heads origin "$REPORT_BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$REPORT_BRANCH:$REPORT_BRANCH"
-            git switch "$REPORT_BRANCH"
+          if git ls-remote --exit-code origin "refs/heads/$REPORT_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$REPORT_BRANCH"
+            git switch --force-create "$REPORT_BRANCH" "origin/$REPORT_BRANCH"
           else
             git switch --orphan "$REPORT_BRANCH"
-            git rm -rf .
+            git rm -rf --ignore-unmatch .
+            git clean -fdx
           fi
 
-          mkdir -p "$(dirname "$target_report")"
           cp "$source_report" "$target_report"
+          touch .nojekyll
+          printf '%s\n' "$EXPECTED_HEAD_SHA" > source-head.txt
+          printf '%s\n' "PR #$PR_NUMBER" > source-pr.txt
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$target_report"
+          git add -A
 
           if git diff --cached --quiet; then
             echo "Published mobile coverage report is unchanged."
-            exit 0
+          else
+            git commit -m "chore: publish code coverage report"
+            git push origin "HEAD:$REPORT_BRANCH"
           fi
 
-          git commit -m "chore: publish PR #$PR_NUMBER coverage report"
-          git push origin "$REPORT_BRANCH"
+          echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Configure GitHub Pages
+        if: ${{ steps.publish.outputs.should_deploy == 'true' }}
+        uses: actions/configure-pages@v5
+
+      - name: Deploy coverage report to GitHub Pages
+        id: deployment
+        if: ${{ steps.publish.outputs.should_deploy == 'true' }}
+        uses: actions/deploy-pages@v4
