@@ -13,8 +13,10 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout PR head
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -61,6 +63,7 @@ jobs:
             "$results_dir/test-runs" \
             "$results_dir/coverage/raw" \
             "$results_dir/coverage/report" \
+            "$results_dir/coverage/mobile" \
             "$results_dir/coverage/logs"
 
       - name: Restore and build source generators
@@ -180,11 +183,13 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           TEST_STEP_OUTCOME: ${{ steps.tests.outcome }}
           REPORTGENERATOR_VERSION: "5.5.10"
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
           coverage_dir="$results_dir/coverage"
           coverage_raw_dir="$coverage_dir/raw"
           coverage_report_dir="$coverage_dir/report"
+          coverage_mobile_dir="$coverage_dir/mobile"
           coverage_logs_dir="$coverage_dir/logs"
           reportgenerator_dir="$RUNNER_TEMP/reportgenerator"
           inputs_file="$coverage_dir/coverage-inputs.txt"
@@ -196,6 +201,7 @@ jobs:
           mkdir -p \
             "$coverage_raw_dir" \
             "$coverage_report_dir" \
+            "$coverage_mobile_dir" \
             "$coverage_logs_dir" \
             "$reportgenerator_dir"
 
@@ -250,11 +256,27 @@ jobs:
             exit 1
           fi
 
+          mobile_report="$coverage_mobile_dir/code-coverage.html"
+          python3 scripts/generate-mobile-coverage-report.py \
+            --input "$merged_cobertura" \
+            --output "$mobile_report" \
+            --repository "$GITHUB_REPOSITORY" \
+            --ref "$report_tag" \
+            --title "SSC code coverage"
+
+          if [[ ! -s "$mobile_report" ]]; then
+            echo "Mobile coverage report was not generated." >&2
+            exit 1
+          fi
+
+          mobile_preview_url="https://htmlpreview.github.io/?https://github.com/$GITHUB_REPOSITORY/blob/${PR_HEAD_REF:-main}/reports/code-coverage.html"
+
           {
             echo "## SSC code coverage"
             echo
             echo "- Pull request head: \`${PR_HEAD_SHA:-not-a-pull-request}\`"
             echo "- Workflow commit: \`$GITHUB_SHA\`"
+            echo "- Mobile report after publication: [$mobile_preview_url]($mobile_preview_url)"
             echo "- Detailed line coverage: artifact \`ssc-pr-test-results-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT\`, file \`coverage/report/index.html\`"
             echo
             cat "$summary_markdown"
@@ -347,6 +369,7 @@ jobs:
             echo
             echo "## Coverage"
             echo "- Summary is written to the GitHub Actions job summary."
+            echo "- Mobile single-file report: \`coverage/mobile/code-coverage.html\`"
             echo "- Detailed HTML report: \`coverage/report/index.html\`"
             echo "- Merged Cobertura: \`coverage/report/Cobertura.xml\`"
             echo "- Raw project reports: \`coverage/raw/*.cobertura.xml\`"
@@ -381,3 +404,77 @@ jobs:
       - name: No test projects found
         if: ${{ steps.discover.outputs.has_tests != 'true' }}
         run: echo "::notice::No .NET test projects were found. Skipping tests."
+
+  publish-coverage-report:
+    name: Publish mobile coverage report
+    needs: dotnet-tests
+    if: ${{ always() && needs.dotnet-tests.result == 'success' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Detect coverage report update commit
+        id: report_commit
+        shell: bash
+        env:
+          REPORT_COMMIT_MESSAGE: "chore: update code coverage report"
+        run: |
+          current_message="$(git log -1 --pretty=%s)"
+          if [[ "$current_message" == "$REPORT_COMMIT_MESSAGE" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Coverage report commit detected; no second report commit will be created."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download coverage artifact
+        if: ${{ steps.report_commit.outputs.skip != 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/coverage-artifact
+
+      - name: Commit mobile coverage report
+        if: ${{ steps.report_commit.outputs.skip != 'true' }}
+        shell: bash
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          REPORT_COMMIT_MESSAGE: "chore: update code coverage report"
+        run: |
+          source_report="$RUNNER_TEMP/coverage-artifact/coverage/mobile/code-coverage.html"
+          target_report="reports/code-coverage.html"
+
+          if [[ ! -s "$source_report" ]]; then
+            echo "Downloaded artifact does not contain the mobile coverage report." >&2
+            exit 1
+          fi
+
+          remote_head="$(git ls-remote origin "refs/heads/$HEAD_REF" | awk '{print $1}')"
+          if [[ "$remote_head" != "$EXPECTED_HEAD_SHA" ]]; then
+            echo "PR HEAD moved from $EXPECTED_HEAD_SHA to $remote_head; stale report will not be committed."
+            exit 0
+          fi
+
+          mkdir -p "$(dirname "$target_report")"
+          cp "$source_report" "$target_report"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$target_report"
+
+          if git diff --cached --quiet; then
+            echo "Mobile coverage report is unchanged."
+            exit 0
+          fi
+
+          git commit -m "$REPORT_COMMIT_MESSAGE"
+          git push origin "HEAD:$HEAD_REF"
