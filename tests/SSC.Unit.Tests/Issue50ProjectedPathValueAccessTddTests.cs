@@ -63,6 +63,42 @@ public sealed class Issue50ProjectedPathValueAccessTddTests
     }
 
     /// <summary>
+    /// 同じ投影済み path に集約された複数 entry を標準順序と重複を保持して返すことを確認します。
+    /// </summary>
+    [Fact]
+    public void ExactSearch_PreservesDuplicateProjectedPathsAndOriginalOrder()
+    {
+        var result = ParallelCompareApi.Compare(
+        [
+            new ListDocument
+            {
+                Items =
+                [
+                    new ListItem { Name = "before-a" },
+                    new ListItem { Name = "before-b" },
+                ],
+            },
+            new ListDocument
+            {
+                Items =
+                [
+                    new ListItem { Name = "after-a" },
+                    new ListItem { Name = "after-b" },
+                ],
+            },
+        ]);
+        var projector = new CollapseItemSelectorProjector();
+
+        var matches = result.GetDiffEntryPathProjections(projector, "Item.Name");
+
+        Assert.Equal(2, matches.Count);
+        Assert.All(matches, match => Assert.Equal("Item.Name", match.ProjectedPath));
+        Assert.Equal(
+            ["Items[0].Name", "Items[1].Name"],
+            matches.Select(match => match.Entry.Path).ToArray());
+    }
+
+    /// <summary>
     /// pattern 検索で投影済み path を絞り込めることを確認します。
     /// </summary>
     [Fact]
@@ -151,6 +187,17 @@ public sealed class Issue50ProjectedPathValueAccessTddTests
             return context.Current.StandardSegment.MemberName == "Value"
                 ? ParallelDiffPathSegmentProjection.Replace(
                     ParallelDiffPathSegment.Member("Alias"))
+                : ParallelDiffPathSegmentProjection.KeepStandard();
+        }
+    }
+
+    private sealed class CollapseItemSelectorProjector : IParallelDiffPathProjector
+    {
+        public ParallelDiffPathSegmentProjection Project(ParallelDiffPathProjectionContext context)
+        {
+            return context.Current.StandardSegment.MemberName == "Items"
+                ? ParallelDiffPathSegmentProjection.Replace(
+                    ParallelDiffPathSegment.Member("Item"))
                 : ParallelDiffPathSegmentProjection.KeepStandard();
         }
     }
