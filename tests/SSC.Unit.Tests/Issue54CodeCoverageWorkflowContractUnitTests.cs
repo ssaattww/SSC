@@ -50,6 +50,60 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
     }
 
     /// <summary>
+    /// スマートフォン向け単一HTMLを生成し、PR branchへ有限回で反映することを確認します。
+    /// </summary>
+    [Fact]
+    public void PullRequestWorkflow_PublishesMobileReportWithoutCommitLoop()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var workflowPath = Path.Combine(
+            repositoryRoot,
+            ".github",
+            "workflows",
+            "pr-xunit-tests.yml");
+        var generatorPath = Path.Combine(
+            repositoryRoot,
+            "scripts",
+            "generate-mobile-coverage-report.py");
+        var workflow = File.ReadAllText(workflowPath);
+        var testJob = GetJobBlock(workflow, "dotnet-tests");
+        var publishJob = GetJobBlock(workflow, "publish-coverage-report");
+        var coverageStep = GetStepBlock(
+            workflow,
+            "Generate merged code coverage report");
+
+        Assert.True(File.Exists(generatorPath));
+        Assert.Contains("Checkout PR head", testJob);
+        Assert.Contains(
+            "ref: ${{ github.event.pull_request.head.sha || github.sha }}",
+            testJob);
+        Assert.Contains("contents: read", testJob);
+        Assert.DoesNotContain("git push", testJob);
+        Assert.Contains("generate-mobile-coverage-report.py", coverageStep);
+        Assert.Contains("coverage/mobile/code-coverage.html", workflow);
+        Assert.Contains("htmlpreview.github.io", coverageStep);
+        Assert.Contains("needs: dotnet-tests", publishJob);
+        Assert.Contains(
+            "github.event.pull_request.head.repo.full_name == github.repository",
+            publishJob);
+        Assert.Contains("contents: write", publishJob);
+        Assert.Contains("actions/download-artifact@v4", publishJob);
+        Assert.Contains("reports/code-coverage.html", publishJob);
+        Assert.Contains(
+            "REPORT_COMMIT_MESSAGE: \"chore: update code coverage report\"",
+            publishJob);
+        Assert.Contains(
+            "if [[ \"$current_message\" == \"$REPORT_COMMIT_MESSAGE\" ]]",
+            publishJob);
+        Assert.Contains(
+            "if: ${{ steps.report_commit.outputs.skip != 'true' }}",
+            publishJob);
+        Assert.Contains("EXPECTED_HEAD_SHA", publishJob);
+        Assert.Contains("stale report will not be committed", publishJob);
+        Assert.Contains("git push origin \"HEAD:$HEAD_REF\"", publishJob);
+    }
+
+    /// <summary>
     /// テスト成功時にcoverageが欠落した場合、workflowが成功扱いしないことを確認します。
     /// </summary>
     [Fact]
@@ -101,5 +155,30 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
         return nextStepIndex < 0
             ? workflow[startIndex..]
             : workflow[startIndex..nextStepIndex];
+    }
+
+    private static string GetJobBlock(string workflow, string jobName)
+    {
+        var jobHeader = $"  {jobName}:";
+        var startIndex = workflow.IndexOf(jobHeader, StringComparison.Ordinal);
+        Assert.True(startIndex >= 0, $"Could not locate workflow job '{jobName}'.");
+
+        var nextJobIndex = workflow.IndexOf(
+            "\n  ",
+            startIndex + jobHeader.Length,
+            StringComparison.Ordinal);
+        while (nextJobIndex >= 0
+               && nextJobIndex + 3 < workflow.Length
+               && char.IsWhiteSpace(workflow[nextJobIndex + 3]))
+        {
+            nextJobIndex = workflow.IndexOf(
+                "\n  ",
+                nextJobIndex + 3,
+                StringComparison.Ordinal);
+        }
+
+        return nextJobIndex < 0
+            ? workflow[startIndex..]
+            : workflow[startIndex..nextJobIndex];
     }
 }
