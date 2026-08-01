@@ -5,7 +5,7 @@
 ## In Progress
 
 - T-095: PR #51 を追加レビューし、必要な指摘を解消する
-  - Status: 修正実装・ローカル検証完了（merge commit、HEAD一致CI、fix verification待ち）
+  - Status: fix verification指摘対応中（PR51-NR-F004）
   - Phase: Phase 4
   - Estimate: S
   - Depends on:
@@ -34,6 +34,12 @@
     - Issue #50の正規task identityをT-096へ移し、旧branch T-094との対応を記録
     - Missing slotとpattern検索matrix、workflow diagnostics契約testを追加
     - focused 11件、Unit 97件、E2E 88件、format、diff checkに成功
+  - Fix Verification:
+    - reviewed HEAD `f3def1d3a73271ee1816dfc08f129faab217d0ee`
+    - PR51-NR-F001、F002、F003、F005はaddressed
+    - PR51-NR-F004はupload conditionを同一stepへ結び付けるcontract test不足によりunresolved
+    - HEAD一致CI run `30690066090`成功、Artifact `8815347066`の22 payloadとdigestを確認
+    - `gpt-5.6-sol / high` reviewer verdict `fail`
 - T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
   - Status: 対応中（PR49-FR1のfix verification合格。pre-freeze commit・matching-HEAD CI・fresh独立最終レビュー待ち）
   - Phase: Phase 3
