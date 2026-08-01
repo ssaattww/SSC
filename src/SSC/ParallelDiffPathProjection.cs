@@ -226,11 +226,14 @@ public sealed class ParallelDiffEntryPathProjection
 public static class ParallelDiffEntryPathProjectionExtensions
 {
     /// <summary>
-    /// 利用側定義 path が指定 pattern に一致するか判定します。
+    /// 利用側定義 path 自身、またはその祖先が指定 pattern に一致するか判定します。
     /// </summary>
     /// <param name="projection">判定する差分 entry projection。</param>
     /// <param name="pattern">照合する path pattern。</param>
-    /// <returns><see cref="ParallelDiffEntryPathProjection.ProjectedPath"/> が一致する場合は <see langword="true"/>。</returns>
+    /// <returns>
+    /// pattern の全 segment が <see cref="ParallelDiffEntryPathProjection.ProjectedPath"/> の先頭から一致する場合は
+    /// <see langword="true"/>。
+    /// </returns>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="projection"/> または <paramref name="pattern"/> が <see langword="null"/> の場合。
     /// </exception>
