@@ -50,24 +50,57 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Prepare test diagnostic artifact
+        if: ${{ steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true' }}
+        shell: bash
+        run: |
+          results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
+          rm -rf "$results_dir"
+          mkdir -p "$results_dir/logs"
+
       - name: Restore and build source generators
         if: ${{ steps.discover.outputs.has_generators == 'true' }}
         shell: bash
         run: |
+          logs_dir="$GITHUB_WORKSPACE/artifacts/test-results/logs"
+          generator_status=0
+
           while IFS= read -r project; do
             [[ -z "$project" ]] && continue
             echo "Building generator: $project"
-            dotnet restore "$project"
-            dotnet build "$project" --configuration Release --no-restore --verbosity minimal
+
+            result_name="$(printf '%s' "${project%.csproj}" | sed -E 's#[^A-Za-z0-9._-]+#_#g')"
+            restore_stdout="$logs_dir/${result_name}-generator-restore.stdout.log"
+            restore_stderr="$logs_dir/${result_name}-generator-restore.stderr.log"
+            build_stdout="$logs_dir/${result_name}-generator-build.stdout.log"
+            build_stderr="$logs_dir/${result_name}-generator-build.stderr.log"
+
+            if ! dotnet restore "$project" \
+              > >(tee "$restore_stdout") \
+              2> >(tee "$restore_stderr" >&2); then
+              generator_status=1
+              continue
+            fi
+
+            if ! dotnet build "$project" \
+              --configuration Release \
+              --no-restore \
+              --verbosity minimal \
+              > >(tee "$build_stdout") \
+              2> >(tee "$build_stderr" >&2); then
+              generator_status=1
+            fi
           done <<< "${{ steps.discover.outputs.generator_projects }}"
+
+          exit "$generator_status"
 
       - name: Restore and run tests
         if: ${{ steps.discover.outputs.has_tests == 'true' }}
         shell: bash
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
-          rm -rf "$results_dir"
-          mkdir -p "$results_dir"
+          logs_dir="$results_dir/logs"
+          mkdir -p "$logs_dir"
           test_status=0
 
           while IFS= read -r project; do
@@ -75,7 +108,14 @@ jobs:
             echo "Testing: $project"
 
             result_name="$(printf '%s' "${project%.csproj}" | sed -E 's#[^A-Za-z0-9._-]+#_#g')"
-            if ! dotnet restore "$project"; then
+            restore_stdout="$logs_dir/${result_name}-restore.stdout.log"
+            restore_stderr="$logs_dir/${result_name}-restore.stderr.log"
+            test_stdout="$logs_dir/${result_name}-test.stdout.log"
+            test_stderr="$logs_dir/${result_name}-test.stderr.log"
+
+            if ! dotnet restore "$project" \
+              > >(tee "$restore_stdout") \
+              2> >(tee "$restore_stderr" >&2); then
               test_status=1
               continue
             fi
@@ -85,18 +125,62 @@ jobs:
               --no-restore \
               --verbosity minimal \
               --logger "trx;LogFileName=${result_name}.trx" \
-              --results-directory "$results_dir"; then
+              --results-directory "$results_dir" \
+              > >(tee "$test_stdout") \
+              2> >(tee "$test_stderr" >&2); then
               test_status=1
             fi
           done <<< "${{ steps.discover.outputs.test_projects }}"
 
           exit "$test_status"
 
+      - name: Collect .NET diagnostic context
+        if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
+        shell: bash
+        env:
+          TEST_PROJECTS: ${{ steps.discover.outputs.test_projects }}
+          GENERATOR_PROJECTS: ${{ steps.discover.outputs.generator_projects }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          diagnostics_dir="$GITHUB_WORKSPACE/artifacts/test-results/diagnostics"
+          mkdir -p "$diagnostics_dir"
+
+          dotnet --info \
+            > "$diagnostics_dir/dotnet-info.stdout.log" \
+            2> "$diagnostics_dir/dotnet-info.stderr.log" || true
+
+          git status --short --branch \
+            > "$diagnostics_dir/git-status.stdout.log" \
+            2> "$diagnostics_dir/git-status.stderr.log" || true
+
+          {
+            echo "Repository: $GITHUB_REPOSITORY"
+            echo "Workflow commit: $GITHUB_SHA"
+            if [[ -n "${PR_HEAD_SHA:-}" ]]; then
+              echo "Pull request head: $PR_HEAD_SHA"
+            fi
+            echo "Workflow run: $GITHUB_RUN_ID"
+            echo "Run attempt: $GITHUB_RUN_ATTEMPT"
+            echo "Runner OS: $RUNNER_OS"
+            echo "Runner architecture: $RUNNER_ARCH"
+          } > "$diagnostics_dir/runner-context.stdout.log" \
+            2> "$diagnostics_dir/runner-context.stderr.log"
+
+          {
+            echo "# Test projects"
+            printf '%s\n' "$TEST_PROJECTS"
+            echo
+            echo "# Generator projects"
+            printf '%s\n' "$GENERATOR_PROJECTS"
+          } > "$diagnostics_dir/project-list.stdout.log" \
+            2> "$diagnostics_dir/project-list.stderr.log"
+
       - name: Create test result manifest
-        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
         shell: bash
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           TEST_PROJECTS: ${{ steps.discover.outputs.test_projects }}
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
@@ -106,7 +190,10 @@ jobs:
             echo "# SSC .NET test results"
             echo
             echo "- Repository: \`$GITHUB_REPOSITORY\`"
-            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Workflow commit: \`$GITHUB_SHA\`"
+            if [[ -n "${PR_HEAD_SHA:-}" ]]; then
+              echo "- Pull request head: \`$PR_HEAD_SHA\`"
+            fi
             echo "- Workflow run: \`$GITHUB_RUN_ID\`"
             echo "- Run attempt: \`$GITHUB_RUN_ATTEMPT\`"
             if [[ -n "${PR_NUMBER:-}" ]]; then
@@ -120,15 +207,16 @@ jobs:
               echo "- \`$project\`"
             done <<< "$TEST_PROJECTS"
             echo
-            echo "## Result files"
+            echo "## Artifact files"
 
-            shopt -s nullglob
-            trx_files=("$results_dir"/*.trx)
-            if [[ ${#trx_files[@]} -eq 0 ]]; then
-              echo "- No TRX files were produced."
+            mapfile -t artifact_files < <(
+              find "$results_dir" -type f ! -name manifest.md -printf '%P\n' | sort
+            )
+            if [[ ${#artifact_files[@]} -eq 0 ]]; then
+              echo "- No test result or diagnostic files were produced."
             else
-              for trx_file in "${trx_files[@]}"; do
-                echo "- \`$(basename "$trx_file")\`"
+              for artifact_file in "${artifact_files[@]}"; do
+                echo "- \`$artifact_file\`"
               done
             fi
           } > "$results_dir/manifest.md"
@@ -138,7 +226,7 @@ jobs:
       # The repository owner explicitly approved retaining this artifact so
       # ChatGPT-assisted review can inspect the same test evidence as maintainers.
       - name: Upload .NET test results for ChatGPT review
-        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+        if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}
         uses: actions/upload-artifact@v4
         with:
           name: ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}

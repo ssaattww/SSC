@@ -1,5 +1,29 @@
 # Breaking Changes
 
+## 2026-07-31
+
+### Issue #48 `ParallelDiffPathPattern` の祖先一致
+
+- 対象:
+  - `ParallelDiffPathPattern.IsMatch(string)`
+  - `ParallelDiffEntryPathExtensions.PathMatches(...)`
+  - `ParallelDiffEntryPathProjectionExtensions.PathMatches(...)`
+- 変更種別:
+  - public runtime behavior の拡張
+- 影響:
+  - 従来はpatternと候補pathのsegment数が同じ場合だけ一致した
+  - Issue #48以降はpatternの全segmentが候補pathの先頭から一致すれば、候補側の残りsegmentを子孫pathとして許容する
+  - 標準pathと利用側定義pathの両方で、`Root.A` は `Root.A`、`Root.A.B`、`Root.A.Attribute[Width].Value` に一致する
+  - segment単位で比較するため、`Root.A` は `Root.AA` と `Root.AA.B` には一致しない
+  - 空文字列のCompareKeyから既存互換として生成される `Name[]` は、候補pathの照合時だけ空 key selector として扱うため、`Name[*]` は `Name[].Value` のような子孫pathに一致する
+- 互換性:
+  - public API shape、完全一致、selector、escape、例外契約は変更しない
+  - `ParallelDiffPathPattern.TryParse("Name[]")` は引き続き `false` を返し、`Parse("Name[]")` は引き続き例外を送出する。空 selector patternは許可しない
+  - patternより浅いpathと異なるsegmentは引き続き不一致
+  - 標準pathまたは利用側定義pathで子孫pathを意図的に不一致として扱っていた場合、filter結果が変化する
+- 背景:
+  - 祖先pathを一つ指定して、その配下の子node、属性、および値の差分をまとめて無視できる必要があるため
+
 ## 2026-07-11
 
 ### T-090 polymorphic sequence の runtime 型比較

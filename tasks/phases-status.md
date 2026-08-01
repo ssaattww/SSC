@@ -1,6 +1,6 @@
 # Phases Status
 
-- Updated: 2026-07-18
+- Updated: 2026-08-01
 
 ## Phase 1: 要件・外部仕様確定
 
@@ -35,8 +35,9 @@
 
 ## Phase 3: 実装
 
-- Status: Done
+- Status: In Progress
 - Notes:
+  - T-094でPR #49の独立最終レビュー指摘 `PR49-FR1` を受け、空文字列keyのlegacy標準pathにも祖先patternが一致する修正をTDDで実装し、独立検証まで完了した
   - T-093でPR #47の利用側定義path投影APIをレビューし、空文字列keyの後方互換、XML documentation、README・設計契約の指摘を解消した
   - T-092でPR #45の差分パスLINQフィルターをレビューし、`*` escape、XML documentation、nullable契約、設計grammar・索引、境界・回帰テストの指摘を解消した
   - T-091でT-090追加分のXML documentationを日本語化した
@@ -152,8 +153,9 @@
 
 ## Phase 4: 検証・受け入れ
 
-- Status: Done
+- Status: In Progress
 - Notes:
+  - T-094はterra/high実装と別terra/high検証でfocused/full test、format、diff check、standards validationに成功し、source sol/high reviewerのfix verificationにも合格した。pre-freeze commit、matching-HEAD CI、fresh独立最終レビュー待ち
   - T-093はfocused unit 21件、focused E2E 7件、Release全162件、format、diff check、独立検証に成功し、`gpt-5.6-sol / high`同一reviewerの最終指摘なしを確認した（Markdown lintはrepository wiring不在のためunsupported）
   - T-092はRelease 133テスト、focused 21テスト、format、diff check、coding standards validation、`gpt-5.6-sol / high`同一レビュアー再レビューに成功した
   - T-091はRelease 112テスト、format、diff check、XML整形式、非コメント差分照合、独立reviewに成功した
