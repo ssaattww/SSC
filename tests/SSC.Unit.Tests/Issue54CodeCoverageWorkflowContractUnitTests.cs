@@ -50,7 +50,7 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
     }
 
     /// <summary>
-    /// スマートフォン向け単一HTMLを専用branchへ公開し、PR HEADを変更しないことを確認します。
+    /// スマートフォン向け単一HTMLを専用branchへ保存し、GitHub Pagesへ公開することを確認します。
     /// </summary>
     [Fact]
     public void PullRequestWorkflow_PublishesMobileReportWithoutChangingPullRequestHead()
@@ -81,22 +81,31 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
         Assert.DoesNotContain("git push", testJob);
         Assert.Contains("generate-mobile-coverage-report.py", coverageStep);
         Assert.Contains("coverage/mobile/code-coverage.html", workflow);
-        Assert.Contains("htmlpreview.github.io", coverageStep);
-        Assert.Contains("blob/coverage-reports/reports/pr-", coverageStep);
+        Assert.Contains("actions/upload-pages-artifact@v4", testJob);
+        Assert.Contains("path: artifacts/pages", testJob);
         Assert.Contains("needs: dotnet-tests", publishJob);
         Assert.Contains(
             "github.event.pull_request.head.repo.full_name == github.repository",
             publishJob);
         Assert.Contains("contents: write", publishJob);
+        Assert.Contains("pages: write", publishJob);
+        Assert.Contains("id-token: write", publishJob);
+        Assert.Contains("environment:", publishJob);
+        Assert.Contains("name: github-pages", publishJob);
         Assert.Contains("actions/download-artifact@v4", publishJob);
-        Assert.Contains("REPORT_BRANCH: coverage-reports", publishJob);
-        Assert.Contains("reports/pr-$PR_NUMBER/code-coverage.html", publishJob);
+        Assert.Contains("REPORT_BRANCH: coverage-pages", publishJob);
+        Assert.Contains("target_report=\"index.html\"", publishJob);
         Assert.Contains("EXPECTED_HEAD_SHA", publishJob);
         Assert.Contains("stale report will not be published", publishJob);
         Assert.Contains("git switch --orphan \"$REPORT_BRANCH\"", publishJob);
-        Assert.Contains("git push origin \"$REPORT_BRANCH\"", publishJob);
+        Assert.Contains("git push origin \"HEAD:$REPORT_BRANCH\"", publishJob);
+        Assert.Contains("actions/configure-pages@v5", publishJob);
+        Assert.Contains("actions/deploy-pages@v4", publishJob);
+        Assert.Contains("group: coverage-pages", publishJob);
+        Assert.DoesNotContain("reports/pr-$PR_NUMBER", publishJob);
         Assert.DoesNotContain("HEAD:$PR_HEAD_REF", publishJob);
-        Assert.DoesNotContain("chore: update code coverage report", publishJob);
+        Assert.DoesNotContain("htmlpreview.github.io", workflow);
+        Assert.DoesNotContain("\n  push:", workflow);
     }
 
     /// <summary>
