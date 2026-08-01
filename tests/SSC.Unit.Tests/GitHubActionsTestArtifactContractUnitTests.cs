@@ -58,10 +58,10 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
     }
 
     /// <summary>
-    /// pull request workflow がtracked checkout sourceとGit metadataを診断artifact配下へ保存することを確認します。
+    /// pull request workflow がtracked checkout source archiveとGit metadataを診断artifact配下へ保存することを確認します。
     /// </summary>
     [Fact]
-    public void PullRequestWorkflow_PreservesTrackedCheckoutSourceInDiagnosticArtifact()
+    public void PullRequestWorkflow_PreservesTrackedCheckoutSourceArchiveInDiagnosticArtifact()
     {
         var workflowPath = Path.Combine(
             FindRepositoryRoot(),
@@ -82,7 +82,10 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
             "source_dir=\"$GITHUB_WORKSPACE/artifacts/test-results/source\"",
             sourceStep);
         Assert.Contains(
-            "git archive --format=tar HEAD | tar -xf - -C \"$source_dir\"",
+            "source_archive=\"$source_dir/checked-out-source.tar\"",
+            sourceStep);
+        Assert.Contains(
+            "git archive --format=tar HEAD > \"$source_archive\"",
             sourceStep);
         Assert.Contains(
             "git rev-parse HEAD > \"$source_dir/checked-out-head.txt\"",
@@ -90,7 +93,8 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
         Assert.Contains(
             "git status --short --untracked-files=no > \"$source_dir/git-status.txt\"",
             sourceStep);
-        Assert.DoesNotContain(".git", sourceStep);
+        Assert.DoesNotContain("git archive --format=tar HEAD |", sourceStep);
+        Assert.DoesNotContain("tar -xf", sourceStep);
         Assert.Contains("path: artifacts/test-results", uploadStep);
     }
 

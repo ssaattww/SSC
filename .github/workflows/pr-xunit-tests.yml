@@ -180,9 +180,10 @@ jobs:
         shell: bash
         run: |
           source_dir="$GITHUB_WORKSPACE/artifacts/test-results/source"
+          source_archive="$source_dir/checked-out-source.tar"
           rm -rf "$source_dir"
           mkdir -p "$source_dir"
-          git archive --format=tar HEAD | tar -xf - -C "$source_dir"
+          git archive --format=tar HEAD > "$source_archive"
           git rev-parse HEAD > "$source_dir/checked-out-head.txt"
           git status --short --untracked-files=no > "$source_dir/git-status.txt"
 
