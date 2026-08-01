@@ -58,14 +58,14 @@ PR本文またはActions Summaryの「Mobile coverage report」をタップし�
 
 テストとcoverage生成が成功すると、専用jobが同じ単一HTMLを次の2箇所へ反映します。
 
-- `coverage-pages` branch直下の`index.html`: リポジトリ内の永続的なレポート保存場所
+- `gh-pages` branch直下の`index.html`: リポジトリ内の永続的なレポート保存場所
 - GitHub Pages: スマートフォン向けの閲覧画面
 
-PR番号をpathやbranch名へ含めず、常に最新の成功レポートを固定URLで公開します。`coverage-pages` branchには`source-head.txt`と`source-pr.txt`も保存し、どのPR HEADから生成したかを追跡できるようにします。
+PR番号をpathやbranch名へ含めず、常に最新の成功レポートを固定URLで公開します。`gh-pages` branchには`source-head.txt`と`source-pr.txt`も保存し、どのPR HEADから生成したかを追跡できるようにします。
 
 PR branchへはコミットしません。テストjobのtokenは`contents: read`のまま維持し、公開jobだけに`contents: write`、`pages: write`、`id-token: write`を付与します。fork由来のPRでは公開しません。
 
-PR workflowのtriggerは`pull_request`のみです。`coverage-pages` branchへのpushはPR HEADを変更せず、workflowの再実行条件にも一致しません。そのためcoverage公開による再実行や無限CIは発生しません。公開jobには`coverage-pages`を単位とするconcurrencyも設定し、複数runの公開競合を抑止します。
+PR workflowのtriggerは`pull_request`のみです。`gh-pages` branchへのpushはPR HEADを変更せず、workflowの再実行条件にも一致しません。そのためcoverage公開による再実行や無限CIは発生しません。公開jobには`gh-pages`を単位とするconcurrencyも設定し、複数runの公開競合を抑止します。
 
 HTML公開直前にremote PR branchのHEADが元のPR HEADと一致することを検査します。作業中にPR HEADが更新されていた場合は、古いcoverageをbranchにもPagesにも公開せず、新しいHEAD側のrunへ処理を譲ります。
 
