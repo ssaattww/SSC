@@ -1,0 +1,217 @@
+schema_version: 3
+producer:
+  skill: chat-implementation-worker
+  mode: initial implementation
+  generated_at: 2026-08-02T07:50:00+09:00
+repository: ssaattww/SSC
+issue_or_pr: "Issue #54 / PR #55"
+task_id: T-097
+branch: feature/issue-54-code-coverage
+base_ref: main
+target:
+  current_head: unknown
+  reviewed_head: null
+  commit_range: main...feature/issue-54-code-coverage
+authoritative_requirements:
+  - source: user_instruction
+    reference: current chat
+    summary: Implement without Red-first TDD, create PR, and explain how to identify uncovered functions.
+  - source: issue
+    reference: SSC#54
+    summary: Collect and visualize Unit/E2E coverage while preserving diagnostic artifacts.
+development_policy:
+  method: test-after by explicit user exception
+  testing_order: implementation then contract/regression validation
+  governing_source: current user instruction
+validation_plan:
+  commands:
+    - PR .NET Tests workflow
+  required_failure_diagnostics:
+    - TRX
+    - standard output
+    - standard error
+    - ReportGenerator logs
+    - raw coverage
+blocked: []
+authorized_actions:
+  - read_repository
+  - edit_tests
+  - edit_documentation
+  - edit_workflows
+  - write_handoff
+  - write_report
+  - create_branch
+  - commit
+  - push
+  - create_pr
+  - update_pr
+  - comment_pr
+write_boundary:
+  allowed:
+    - path_or_operation: PR #55 files and reports
+      reason: Issue #54 implementation
+  forbidden:
+    - path_or_operation: merge
+      reason: user-owned action
+scope:
+  - Coverage collection for Unit and E2E tests
+  - ReportGenerator HTML, Cobertura, Markdown, and text outputs
+  - Actions Summary and diagnostic artifact integration
+  - Documentation for uncovered-method inspection
+non_goals:
+  - coverage threshold gate
+  - external coverage SaaS
+  - coverage history or badge
+files:
+  changed:
+    - path: .github/workflows/pr-xunit-tests.yml
+      purpose: collect and render coverage
+    - path: tests/SSC.Unit.Tests/Issue54CodeCoverageWorkflowContractUnitTests.cs
+      purpose: coverage workflow contract
+    - path: tests/SSC.Unit.Tests/GitHubActionsTestArtifactContractUnitTests.cs
+      purpose: align artifact contract with per-project result directories
+    - path: doc/design/detail/13-CodeCoverageVisualization.md
+      purpose: design and usage
+    - path: README.md
+      purpose: user-facing coverage entry point
+    - path: reports/task-t-097-issue-54-code-coverage-implementation-20260802.md
+      purpose: detailed implementation report
+  inspected:
+    - path: tests/SSC.Unit.Tests/SSC.Unit.Tests.csproj
+      purpose: coverlet collector availability
+    - path: tests/SSC.E2E.Tests/SSC.E2E.Tests.csproj
+      purpose: coverlet collector and generator analyzer relationship
+  intentionally_untouched:
+    - path_or_area: src/SSC and src/SSC.Generators production code
+      reason: visualization requires no production API change
+commands:
+  - command: PR .NET Tests run 30721897811
+    purpose: full test and coverage validation
+    exit_code: 0
+    result: passed
+    head_sha: 32505d049e3db80c3fd34581fab33c4033572e48
+    evidence: artifact 8825122433
+tests:
+  - name: SSC.Unit.Tests
+    phase: post_implementation
+    result: passed
+    head_sha: 32505d049e3db80c3fd34581fab33c4033572e48
+    evidence: 100 passed
+  - name: SSC.E2E.Tests
+    phase: regression
+    result: passed
+    head_sha: 32505d049e3db80c3fd34581fab33c4033572e48
+    evidence: 88 passed
+ci:
+  required: true
+  workflow: PR .NET Tests
+  run_id: 30721897811
+  head_sha: 32505d049e3db80c3fd34581fab33c4033572e48
+  conclusion: success
+  artifacts:
+    - id: 8825122433
+      name: ssc-pr-test-results-30721897811-1
+      purpose: tests, diagnostics, source, and coverage report
+implementation:
+  outcome: completed
+  final_head: 32505d049e3db80c3fd34581fab33c4033572e48
+  commits:
+    - sha: 3ed9f82ebf975d976e3ab5d41df8aaa26358c557
+      purpose: coverage workflow
+    - sha: 89226d44dec46d5d18cef6a0158087436f704738
+      purpose: coverage contract tests
+    - sha: 5c0e5e710153a2e7f90e2b67803cb29454183de4
+      purpose: coverage documentation
+    - sha: f3576c17c5e6afb91c0fcab697c3faf5c3ca675b
+      purpose: preserve artifact contract and deduplicate coverage
+    - sha: 32505d049e3db80c3fd34581fab33c4033572e48
+      purpose: update legacy artifact contract test
+  addressed_findings: []
+  failure_diagnostics:
+    - type: artifact
+      location: workflow artifacts 8825063372 and 8825091007
+      summary: preserved evidence for two contract-test failures
+  blocked_items: []
+  summary:
+    - Coverage visualization implemented and validated.
+review:
+  mode: not_applicable
+  reviewed_head: unknown
+  reviewer:
+    identity: unknown
+    role: not_applicable
+    continuity:
+      previous_reviewer_identity: null
+      changed: false
+      reason: null
+    independence:
+      implemented_change: true
+      implemented_review_fix: false
+      served_as_normal_reviewer: false
+      inherited_conversation: true
+      evidence: []
+  verdict: not_applicable
+  required_coverage: []
+  validation_assessment: []
+  reserved_report_paths: []
+  report_attestation:
+    allowed: not_applicable
+    reviewed_implementation_head: null
+    allowed_paths: []
+    required_first_parent: null
+    maximum_commits_after_reviewed_head: null
+    forbidden_path_classes: []
+    no_later_commits_required: not_applicable
+    validation_status: not_applicable
+    validation_evidence: []
+  summary:
+    - Independent review remains required.
+report:
+  report_type: implementation_report
+  outcome: created
+  persistence_mode: repository_file
+  paths:
+    - reports/task-t-097-issue-54-code-coverage-implementation-20260802.md
+  reviewed_head: null
+  attestation_head: null
+  pr_comments: []
+  summary:
+    - Detailed implementation evidence prepared.
+findings: []
+held: []
+unexplored: []
+unknown:
+  - field_or_fact: final HEAD after report and handoff persistence
+    reason: commit SHA cannot be known before persistence
+not_applicable:
+  - field_or_area: independent review verdict
+    reason: implementation worker cannot review its own changes
+remaining_risks:
+  - SSC.Generators compile-time analyzer execution is not included in VSTest coverage.
+source_payloads:
+  - source_skill: implementation-worker
+    output_contract_version: unknown
+    content_type: text/markdown
+    payload: See implementation report for complete evidence.
+extensions: []
+next_action:
+  type: review
+  target_skill: chat-review-worker
+  mode: initial_review
+  summary: Independently review PR #55 at its final current HEAD.
+  instructions:
+    - Confirm final PR current HEAD and matching workflow run.
+    - Inspect coverage artifact and HTML method/source visualization.
+    - Do not merge.
+  required_attachments_or_references:
+    - PR #55
+    - Issue #54
+  requested_authorized_actions:
+    - read_repository
+    - write_report
+    - comment_pr
+transport:
+  method: repository_file
+  packet_path: reports/task-t-097-issue-54-code-coverage-handoff-20260802.yaml
+  packet_url: null
+  transport_note: Final HEAD and matching CI must be refreshed after persistence commits.
