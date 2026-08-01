@@ -206,6 +206,21 @@ public sealed class ParallelDiffEntryPathProjection
     public ParallelDiffEntry Entry { get; }
 
     /// <summary>
+    /// 比較した model slot 数を取得します。
+    /// </summary>
+    public int Count => Entry.Values.Count;
+
+    /// <summary>
+    /// 指定した model slot の値を取得します。
+    /// </summary>
+    /// <param name="modelIndex">参照する model slot の index。</param>
+    /// <returns>指定 slot の値。</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="modelIndex"/> が範囲外の場合。
+    /// </exception>
+    public object? this[int modelIndex] => GetValue(modelIndex);
+
+    /// <summary>
     /// 投影器を適用して生成した利用側定義 path を取得します。
     /// </summary>
     public string ProjectedPath { get; }
@@ -218,6 +233,34 @@ public sealed class ParallelDiffEntryPathProjection
     /// <see langword="null"/> です。
     /// </remarks>
     public string? ProjectedParentPath { get; }
+
+    /// <summary>
+    /// 指定した model slot の状態を取得します。
+    /// </summary>
+    /// <param name="modelIndex">参照する model slot の index。</param>
+    /// <returns>指定 slot の状態。</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="modelIndex"/> が範囲外の場合。
+    /// </exception>
+    public ValueState GetState(int modelIndex)
+    {
+        return GetDiffValue(modelIndex).State;
+    }
+
+    private object? GetValue(int modelIndex)
+    {
+        return GetDiffValue(modelIndex).Value;
+    }
+
+    private ParallelDiffValue GetDiffValue(int modelIndex)
+    {
+        if (modelIndex < 0 || modelIndex >= Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(modelIndex));
+        }
+
+        return Entry.Values[modelIndex];
+    }
 }
 
 /// <summary>

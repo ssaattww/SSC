@@ -4,6 +4,73 @@
 
 ## In Progress
 
+- T-095: PR #51 を追加レビューし、必要な指摘を解消する
+  - Status: PR51-IFR-F001再修正中（source artifact完全性）
+  - Phase: Phase 4
+  - Estimate: S
+  - Depends on:
+    - T-096 Issue #50 投影済み差分pathからの値参照API（旧branch identity: T-094）
+  - Exit Criteria:
+    - `gpt-5.6-sol / high` のreviewerがPR #51の現HEADをレビューする
+    - 必須指摘がある場合は `gpt-5.6-terra / high` のimplementation workerが修正する
+    - 修正後は同一reviewerがfinding identityを維持して再レビューする
+    - PR current HEADと一致するCI、artifact、validation結果を確認する
+    - reviewと修正の詳細reportをrepositoryへ保存する
+    - mergeは実施しない
+  - Output:
+    - PR #51
+    - `reports/task-t-095-pr-51-review-20260801161359.md`
+    - `reports/task-t-095-pr-51-review-fix-implementation-20260801162816.md`
+    - `reports/task-t-095-pr-51-review-fix-verification-20260801163746.md`
+    - `reports/task-t-095-pr-51-f004-fix-implementation-20260801164701.md`
+    - `reports/task-t-095-pr-51-f004-rereview-20260801165222.md`
+    - `reports/task-t-095-pr-51-independent-final-review-20260801170040.md`（fail report、attestationではない）
+    - `reports/task-t-095-pr-51-ifr-f001-fix-implementation-20260801171201.md`
+    - `reports/task-t-095-pr-51-ifr-f001-fix-verification-20260801171718.md`
+  - Review:
+    - reviewed HEAD `d4a9e3ea96ba3e554ccb89adc5251f6c72adbb5d`
+    - `gpt-5.6-sol / high` reviewer verdict `fail`
+    - Blocking: main競合7箇所、current-HEAD CI/check/artifactなし
+    - High: T-094 task identity衝突
+    - Medium: generator failure diagnostics不足、Missing/pattern検索test不足
+    - local validationはUnit 81件、E2E 88件、format、diff checkに成功
+  - Fix Implementation:
+    - `gpt-5.6-terra / high` implementation workerがPR51-NR-F001〜F005へ対応
+    - current mainを統合し、workflow 5箇所、phase 1箇所、task 1箇所の競合を解消
+    - Issue #50の正規task identityをT-096へ移し、旧branch T-094との対応を記録
+    - Missing slotとpattern検索matrix、workflow diagnostics契約testを追加
+    - focused 11件、Unit 97件、E2E 88件、format、diff checkに成功
+  - Fix Verification:
+    - reviewed HEAD `f3def1d3a73271ee1816dfc08f129faab217d0ee`
+    - PR51-NR-F001、F002、F003、F005はaddressed
+    - PR51-NR-F004はupload conditionを同一stepへ結び付けるcontract test不足によりunresolved
+    - HEAD一致CI run `30690066090`成功、Artifact `8815347066`の22 payloadとdigestを確認
+    - `gpt-5.6-sol / high` reviewer verdict `fail`
+  - F004 Follow-up:
+    - upload stepのname、condition、action、pathを同一blockで検証するcontract testへ修正
+    - upload conditionを壊すtemporary mutationでfocused test失敗を確認し、復元後に成功
+    - runtime workflowは最終変更なし、Issue #50 focused 10件とformat、diff checkに成功
+  - Normal Review Completion:
+    - reviewed HEAD `66e7f3827e9eb09de0d1d48284de974ccfbf2d4d`
+    - PR51-NR-F001〜F005はすべてaddressed、新規findingなし、同一reviewer verdict `pass`
+    - HEAD一致CI run `30690548854`成功、Artifact `8815513603`のdigestと22 payloadを確認
+    - end-of-Issue Skill-gap判断は`no skill action needed`
+    - feedback分類は製品固有のworkflow contract test不足であり、新規feedback pointなし
+    - repository-backed normal handoffは同一session・同一branchで継続するためnot applicable
+  - Independent Final Review:
+    - reviewed HEAD `36eeada49aa60bb6c5985278a589311c092791fa`
+    - `PR51-IFR-F001` Medium: artifactにcheckout済みsourceとGit metadataがなく、PR本文・T-096 exit criteria・実装reportと不一致
+    - HEAD一致CI run `30690908186`は成功したが、Artifact `8815629061`のZIP実体にsource payloadなし
+    - fresh `gpt-5.6-sol / high` reviewer verdict `fail`、report attestationは不許可
+  - Independent Review Follow-up:
+    - `gpt-5.6-terra / high` implementation workerが`PR51-IFR-F001`へTDD対応
+    - tracked checkout source、`checked-out-head.txt`、untracked除外`git-status.txt`を同一artifact配下へ復元
+    - workflow contract Red 1件を確認後にGreen 2件、Issue #50 focused 10件、全186件、format、diff checkに成功
+  - Independent Review Fix Verification:
+    - reviewed HEAD `c743e489f89d39d0d9f4aad6ebd4723c8a642da2`
+    - CI run `30691418238`は成功、Artifact `8815796996`はUnit 98件・E2E 88件成功
+    - git archive期待283 tracked entriesに対しZIP source 279件で、hidden 3件とtracked symlink 1件が欠落
+    - manifest 306件に対してZIP payload 303件となり、`PR51-IFR-F001`はunresolved、normal reviewer verdict `fail`
 - T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
   - Status: 対応中（PR49-FR1のfix verification合格。pre-freeze commit・matching-HEAD CI・fresh独立最終レビュー待ち）
   - Phase: Phase 3
@@ -53,6 +120,44 @@
 なし
 
 ## Done
+
+- T-096: Issue #50 投影済み差分pathからの値参照APIを実装する
+  - Status: 完了（レビュー指摘対応、README再構成、task追跡整合、最終HEAD一致CI確認まで完了）
+  - Phase: Phase 3
+  - Estimate: M
+  - Identity:
+    - current main上の正規task identityはT-096
+    - PR #51 branchで使用した旧identityはT-094であり、historical report本文とfilenameは監査証跡として変更しない
+  - Depends on:
+    - T-092 差分path patternと設計索引の整備
+    - T-093 差分entryの利用側定義path投影API
+  - Exit Criteria:
+    - `ParallelDiffEntryPathProjection` からmodel slot数、値、状態を直接参照できる
+    - 利用側定義pathの完全一致と`ParallelDiffPathPattern`で検索できる
+    - 同一投影pathの複数entryを順序と重複を保持して返す
+    - READMEで標準path、差分entry、投影pathの責務と使い分けを説明する
+    - null、空文字列、範囲外indexの例外契約をtestで保証する
+    - CI artifactにTRX、標準出力、標準エラー、調査用ログ、checkout済みソースを保存する
+    - 新しいPR HEADに一致するCIとartifactを確認する
+    - 詳細reportをrepositoryへ保存し、PR #51へ簡易reportを投稿する
+  - Output:
+    - PR #51
+    - `README.md`
+    - `.github/workflows/pr-xunit-tests.yml`
+    - `src/SSC/ParallelDiffPathProjection.cs`
+    - `src/SSC/ParallelProjectedPathSearchExtensions.cs`
+    - `tests/SSC.Unit.Tests/Issue50ProjectedPathValueAccessTddTests.cs`
+    - `doc/design/detail/12-DiffEntryProjectedPathValueAccess.md`
+    - `reports/task-t-094-issue-50-projected-path-value-access-implementation-20260801.md`
+    - `reports/task-t-094-initial-review-202608011406.md`（旧branch identity: T-094）
+    - `reports/task-t-094-review-fix-implementation-202608011452.md`（旧branch identity: T-094）
+    - `reports/task-t-094-rereview-202608011557.md`（旧branch identity: T-094）
+    - `reports/task-t-094-rereview-r2-202608011604.md`（旧branch identity: T-094）
+  - Verification:
+    - TDD赤確認: `Count`、indexer、`GetState(int)` 未実装によるcompile error
+    - 初回実装HEAD一致CI成功（E2E 88件 / Unit 80件）
+    - 最終HEAD `6e64b6af43daa2a7698929ff6a90abb3c33fe513` と一致するCI run `30687203507` 成功（E2E 88件 / Unit 81件）
+    - Artifact `8814356136` にTRX、標準出力、標準エラー、checkout済みソース、Git情報を保存
 
 - T-093: PR #47 差分entryの利用側定義path投影APIをレビューし、指摘を解消する
   - Status: 完了（初回レビュー6件と再レビュー2件を解消し、独立検証・同一レビュアー最終レビューに合格した）
