@@ -5,7 +5,7 @@
 ## In Progress
 
 - T-095: PR #51 を追加レビューし、必要な指摘を解消する
-  - Status: PR51-IFR-F001修正・ローカル検証完了（commit、HEAD一致CI、normal fix verification待ち）
+  - Status: PR51-IFR-F001再修正中（source artifact完全性）
   - Phase: Phase 4
   - Estimate: S
   - Depends on:
@@ -26,6 +26,7 @@
     - `reports/task-t-095-pr-51-f004-rereview-20260801165222.md`
     - `reports/task-t-095-pr-51-independent-final-review-20260801170040.md`（fail report、attestationではない）
     - `reports/task-t-095-pr-51-ifr-f001-fix-implementation-20260801171201.md`
+    - `reports/task-t-095-pr-51-ifr-f001-fix-verification-20260801171718.md`
   - Review:
     - reviewed HEAD `d4a9e3ea96ba3e554ccb89adc5251f6c72adbb5d`
     - `gpt-5.6-sol / high` reviewer verdict `fail`
@@ -65,6 +66,11 @@
     - `gpt-5.6-terra / high` implementation workerが`PR51-IFR-F001`へTDD対応
     - tracked checkout source、`checked-out-head.txt`、untracked除外`git-status.txt`を同一artifact配下へ復元
     - workflow contract Red 1件を確認後にGreen 2件、Issue #50 focused 10件、全186件、format、diff checkに成功
+  - Independent Review Fix Verification:
+    - reviewed HEAD `c743e489f89d39d0d9f4aad6ebd4723c8a642da2`
+    - CI run `30691418238`は成功、Artifact `8815796996`はUnit 98件・E2E 88件成功
+    - git archive期待283 tracked entriesに対しZIP source 279件で、hidden 3件とtracked symlink 1件が欠落
+    - manifest 306件に対してZIP payload 303件となり、`PR51-IFR-F001`はunresolved、normal reviewer verdict `fail`
 - T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
   - Status: 対応中（PR49-FR1のfix verification合格。pre-freeze commit・matching-HEAD CI・fresh独立最終レビュー待ち）
   - Phase: Phase 3
