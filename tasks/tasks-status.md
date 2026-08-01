@@ -4,7 +4,22 @@
 
 ## In Progress
 
-なし
+- T-095: PR #51 を追加レビューし、必要な指摘を解消する
+  - Status: レビュー準備中（現HEAD、main競合、HEAD一致CIを確認中）
+  - Phase: Phase 4
+  - Estimate: S
+  - Depends on:
+    - T-094 Issue #50 投影済み差分pathからの値参照API
+  - Exit Criteria:
+    - `gpt-5.6-sol / high` のreviewerがPR #51の現HEADをレビューする
+    - 必須指摘がある場合は `gpt-5.6-terra / high` のimplementation workerが修正する
+    - 修正後は同一reviewerがfinding identityを維持して再レビューする
+    - PR current HEADと一致するCI、artifact、validation結果を確認する
+    - reviewと修正の詳細reportをrepositoryへ保存する
+    - mergeは実施しない
+  - Output:
+    - PR #51
+    - `reports/task-t-095-pr-51-review-20260801161359.md`
 
 ## Backlog
 
