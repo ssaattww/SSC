@@ -21,6 +21,7 @@ dotnet test <test-project> \
 - `coverage/raw/*.cobertura.xml`: test projectごとのraw coverage
 - `coverage/report/index.html`: class、method、source行を確認するHTML report
 - `coverage/report/Cobertura.xml`: 統合済みcoverage
+- `coverage/mobile/code-coverage.html`: スマートフォン向け単一HTML
 - `coverage/report/*Github*.md`: Actions Summaryへ転記するMarkdown
 - `coverage/report/*Summary*.txt`: text summary
 - `coverage/logs/reportgenerator-install.stdout.log`
@@ -33,11 +34,33 @@ dotnet test <test-project> \
 
 ## PRで確認する方法
 
+### スマートフォン
+
+PR本文の「Mobile coverage report」をタップします。`reports/code-coverage.html` をHTML preview経由で開くため、artifact ZIPのダウンロードや展開は不要です。
+
+単一HTMLでは次を確認できます。
+
+- line、branch、method coverage
+- class別coverage
+- method別coverage
+- 0% methodと部分coverage method
+- 未実行行番号
+- methodからGitHub上のsourceへのリンク
+
+### GitHub Actions
+
 1. PRのChecksから `PR .NET Tests` を開きます。
 2. 対象runのhead SHAがPRのcurrent HEAD SHAと一致することを確認します。
 3. Job Summaryでline coverage、branch coverage、assembly別coverageを確認します。
-4. Artifactsから `ssc-pr-test-results-<run-id>-<attempt>` をダウンロードします。
-5. ZIPを展開し、`coverage/report/index.html` をブラウザで開きます。
+4. より詳細なReportGenerator画面が必要な場合だけartifactを取得し、`coverage/report/index.html` を開きます。
+
+## HTMLの自動更新とCI停止条件
+
+テストとcoverage生成が成功すると、専用jobがartifact内の単一HTMLを`reports/code-coverage.html`へコミットします。テストjobのtokenは`contents: read`のまま維持し、HTML反映jobだけに`contents: write`を付与します。fork由来のPRでは自動コミットしません。
+
+自動コミットのsubjectは`chore: update code coverage report`です。このコミットによってPR workflowがもう一度起動した場合、次のrunは通常のテストとcoverage生成を実施しますが、subjectを検出して追加コミットを作成しません。したがって、1回の通常更新に対してworkflow実行は最大2回で停止します。
+
+また、HTML反映直前にremote branchのHEADが元のPR HEADと一致することを検査します。作業中にPR HEADが更新されていた場合は、古いcoverageをコミットせず、新しいHEAD側のrunへ処理を譲ります。
 
 ## 通っていない関数を確認する方法
 
@@ -83,7 +106,15 @@ artifacts/local-coverage/tools/reportgenerator \
   "-title:SSC code coverage"
 ```
 
-生成後、`artifacts/local-coverage/report/index.html` を開きます。
+生成後、`artifacts/local-coverage/report/index.html` を開きます。スマートフォン向け単一HTMLは次で生成できます。
+
+```bash
+python3 scripts/generate-mobile-coverage-report.py \
+  --input artifacts/local-coverage/report/Cobertura.xml \
+  --output reports/code-coverage.html \
+  --repository ssaattww/SSC \
+  --ref "$(git rev-parse HEAD)"
+```
 
 ## 対象assembly
 
