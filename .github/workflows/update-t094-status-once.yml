@@ -1,0 +1,45 @@
+name: Update T-094 Status Once
+
+on:
+  push:
+    branches:
+      - design/issue-50-projected-path-value-access
+    paths:
+      - .github/workflows/update-t094-status-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: design/issue-50-projected-path-value-access
+          fetch-depth: 0
+
+      - name: Update task status and remove temporary workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tasks/tasks-status.md')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              '  - Status: レビュー指摘対応中（重複・順序保持test、README再構成、PR説明整合を実施）',
+              '  - Status: 完了（レビュー指摘対応、README再構成、task追跡整合、最終HEAD一致CI確認まで完了）',
+              1)
+          text = text.replace(
+              '    - レビュー指摘対応後のHEAD一致CIを確認予定',
+              '    - 最終HEAD `6e64b6af43daa2a7698929ff6a90abb3c33fe513` と一致するCI run `30687203507` 成功（E2E 88件 / Unit 81件）\n    - Artifact `8814356136` にTRX、標準出力、標準エラー、checkout済みソース、Git情報を保存',
+              1)
+          path.write_text(text, encoding='utf-8')
+          PY
+          rm .github/workflows/update-t094-status-once.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add tasks/tasks-status.md .github/workflows/update-t094-status-once.yml
+          git commit -m "Complete T-094 task tracking"
+          git push origin HEAD:design/issue-50-projected-path-value-access
