@@ -1,0 +1,74 @@
+name: Apply T-094 tracking
+
+on:
+  push:
+    branches:
+      - design/issue-50-projected-path-value-access
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: design/issue-50-projected-path-value-access
+          fetch-depth: 0
+
+      - name: Insert T-094 without replacing history
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tasks/tasks-status.md')
+          text = path.read_text(encoding='utf-8')
+          if '- T-094:' not in text:
+              text = text.replace('- Updated: 2026-07-18', '- Updated: 2026-08-01', 1)
+              task = '''- T-094: Issue #50 投影済み差分pathからの値参照APIを実装する
+            - Status: レビュー指摘対応中（重複・順序保持test、README再構成、PR説明整合を実施）
+            - Phase: Phase 3
+            - Estimate: M
+            - Depends on:
+              - T-092 差分path patternと設計索引の整備
+              - T-093 差分entryの利用側定義path投影API
+            - Exit Criteria:
+              - `ParallelDiffEntryPathProjection` からmodel slot数、値、状態を直接参照できる
+              - 利用側定義pathの完全一致と`ParallelDiffPathPattern`で検索できる
+              - 同一投影pathの複数entryを順序と重複を保持して返す
+              - READMEで標準path、差分entry、投影pathの責務と使い分けを説明する
+              - null、空文字列、範囲外indexの例外契約をtestで保証する
+              - CI artifactにTRX、標準出力、標準エラー、調査用ログ、checkout済みソースを保存する
+              - 新しいPR HEADに一致するCIとartifactを確認する
+              - 詳細reportをrepositoryへ保存し、PR #51へ簡易reportを投稿する
+            - Output:
+              - PR #51
+              - `README.md`
+              - `.github/workflows/pr-xunit-tests.yml`
+              - `src/SSC/ParallelDiffPathProjection.cs`
+              - `src/SSC/ParallelProjectedPathSearchExtensions.cs`
+              - `tests/SSC.Unit.Tests/Issue50ProjectedPathValueAccessTddTests.cs`
+              - `doc/design/detail/12-DiffEntryProjectedPathValueAccess.md`
+              - `reports/task-t-094-issue-50-projected-path-value-access-implementation-20260801.md`
+            - Verification:
+              - TDD赤確認: `Count`、indexer、`GetState(int)` 未実装によるcompile error
+              - 初回実装HEAD一致CI成功（E2E 88件 / Unit 80件）
+              - レビュー指摘対応後のHEAD一致CIを確認予定
+
+          '''
+              text = text.replace('## Done\n\n', '## Done\n\n' + task, 1)
+              path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Remove one-time workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/apply-t094-tracking.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tasks/tasks-status.md .github/workflows/apply-t094-tracking.yml
+          git commit -m "Track T-094 review fixes"
+          git push origin HEAD:design/issue-50-projected-path-value-access
