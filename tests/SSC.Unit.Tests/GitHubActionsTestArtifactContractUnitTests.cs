@@ -17,6 +17,10 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
             "workflows",
             "pr-xunit-tests.yml");
         var workflow = File.ReadAllText(workflowPath);
+        const string uploadStepName = "Upload .NET test results for ChatGPT review";
+        const string uploadCondition =
+            "if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}";
+        var uploadStep = GetStepBlock(workflow, uploadStepName);
 
         Assert.Contains("Prepare test diagnostic artifact", workflow);
         Assert.Contains("mkdir -p \"$results_dir/logs\"", workflow);
@@ -43,11 +47,10 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
             workflow);
         Assert.Contains("Pull request head:", workflow);
         Assert.Contains("find \"$results_dir\" -type f ! -name manifest.md", workflow);
-        Assert.Contains("actions/upload-artifact@v4", workflow);
-        Assert.Contains("path: artifacts/test-results", workflow);
-        Assert.Contains(
-            "if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}",
-            workflow);
+        Assert.Contains($"- name: {uploadStepName}", uploadStep);
+        Assert.Contains(uploadCondition, uploadStep);
+        Assert.Contains("uses: actions/upload-artifact@v4", uploadStep);
+        Assert.Contains("path: artifacts/test-results", uploadStep);
         Assert.Contains("retention-days: 7", workflow);
         Assert.Contains("manifest.md", workflow);
         Assert.Contains("ChatGPT-assisted review", workflow);
@@ -69,5 +72,20 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
 
         throw new DirectoryNotFoundException(
             "Could not locate the SSC repository root from the test output directory.");
+    }
+
+    private static string GetStepBlock(string workflow, string stepName)
+    {
+        var stepHeader = $"      - name: {stepName}";
+        var startIndex = workflow.IndexOf(stepHeader, StringComparison.Ordinal);
+        Assert.True(startIndex >= 0, $"Could not locate workflow step '{stepName}'.");
+
+        var nextStepIndex = workflow.IndexOf(
+            "\n      - name:",
+            startIndex + stepHeader.Length,
+            StringComparison.Ordinal);
+        return nextStepIndex < 0
+            ? workflow[startIndex..]
+            : workflow[startIndex..nextStepIndex];
     }
 }

@@ -157,7 +157,7 @@
 - Notes:
   - T-094はterra/high実装と別terra/high検証でfocused/full test、format、diff check、standards validationに成功し、source sol/high reviewerのfix verificationにも合格した。pre-freeze commit、matching-HEAD CI、fresh独立最終レビュー待ち
   - T-096はIssue #50投影済み差分path値参照APIのcurrent main上の正規task identityであり、旧branch上のT-094記録とhistorical report filenameは変更せず対応を追跡する
-  - T-095のfix verificationでPR51-NR-F001/F002/F003/F005を解消し、PR51-NR-F004のworkflow upload condition contract testを追加修正中
+  - T-095のPR51-NR-F004 contract test修正を完了し、commit、HEAD一致CI、同一reviewerの再verification待ち
   - T-093はfocused unit 21件、focused E2E 7件、Release全162件、format、diff check、独立検証に成功し、`gpt-5.6-sol / high`同一reviewerの最終指摘なしを確認した（Markdown lintはrepository wiring不在のためunsupported）
   - T-092はRelease 133テスト、focused 21テスト、format、diff check、coding standards validation、`gpt-5.6-sol / high`同一レビュアー再レビューに成功した
   - T-091はRelease 112テスト、format、diff check、XML整形式、非コメント差分照合、独立reviewに成功した
