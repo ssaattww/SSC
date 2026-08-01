@@ -1,6 +1,6 @@
 # Tasks Status
 
-- Updated: 2026-07-18
+- Updated: 2026-08-01
 
 ## In Progress
 
@@ -11,6 +11,36 @@
 なし
 
 ## Done
+
+- T-094: Issue #50 投影済み差分pathからの値参照APIを実装する
+  - Status: レビュー指摘対応中（重複・順序保持test、README再構成、PR説明整合を実施）
+  - Phase: Phase 3
+  - Estimate: M
+  - Depends on:
+    - T-092 差分path patternと設計索引の整備
+    - T-093 差分entryの利用側定義path投影API
+  - Exit Criteria:
+    - `ParallelDiffEntryPathProjection` からmodel slot数、値、状態を直接参照できる
+    - 利用側定義pathの完全一致と`ParallelDiffPathPattern`で検索できる
+    - 同一投影pathの複数entryを順序と重複を保持して返す
+    - READMEで標準path、差分entry、投影pathの責務と使い分けを説明する
+    - null、空文字列、範囲外indexの例外契約をtestで保証する
+    - CI artifactにTRX、標準出力、標準エラー、調査用ログ、checkout済みソースを保存する
+    - 新しいPR HEADに一致するCIとartifactを確認する
+    - 詳細reportをrepositoryへ保存し、PR #51へ簡易reportを投稿する
+  - Output:
+    - PR #51
+    - `README.md`
+    - `.github/workflows/pr-xunit-tests.yml`
+    - `src/SSC/ParallelDiffPathProjection.cs`
+    - `src/SSC/ParallelProjectedPathSearchExtensions.cs`
+    - `tests/SSC.Unit.Tests/Issue50ProjectedPathValueAccessTddTests.cs`
+    - `doc/design/detail/12-DiffEntryProjectedPathValueAccess.md`
+    - `reports/task-t-094-issue-50-projected-path-value-access-implementation-20260801.md`
+  - Verification:
+    - TDD赤確認: `Count`、indexer、`GetState(int)` 未実装によるcompile error
+    - 初回実装HEAD一致CI成功（E2E 88件 / Unit 80件）
+    - レビュー指摘対応後のHEAD一致CIを確認予定
 
 - T-093: PR #47 差分entryの利用側定義path投影APIをレビューし、指摘を解消する
   - Status: 完了（初回レビュー6件と再レビュー2件を解消し、独立検証・同一レビュアー最終レビューに合格した）
