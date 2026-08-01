@@ -57,6 +57,43 @@ public sealed class GitHubActionsTestArtifactContractUnitTests
         Assert.Contains("explicitly approved", workflow);
     }
 
+    /// <summary>
+    /// pull request workflow がtracked checkout sourceとGit metadataを診断artifact配下へ保存することを確認します。
+    /// </summary>
+    [Fact]
+    public void PullRequestWorkflow_PreservesTrackedCheckoutSourceInDiagnosticArtifact()
+    {
+        var workflowPath = Path.Combine(
+            FindRepositoryRoot(),
+            ".github",
+            "workflows",
+            "pr-xunit-tests.yml");
+        var workflow = File.ReadAllText(workflowPath);
+        const string sourceStepName = "Preserve checked-out source";
+        const string uploadStepName = "Upload .NET test results for ChatGPT review";
+        var sourceStep = GetStepBlock(workflow, sourceStepName);
+        var uploadStep = GetStepBlock(workflow, uploadStepName);
+
+        Assert.Contains($"- name: {sourceStepName}", sourceStep);
+        Assert.Contains(
+            "if: ${{ always() && (steps.discover.outputs.has_tests == 'true' || steps.discover.outputs.has_generators == 'true') }}",
+            sourceStep);
+        Assert.Contains(
+            "source_dir=\"$GITHUB_WORKSPACE/artifacts/test-results/source\"",
+            sourceStep);
+        Assert.Contains(
+            "git archive --format=tar HEAD | tar -xf - -C \"$source_dir\"",
+            sourceStep);
+        Assert.Contains(
+            "git rev-parse HEAD > \"$source_dir/checked-out-head.txt\"",
+            sourceStep);
+        Assert.Contains(
+            "git status --short --untracked-files=no > \"$source_dir/git-status.txt\"",
+            sourceStep);
+        Assert.DoesNotContain(".git", sourceStep);
+        Assert.Contains("path: artifacts/test-results", uploadStep);
+    }
+
     private static string FindRepositoryRoot()
     {
         for (DirectoryInfo? directory = new(AppContext.BaseDirectory);
