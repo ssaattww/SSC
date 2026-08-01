@@ -66,8 +66,9 @@ jobs:
         shell: bash
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
-          rm -rf "$results_dir"
-          mkdir -p "$results_dir"
+          logs_dir="$GITHUB_WORKSPACE/artifacts/logs"
+          rm -rf "$results_dir" "$logs_dir"
+          mkdir -p "$results_dir" "$logs_dir"
           test_status=0
 
           while IFS= read -r project; do
@@ -75,22 +76,50 @@ jobs:
             echo "Testing: $project"
 
             result_name="$(printf '%s' "${project%.csproj}" | sed -E 's#[^A-Za-z0-9._-]+#_#g')"
-            if ! dotnet restore "$project"; then
+            restore_stdout="$logs_dir/${result_name}-restore.stdout.log"
+            restore_stderr="$logs_dir/${result_name}-restore.stderr.log"
+            test_stdout="$logs_dir/${result_name}-test.stdout.log"
+            test_stderr="$logs_dir/${result_name}-test.stderr.log"
+
+            set +e
+            dotnet restore "$project" \
+              > >(tee "$restore_stdout") \
+              2> >(tee "$restore_stderr" >&2)
+            restore_status=$?
+            set -e
+            if [[ $restore_status -ne 0 ]]; then
               test_status=1
               continue
             fi
 
-            if ! dotnet test "$project" \
+            set +e
+            dotnet test "$project" \
               --configuration Release \
               --no-restore \
               --verbosity minimal \
               --logger "trx;LogFileName=${result_name}.trx" \
-              --results-directory "$results_dir"; then
+              --results-directory "$results_dir" \
+              > >(tee "$test_stdout") \
+              2> >(tee "$test_stderr" >&2)
+            project_status=$?
+            set -e
+            if [[ $project_status -ne 0 ]]; then
               test_status=1
             fi
           done <<< "${{ steps.discover.outputs.test_projects }}"
 
           exit "$test_status"
+
+      - name: Preserve checked-out source
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          source_dir="$GITHUB_WORKSPACE/artifacts/source"
+          rm -rf "$source_dir"
+          mkdir -p "$source_dir"
+          git archive --format=tar HEAD | tar -xf - -C "$source_dir"
+          git rev-parse HEAD > "$source_dir/checked-out-head.txt"
+          git status --short > "$source_dir/git-status.txt"
 
       - name: Create test result manifest
         if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
@@ -112,7 +141,7 @@ jobs:
             if [[ -n "${PR_NUMBER:-}" ]]; then
               echo "- Pull request: \`#$PR_NUMBER\`"
             fi
-            echo "- Authorization: The repository owner explicitly approved retaining these test results as a GitHub Actions artifact for ChatGPT-assisted review when this workflow behavior was added in PR #47."
+            echo "- Authorization: The repository owner explicitly approved retaining these test results and failure diagnostics as a GitHub Actions artifact for ChatGPT-assisted review."
             echo
             echo "## Test projects"
             while IFS= read -r project; do
@@ -131,18 +160,22 @@ jobs:
                 echo "- \`$(basename "$trx_file")\`"
               done
             fi
+            echo
+            echo "## Diagnostics"
+            echo "- Standard output and standard error: \`artifacts/logs\`"
+            echo "- Checked-out source and Git metadata: \`artifacts/source\`"
           } > "$results_dir/manifest.md"
 
           cat "$results_dir/manifest.md" >> "$GITHUB_STEP_SUMMARY"
 
       # The repository owner explicitly approved retaining this artifact so
       # ChatGPT-assisted review can inspect the same test evidence as maintainers.
-      - name: Upload .NET test results for ChatGPT review
-        if: ${{ always() && steps.discover.outputs.has_tests == 'true' }}
+      - name: Upload .NET test results and diagnostics for ChatGPT review
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/test-results
+          name: ssc-pr-test-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts
           if-no-files-found: error
           retention-days: 7
 
