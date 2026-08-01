@@ -56,8 +56,8 @@ jobs:
         run: |
           results_dir="$GITHUB_WORKSPACE/artifacts/test-results"
           rm -rf "$results_dir"
+          mkdir -p "$results_dir/logs"
           mkdir -p \
-            "$results_dir/logs" \
             "$results_dir/test-runs" \
             "$results_dir/coverage/raw" \
             "$results_dir/coverage/report" \
@@ -156,7 +156,14 @@ jobs:
             fi
 
             coverage_index=0
+            declare -A copied_coverage_hashes=()
             for coverage_file in "${project_coverage_files[@]}"; do
+              coverage_hash="$(sha256sum "$coverage_file" | awk '{print $1}')"
+              if [[ -n "${copied_coverage_hashes[$coverage_hash]:-}" ]]; then
+                continue
+              fi
+
+              copied_coverage_hashes[$coverage_hash]=1
               coverage_index=$((coverage_index + 1))
               cp "$coverage_file" \
                 "$coverage_raw_dir/${result_name}-${coverage_index}.cobertura.xml"
