@@ -5,7 +5,7 @@
 ## In Progress
 
 - T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
-  - Status: 対応中（空文字列の `CompareKey` が生成する legacy path に祖先 pattern が一致しない問題をTDDで修正する）
+  - Status: 対応中（TDD修正と独立検証が完了し、commit・matching-HEAD CI・fix verification待ち）
   - Phase: Phase 3
   - Estimate: S
   - Depends on:
@@ -21,12 +21,26 @@
     - review、実装、検証、再レビュー、独立最終レビューの各reportをPR #49 branchへcommit・pushする
   - Output:
     - PR #49
+    - `src/SSC/Internal/XPathLikePathParser.cs`
     - `src/SSC/ParallelDiffPathPattern.cs`
     - `tests/SSC.Unit.Tests/ParallelDiffPathPatternAncestorUnitTests.cs`
     - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
     - `doc/design/detail/10-DiffEntryPathFilter.md`
+    - `doc/design/detail/11-DiffEntryCustomPath.md`
     - `Design/BreakingChanges.md`
     - `reports/issue-48-codex-independent-final-review-audit-20260801.md`
+    - `reports/task-t-094-review-fix-implementation-20260801142313.md`
+    - `reports/task-t-094-review-fix-verification-20260801143017.md`
+  - Verification:
+    - TDD Red: 実際の `GetDiffEntries()` が生成した `Items[].Label` に `Items[*]` が一致せず、focused E2E 1件失敗
+    - focused Unit 12件、parser/pattern Unit 39件、focused E2E 1件成功
+    - `dotnet test SSC.sln --configuration Release` 成功（Unit 87件 / E2E 88件、計175件）
+    - `dotnet format SSC.sln --verify-no-changes` 成功
+    - `git diff --check` 成功
+    - 日本語XML documentation、API surface、設計整合の独立検証成功
+    - Markdown lintはrepository wiring不在のためfocused/fullともunsupported
+    - `gpt-5.6-terra / high` implementation agentで修正
+    - 別の`gpt-5.6-terra / high` verification agentで独立検証
 
 ## Backlog
 

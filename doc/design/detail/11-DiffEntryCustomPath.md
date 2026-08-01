@@ -80,7 +80,7 @@ Items[#0].Name
 標準 path は SSC の比較 tree 上の位置を表す。
 
 - `Kind == Node` の entry では `GetNodeByPath()` で同じ node を取得できる
-- 空文字列のCompareKeyによる既存base互換の`Name[]`形式は文字列を維持するlegacy selectorであり、既存parserでは解釈できないためnodeとparent pathの解決を保証しない
+- 空文字列のCompareKeyによる既存base互換の`Name[]`形式は文字列を維持するlegacy selectorであり、通常のparserでは解釈できないためnodeとparent pathの解決を保証しない。ただし共有matcherの候補pathとしては空 key selector として扱われるため、`Name[*]` はこの形式の子孫pathに一致する
 - `Kind == ContainerPresence` の entry は public node に対応しないため、`GetNodeByPath()` による解決を保証しない
 - `ParallelDiffEntry.Path` と `ParallelDiffEntry.ParentPath` に使用される
 - 既存 `ParallelDiffEntry.PathMatches()` の照合対象になる

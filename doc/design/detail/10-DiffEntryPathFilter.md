@@ -116,6 +116,7 @@ public static class ParallelDiffEntryPathExtensions
 - `PathMatches(null entry, ...)` は `ArgumentNullException`
 - `PathMatches(..., null pattern)` は `ArgumentNullException`
 - 判定対象 path が既存 XPath-like path として不正な場合、`IsMatch` は `false`
+- ただし、空文字列のCompareKeyにより `GetDiffEntries()` が既存互換として生成する `Name[]` は、照合時だけ空 key selector として扱う
 
 ## 6. パターン構文
 
@@ -148,6 +149,8 @@ escaped-asterisk-selector = "[\\*]"
 pattern が候補 path より短く、pattern の全 segment が先頭から一致する場合、残りの候補 segment は一致した node の子孫として扱う。
 
 初期実装から引き続き、member 名 wildcard と任意深度 wildcard は提供しない。
+
+`Name[]` は外部入力のpatternおよび通常のXPath-like path grammarとしては引き続き不正である。`ParallelDiffPathPattern.TryParse("Name[]")` は `false` を返し、`Parse("Name[]")` は例外を送出する。一方で、空文字列のCompareKeyに対する既存 `GetDiffEntries()` 出力をfilterできるよう、`IsMatch` は候補pathに限り `Name[]` を空 key selector として照合する。したがって `Name[*]` は `Name[].Value` のような子孫pathに一致する。
 
 ## 7. 一致規則
 
@@ -230,6 +233,7 @@ Root.ChildrenOther[0].Value
 - 任意 file key に一致する
 - `[*]` が key selector と ordinal selectorの両方に一致する
 - selector wildcard を含む祖先 pattern が子孫 path に一致する
+- 空文字列のCompareKeyから生成した `Name[].Value` に `Name[*]` が一致する
 - `[\*]` が `*` をエスケープして通常文字の key として扱い、他の key には一致しない
 - exact key と exact ordinal を区別する
 - member 名違いと selector 有無違いを拒否する

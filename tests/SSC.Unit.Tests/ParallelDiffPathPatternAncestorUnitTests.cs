@@ -63,6 +63,17 @@ public sealed class ParallelDiffPathPatternAncestorUnitTests
     }
 
     /// <summary>
+    /// 有効な上位祖先 pattern が、後続 segment に空 selector を含む既存差分 path に一致することを検証します。
+    /// </summary>
+    [Fact]
+    public void IsMatch_WithAncestorBeforeLegacyEmptyKeySelector_MatchesDescendantPath()
+    {
+        ParallelDiffPathPattern pattern = ParallelDiffPathPattern.Parse("Root");
+
+        Assert.True(pattern.IsMatch("Root.Items[].Label"));
+    }
+
+    /// <summary>
     /// LINQ filter で祖先 pattern 配下の子 node、属性、および値の差分だけをまとめて除外できることを検証します。
     /// </summary>
     [Fact]

@@ -87,7 +87,7 @@ public sealed class XPathLikeDiffEntriesE2ETests
     }
 
     /// <summary>
-    /// 空文字列の比較 key を持つ要素が標準 path と値を返し、そのlegacy pathのnode lookupを保証しないことを確認します。
+    /// 空文字列の比較 key を持つ要素が標準 path と値を返し、そのlegacy pathのnode lookupを保証せず、selector wildcard の祖先 pattern と照合できることを確認します。
     /// </summary>
     [Fact]
     public void GetDiffEntries_ReturnsEntryForEmptyCompareKey()
@@ -105,6 +105,7 @@ public sealed class XPathLikeDiffEntriesE2ETests
         ]);
 
         var entry = Assert.Single(result.GetDiffEntries());
+        ParallelDiffPathPattern pattern = ParallelDiffPathPattern.Parse("Items[*]");
 
         Assert.Equal("Items[].Label", entry.Path);
         Assert.Equal("Items[]", entry.ParentPath);
@@ -113,6 +114,7 @@ public sealed class XPathLikeDiffEntriesE2ETests
         Assert.Null(result.GetNodeByPath(entry.ParentPath!));
         Assert.Equal("left", entry.Values[0].Value);
         Assert.Equal("right", entry.Values[1].Value);
+        Assert.True(entry.PathMatches(pattern));
     }
 
     [Fact]

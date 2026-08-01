@@ -62,10 +62,30 @@ internal static class XPathLikePathParser
 {
     public static bool TryParse(string path, out XPathLikePath? parsedPath)
     {
-        return TryParse(path, rootName: null, out parsedPath);
+        return TryParse(path, rootName: null, allowsEmptyKeySelector: false, out parsedPath);
     }
 
     public static bool TryParse(string path, string? rootName, out XPathLikePath? parsedPath)
+    {
+        return TryParse(path, rootName, allowsEmptyKeySelector: false, out parsedPath);
+    }
+
+    /// <summary>
+    /// 既存の <c>GetDiffEntries()</c> が空文字列の比較 key に対して生成する legacy 空 selector を、空 key selector として解析します。
+    /// </summary>
+    /// <param name="path">解析する既存差分 path。</param>
+    /// <param name="parsedPath">解析に成功した場合の構造化 path。</param>
+    /// <returns>解析に成功した場合は <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
+    internal static bool TryParseLegacyEmptyKeySelectorPath(string path, out XPathLikePath? parsedPath)
+    {
+        return TryParse(path, rootName: null, allowsEmptyKeySelector: true, out parsedPath);
+    }
+
+    private static bool TryParse(
+        string path,
+        string? rootName,
+        bool allowsEmptyKeySelector,
+        out XPathLikePath? parsedPath)
     {
         parsedPath = null;
         if (string.IsNullOrEmpty(path))
@@ -83,7 +103,7 @@ internal static class XPathLikePathParser
         var segments = new List<XPathLikePathSegment>(rawSegments.Count - segmentStartIndex);
         for (var index = segmentStartIndex; index < rawSegments.Count; index++)
         {
-            if (!TryParseSegment(rawSegments[index], out var segment))
+            if (!TryParseSegment(rawSegments[index], allowsEmptyKeySelector, out var segment))
             {
                 return false;
             }
@@ -187,7 +207,10 @@ internal static class XPathLikePathParser
         return true;
     }
 
-    private static bool TryParseSegment(string rawSegment, out XPathLikePathSegment segment)
+    private static bool TryParseSegment(
+        string rawSegment,
+        bool allowsEmptyKeySelector,
+        out XPathLikePathSegment segment)
     {
         segment = null!;
         if (string.IsNullOrEmpty(rawSegment))
@@ -209,12 +232,12 @@ internal static class XPathLikePathParser
 
         var memberName = rawSegment[..selectorStart];
         var selectorText = rawSegment[(selectorStart + 1)..^1];
-        if (memberName.Length == 0 || selectorText.Length == 0)
+        if (memberName.Length == 0 || (selectorText.Length == 0 && !allowsEmptyKeySelector))
         {
             return false;
         }
 
-        if (!TryParseSelector(selectorText, out var selector))
+        if (!TryParseSelector(selectorText, allowsEmptyKeySelector, out var selector))
         {
             return false;
         }
@@ -223,9 +246,18 @@ internal static class XPathLikePathParser
         return true;
     }
 
-    private static bool TryParseSelector(string selectorText, out XPathLikePathSelector selector)
+    private static bool TryParseSelector(
+        string selectorText,
+        bool allowsEmptyKeySelector,
+        out XPathLikePathSelector selector)
     {
         selector = null!;
+        if (selectorText.Length == 0 && allowsEmptyKeySelector)
+        {
+            selector = XPathLikePathSelector.Key(string.Empty);
+            return true;
+        }
+
         if (selectorText[0] == '#')
         {
             if (selectorText.Length == 1 || !selectorText[1..].All(char.IsDigit))

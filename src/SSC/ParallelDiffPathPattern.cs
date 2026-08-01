@@ -66,6 +66,9 @@ public sealed class ParallelDiffPathPattern
     /// <summary>
     /// 指定した XPath-like path 自身、またはその祖先がこの pattern に一致するか判定します。
     /// </summary>
+    /// <remarks>
+    /// 空文字列の比較 key に対して <c>GetDiffEntries()</c> が生成する legacy 空 selector は、候補 path に限り空 key selector として照合します。
+    /// </remarks>
     /// <param name="path">照合する <see cref="ParallelDiffEntry.Path"/>。</param>
     /// <returns>pattern の全 segment が path の先頭から一致する場合は <see langword="true"/>。</returns>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> が <see langword="null"/> の場合。</exception>
@@ -73,7 +76,7 @@ public sealed class ParallelDiffPathPattern
     {
         ArgumentNullException.ThrowIfNull(path);
 
-        if (!XPathLikePathParser.TryParse(path, out var parsedPath)
+        if (!XPathLikePathParser.TryParseLegacyEmptyKeySelectorPath(path, out var parsedPath)
             || parsedPath is null
             || parsedPath.Segments.Count < _segments.Count)
         {
