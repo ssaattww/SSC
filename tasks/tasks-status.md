@@ -13,7 +13,7 @@
 ## Done
 
 - T-094: Issue #50 投影済み差分pathからの値参照APIを実装する
-  - Status: レビュー指摘対応中（重複・順序保持test、README再構成、PR説明整合を実施）
+  - Status: 完了（レビュー指摘対応、README再構成、task追跡整合、最終HEAD一致CI確認まで完了）
   - Phase: Phase 3
   - Estimate: M
   - Depends on:
@@ -40,7 +40,8 @@
   - Verification:
     - TDD赤確認: `Count`、indexer、`GetState(int)` 未実装によるcompile error
     - 初回実装HEAD一致CI成功（E2E 88件 / Unit 80件）
-    - レビュー指摘対応後のHEAD一致CIを確認予定
+    - 最終HEAD `6e64b6af43daa2a7698929ff6a90abb3c33fe513` と一致するCI run `30687203507` 成功（E2E 88件 / Unit 81件）
+    - Artifact `8814356136` にTRX、標準出力、標準エラー、checkout済みソース、Git情報を保存
 
 - T-093: PR #47 差分entryの利用側定義path投影APIをレビューし、指摘を解消する
   - Status: 完了（初回レビュー6件と再レビュー2件を解消し、独立検証・同一レビュアー最終レビューに合格した）
