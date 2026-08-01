@@ -24,7 +24,10 @@ public sealed class ParallelDiffPathProjectionAncestorUnitTests
                 Items = [new ProjectionItem { Name = "right" }],
             },
         ]);
-        ParallelDiffPathPattern ancestorPattern = ParallelDiffPathPattern.Parse("Entry[*]");
+        ParallelDiffPathPattern projectedAncestorPattern =
+            ParallelDiffPathPattern.Parse("Entry[*]");
+        ParallelDiffPathPattern standardAncestorPattern =
+            ParallelDiffPathPattern.Parse("Items[*]");
 
         ParallelDiffEntryPathProjection projection = Assert.Single(
             result.GetDiffEntryPathProjections(new RenameItemsProjector("Entry")));
@@ -32,11 +35,14 @@ public sealed class ParallelDiffPathProjectionAncestorUnitTests
             result.GetDiffEntryPathProjections(new RenameItemsProjector("EntryOther")));
 
         Assert.Equal("Entry[0].Name", projection.ProjectedPath);
-        Assert.True(projection.PathMatches(ancestorPattern));
-        Assert.False(projection.Entry.PathMatches(ancestorPattern));
+        Assert.True(projection.PathMatches(projectedAncestorPattern));
+        Assert.False(projection.Entry.PathMatches(projectedAncestorPattern));
+
+        Assert.True(projection.Entry.PathMatches(standardAncestorPattern));
+        Assert.False(projection.PathMatches(standardAncestorPattern));
 
         Assert.Equal("EntryOther[0].Name", siblingProjection.ProjectedPath);
-        Assert.False(siblingProjection.PathMatches(ancestorPattern));
+        Assert.False(siblingProjection.PathMatches(projectedAncestorPattern));
     }
 
     /// <summary>
