@@ -134,3 +134,23 @@ Runner環境にはlocal `dotnet` がないため、別のlocal `dotnet format` �
 ## 10. マージ境界
 
 mergeは実施していない。利用者がレビュー完了後に判断する。
+
+## 11. スマートフォン公開方式の追加判断
+
+利用者から、artifact ZIPを展開せずスマートフォンからcoverageを確認したいという要望が追加されたため、単一HTMLとGitHub Pages公開を追加した。
+
+### 11.1 PR branchへ自動コミットしない理由
+
+当初、PR branchの`reports/code-coverage.html`をActionsが更新する方式を試した。しかし、bot commitによってPR HEADが変わり、そのcommitに対するworkflowが`action_required`となった。current HEAD一致CIの証跡が不安定になり、再実行制御を誤るとCI loopへつながるため、この方式は撤回した。
+
+### 11.2 `gh-pages` branchを採用した理由
+
+生成済みHTMLの永続保存先には、GitHub Pagesで一般的に使われ、保守作業で削除対象と誤認されにくい`gh-pages` branchを採用した。branch直下には最新の成功coverageを示す`index.html`、`.nojekyll`、生成元HEADを示す`source-head.txt`、生成元PRを示す`source-pr.txt`だけを保存する。
+
+PR番号をbranch名や公開URLへ含めず、`https://ssaattww.github.io/SSC/`を固定閲覧先とする。READMEにも同じURLを残す。
+
+### 11.3 無限CIを発生させない仕組み
+
+PR workflowのtriggerは`pull_request`と手動実行のみであり、`gh-pages`へのpushでは起動しない。公開jobはPR branchへpushせず、`gh-pages`だけを更新する。テストjobは`contents: read`、公開jobだけが`contents: write`、`pages: write`、`id-token: write`を持つ。
+
+公開直前にremote PR HEADがrun開始時のHEADと一致することを確認し、古いrunからのreport公開を防止する。公開jobには固定concurrency groupを設定し、複数runが同時に`gh-pages`を更新しないようにする。
