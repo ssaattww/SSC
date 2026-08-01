@@ -1,10 +1,32 @@
 # Tasks Status
 
-- Updated: 2026-07-18
+- Updated: 2026-08-01
 
 ## In Progress
 
-なし
+- T-094: PR #49 独立最終レビュー `PR49-FR1` を修正する
+  - Status: 対応中（空文字列の `CompareKey` が生成する legacy path に祖先 pattern が一致しない問題をTDDで修正する）
+  - Phase: Phase 3
+  - Estimate: S
+  - Depends on:
+    - T-092 差分path patternと設計索引の整備
+    - T-093 利用側定義path投影APIと空文字列keyのlegacy標準path互換
+    - Issue #48 / PR #49 の祖先path一致実装
+  - Exit Criteria:
+    - `GetDiffEntries()` が生成する `Items[].Label` に `Items[*]` と有効な上位祖先patternが一致する失敗testをproduction修正前に追加する
+    - 外部入力としての不正な空selector path、selector境界、標準pathと利用側定義pathの分離契約を維持する
+    - legacy empty-key selectorをmatcherで扱う契約を設計・互換性記録・XML documentationと一致させる
+    - `PR49-FR1 [Medium][Required]` を同一finding identityでfix verificationする
+    - focused test、全test、format、diff check、Markdown lint分類、matching-HEAD CI、fresh独立最終レビューが完了する
+    - review、実装、検証、再レビュー、独立最終レビューの各reportをPR #49 branchへcommit・pushする
+  - Output:
+    - PR #49
+    - `src/SSC/ParallelDiffPathPattern.cs`
+    - `tests/SSC.Unit.Tests/ParallelDiffPathPatternAncestorUnitTests.cs`
+    - `tests/SSC.E2E.Tests/XPathLikeDiffEntriesE2ETests.cs`
+    - `doc/design/detail/10-DiffEntryPathFilter.md`
+    - `Design/BreakingChanges.md`
+    - `reports/issue-48-codex-independent-final-review-audit-20260801.md`
 
 ## Backlog
 
