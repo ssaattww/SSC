@@ -93,7 +93,7 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
         Assert.Contains("environment:", publishJob);
         Assert.Contains("name: github-pages", publishJob);
         Assert.Contains("actions/download-artifact@v4", publishJob);
-        Assert.Contains("REPORT_BRANCH: coverage-pages", publishJob);
+        Assert.Contains("REPORT_BRANCH: gh-pages", publishJob);
         Assert.Contains("target_report=\"index.html\"", publishJob);
         Assert.Contains("EXPECTED_HEAD_SHA", publishJob);
         Assert.Contains("stale report will not be published", publishJob);
@@ -101,7 +101,7 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
         Assert.Contains("git push origin \"HEAD:$REPORT_BRANCH\"", publishJob);
         Assert.Contains("actions/configure-pages@v5", publishJob);
         Assert.Contains("actions/deploy-pages@v4", publishJob);
-        Assert.Contains("group: coverage-pages", publishJob);
+        Assert.Contains("group: gh-pages", publishJob);
         Assert.DoesNotContain("reports/pr-$PR_NUMBER", publishJob);
         Assert.DoesNotContain("HEAD:$PR_HEAD_REF", publishJob);
         Assert.DoesNotContain("htmlpreview.github.io", workflow);
