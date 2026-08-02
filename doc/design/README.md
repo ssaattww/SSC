@@ -19,6 +19,7 @@
 - `detail/10-DiffEntryPathFilter.md`
 - `detail/11-DiffEntryCustomPath.md`
 - `detail/12-DiffEntryProjectedPathValueAccess.md`
+- `detail/13-CodeCoverageVisualization.md`
 
 ## Notes
 

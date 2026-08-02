@@ -1,0 +1,101 @@
+schema_version: 3
+kind: implementation_handoff
+repository: ssaattww/SSC
+issue_or_pr: "PR #55 / Issue #54"
+task_id: T-097
+mode: review_follow_up
+branch: feature/issue-54-code-coverage
+base_ref: main
+implementation_head: 37dcdd1817f220f33174c6ff59c56291db7f507f
+report_attestation_head: null
+scope:
+  - Prevent iOS Safari from automatically enlarging source-line coverage text.
+  - Preserve compact source rows suitable for approximately 40 visible lines.
+non_goals:
+  - Change coverage calculation or Cobertura parsing.
+  - Change summary cards, filters, or method-table sizing.
+  - Merge the pull request.
+development_policy:
+  method: TDD
+  testing_order: failing regression test before implementation
+red:
+  head: 68b153fd8fd0f2420e2f4c0f73bc60e8445b2be6
+  run: "30766656309"
+  conclusion: failure
+  expected_failure: iOS text autosizing and compact row CSS were absent
+  tests:
+    unit_passed: 103
+    unit_failed: 1
+    e2e_passed: 88
+  artifact:
+    id: "8839164161"
+    digest: sha256:02bc0c05147a647b3047e378f57eb90821a5e84d98bc62e641390bcfe0c45b18
+implementation:
+  changed_files:
+    - path: scripts/generate-mobile-coverage-report.py
+      purpose: Disable iOS text autosizing and compact source table rows.
+    - path: tests/SSC.Unit.Tests/MobileCoverageIosTextScalingUnitTests.cs
+      purpose: Preserve the iOS Safari regression contract.
+    - path: tests/SSC.Unit.Tests/MobileCoverageReportGeneratorUnitTests.cs
+      purpose: Align the previous density contract with the accepted values.
+  css:
+    source_font_size: 10px
+    source_line_height: 1.05
+    cell_padding: 0 3px
+    line_state_font_size: 7px
+    source_min_width: 320px
+    text_size_adjust: none
+validation:
+  matching_run: "30766923508"
+  conclusion: success
+  head_sha: 37dcdd1817f220f33174c6ff59c56291db7f507f
+  unit_tests: 104 passed
+  e2e_tests: 88 passed
+  pages_publication: success
+  diagnostic_artifact:
+    id: "8839246908"
+    digest: sha256:43fa6993976992aefee12cf1886b2dcbffb9a506ebd51d0b3e0dcb1aa8a0db58
+  pages_artifact:
+    id: "8839246470"
+    digest: sha256:9c08a253a179a431af491961477302abb779fe6849756eb6d785e1e0e2c37862
+  published_source_head: 37dcdd1817f220f33174c6ff59c56291db7f507f
+failure_diagnostics:
+  - TRX
+  - test stdout
+  - test stderr
+  - raw and merged coverage
+  - ReportGenerator logs
+  - source archive
+  - runner diagnostics
+execution_correction:
+  summary: Five temporary placeholder-only commits were removed after compare confirmed that they contained no user changes.
+  restored_head: 68b153fd8fd0f2420e2f4c0f73bc60e8445b2be6
+  remaining_placeholder_files: false
+report:
+  type: implementation report
+  persistence_mode: repository_file
+  paths:
+    - reports/task-t-097-issue-54-ios-safari-text-autosizing-follow-up-20260803.md
+  reviewed_head: 37dcdd1817f220f33174c6ff59c56291db7f507f
+unknown:
+  - Exact visible line count on every iPhone model and Safari toolbar configuration.
+remaining_risks:
+  - User page zoom and device accessibility settings may alter final perceived density.
+  - Long source lines require horizontal scrolling.
+next_action:
+  type: user_decision
+  target_skill: none
+  mode: null
+  summary: Confirm the updated density on the same iPhone after reloading the Pages URL.
+  instructions:
+    - Open https://ssaattww.github.io/SSC/ and reload once.
+    - Confirm that the line table no longer receives Safari text inflation.
+  required_attachments_or_references:
+    - PR #55
+    - workflow run 30766923508
+  requested_authorized_actions: []
+transport:
+  method: repository_file
+  packet_path: reports/task-t-097-issue-54-ios-safari-text-autosizing-handoff-20260803.yaml
+  packet_url: null
+  transport_note: Final report-attestation HEAD and matching CI are recorded in the PR comment after persistence.

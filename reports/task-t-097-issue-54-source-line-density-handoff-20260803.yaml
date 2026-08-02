@@ -1,0 +1,42 @@
+schema_version: 3
+task_id: T-097
+issue_number: 54
+pull_request_number: 55
+follow_up_name: source-line-density
+branch: feature/issue-54-code-coverage
+public_url: https://ssaattww.github.io/SSC/
+red:
+  head_sha: c78981c0033d7eabb41289d122a22df1954fb5da
+  run_id: 30765836714
+  conclusion: failure
+  expected_failure: dense source table CSS was absent
+  unit_passed: 102
+  unit_failed: 1
+  e2e_passed: 88
+  artifact_id: 8838902388
+  artifact_digest: sha256:1c43ae13af9824a25e382d97f706b318d156d2fcf66ea848f87e47af30b434ea
+implementation:
+  core_script: scripts/generate-mobile-coverage-report-core.py
+  wrapper_script: scripts/generate-mobile-coverage-report.py
+  source_font_px: 10
+  source_line_height: 1.15
+  cell_padding: 1px 4px
+  status_badge_font_px: 8
+  source_viewport_height: 76vh
+  sticky_header: true
+  target_visible_rows: approximately 40
+  scope: source-line table only
+implementation_green:
+  head_sha: a8567f0aa63fa4567696871a765cf08f11987987
+  run_id: 30766207703
+  conclusion: success
+  unit_passed: 103
+  e2e_passed: 88
+  artifact_id: 8839022756
+  artifact_digest: sha256:cea145b6e834dafaa4cef76d741c4bf53da54a93835313b9d84d487a6510698b
+  pages_artifact_id: 8839022494
+  pages_artifact_digest: sha256:ddd880db83b53b1a9c279b337a4d61fe2fc9ec8f6c4055d4e826ade9d85eba5a
+final_validation:
+  policy: use only a run whose head_sha equals the PR current HEAD after report commit
+  result_location: PR body and implementation summary comment
+merge_performed: false

@@ -1,0 +1,225 @@
+schema_version: 3
+producer:
+  skill: chat-implementation-worker
+  mode: review follow-up
+  generated_at: 2026-08-02T22:35:00+09:00
+repository: ssaattww/SSC
+issue_or_pr: "Issue #54 / PR #55"
+task_id: T-097
+branch: feature/issue-54-code-coverage
+base_ref: main
+target:
+  current_head: 09fc8d83627eb99635537a5a860dc78a85e6707b
+  reviewed_head: null
+  commit_range: main...feature/issue-54-code-coverage
+authoritative_requirements:
+  - source: user_instruction
+    reference: current chat
+    summary: Make it obvious which functions are covered in the smartphone coverage report.
+  - source: issue
+    reference: SSC#54
+    summary: Visualize Unit and E2E code coverage while retaining diagnostics.
+development_policy:
+  method: TDD
+  testing_order: failing display contract test, then implementation, then full CI
+  governing_source: repository policy
+validation_plan:
+  commands:
+    - PR .NET Tests workflow
+  required_failure_diagnostics:
+    - TRX
+    - standard output
+    - standard error
+    - generated coverage HTML
+    - diagnostic artifact
+blocked: []
+authorized_actions:
+  - read_repository
+  - edit_tests
+  - edit_documentation
+  - commit
+  - push
+  - update_pr
+  - comment_pr
+  - write_report
+  - write_handoff
+write_boundary:
+  allowed:
+    - path_or_operation: PR #55 mobile coverage generator, tests, reports, PR metadata and comment
+      reason: resolve the coverage-state usability issue
+  forbidden:
+    - path_or_operation: merge
+      reason: user-owned action
+scope:
+  - Explicitly identify fully line-covered, partially covered and unexecuted methods.
+  - Preserve smartphone filtering and GitHub source links.
+  - Record TDD and matching-HEAD CI evidence.
+non_goals:
+  - Change SSC production APIs.
+  - Add a coverage threshold gate.
+  - Treat line coverage as proof of assertion quality.
+files:
+  changed:
+    - path: tests/SSC.Unit.Tests/MobileCoverageReportGeneratorUnitTests.cs
+      purpose: executable HTML state-display contract
+    - path: scripts/generate-mobile-coverage-report.py
+      purpose: explicit method status labels, counts, legend and filters
+    - path: reports/task-t-097-issue-54-mobile-coverage-status-follow-up-20260802.md
+      purpose: detailed implementation and validation report
+    - path: reports/task-t-097-issue-54-mobile-coverage-status-handoff-20260802.yaml
+      purpose: continuation packet
+  inspected:
+    - path: .github/workflows/pr-xunit-tests.yml
+      purpose: diagnostics, coverage generation and Pages publication
+    - path: gh-pages/index.html
+      purpose: published mobile coverage report
+  intentionally_untouched:
+    - path_or_area: src/SSC and src/SSC.Generators production code
+      reason: the issue is report presentation only
+commands:
+  - command: PR .NET Tests run 30749910435
+    purpose: TDD Red validation
+    exit_code: 1
+    result: failed
+    head_sha: a76f2f728d731bc215f902441c5950b88eef8cc9
+    evidence: artifact 8834095834; expected missing <th>状態</th>
+  - command: PR .NET Tests run 30750036902
+    purpose: TDD Green and Pages validation
+    exit_code: 0
+    result: passed
+    head_sha: 5e19a7c97cb8593eb420a1ba3d918a4d849cae41
+    evidence: artifacts 8834138310 and 8834137599
+tests:
+  - name: MobileCoverageReportGeneratorUnitTests.GenerateReport_ShowsExplicitCoverageStateForEveryMethod
+    phase: red
+    result: failed
+    head_sha: a76f2f728d731bc215f902441c5950b88eef8cc9
+    evidence: expected status column absent
+  - name: SSC.Unit.Tests
+    phase: green
+    result: passed
+    head_sha: 5e19a7c97cb8593eb420a1ba3d918a4d849cae41
+    evidence: 102 passed
+  - name: SSC.E2E.Tests
+    phase: regression
+    result: passed
+    head_sha: 5e19a7c97cb8593eb420a1ba3d918a4d849cae41
+    evidence: 88 passed
+ci:
+  required: true
+  workflow: PR .NET Tests
+  run_id: 30750036902
+  head_sha: 5e19a7c97cb8593eb420a1ba3d918a4d849cae41
+  conclusion: success
+  artifacts:
+    - id: 8834138310
+      name: ssc-pr-test-results-30750036902-1
+      purpose: tests, diagnostics, source and coverage
+    - id: 8834137599
+      name: github-pages
+      purpose: smartphone coverage site
+implementation:
+  outcome: completed
+  final_head: unknown
+  commits:
+    - sha: a76f2f728d731bc215f902441c5950b88eef8cc9
+      purpose: failing coverage-state display test
+    - sha: 5e19a7c97cb8593eb420a1ba3d918a4d849cae41
+      purpose: explicit covered, partial and unexecuted states
+    - sha: 09fc8d83627eb99635537a5a860dc78a85e6707b
+      purpose: detailed follow-up report
+  addressed_findings:
+    - id: mobile-report-covered-state-ambiguity
+      reviewed_head: 3fd173633d22834104a6e7e60f0f4c1687f3253e
+      disposition: addressed
+      evidence: method state column, counts, legend and filters
+  failure_diagnostics:
+    - type: artifact
+      location: workflow artifact 8834095834
+      summary: Red run preserved failing TRX, stdout, stderr and generated report
+  blocked_items: []
+  summary:
+    - Mobile report now names the coverage state of every method.
+review:
+  mode: not_applicable
+  reviewed_head: unknown
+  reviewer:
+    identity: unknown
+    role: not_applicable
+    continuity:
+      previous_reviewer_identity: null
+      changed: false
+      reason: null
+    independence:
+      implemented_change: true
+      implemented_review_fix: true
+      served_as_normal_reviewer: false
+      inherited_conversation: true
+      evidence: []
+  verdict: not_applicable
+  required_coverage: []
+  validation_assessment: []
+  reserved_report_paths: []
+  report_attestation:
+    allowed: not_applicable
+    reviewed_implementation_head: null
+    allowed_paths: []
+    required_first_parent: null
+    maximum_commits_after_reviewed_head: null
+    forbidden_path_classes: []
+    no_later_commits_required: not_applicable
+    validation_status: not_applicable
+    validation_evidence: []
+  summary:
+    - Independent review remains required.
+report:
+  report_type: implementation_report
+  outcome: created
+  persistence_mode: repository_file
+  paths:
+    - reports/task-t-097-issue-54-mobile-coverage-status-follow-up-20260802.md
+  reviewed_head: null
+  attestation_head: null
+  pr_comments: []
+  summary:
+    - TDD evidence and UI semantics were documented.
+findings: []
+held: []
+unexplored: []
+unknown:
+  - field_or_fact: final HEAD after handoff persistence
+    reason: the handoff commit SHA is created by persistence
+not_applicable:
+  - field_or_area: independent review verdict
+    reason: implementation worker cannot independently review its own change
+remaining_risks:
+  - Green status means 100 percent line coverage; branch coverage remains a separate metric.
+  - Coverage does not prove assertion correctness or specification compliance.
+source_payloads:
+  - source_skill: implementation-worker
+    output_contract_version: unknown
+    content_type: text/markdown
+    payload: See the detailed follow-up report for complete evidence.
+extensions: []
+next_action:
+  type: review
+  target_skill: chat-review-worker
+  mode: fix_verification
+  summary: Independently verify PR #55 at the final current HEAD.
+  instructions:
+    - Confirm the final PR current HEAD and matching workflow run.
+    - Open the GitHub Pages report and verify explicit method state labels and filters.
+    - Do not merge.
+  required_attachments_or_references:
+    - PR #55
+    - Issue #54
+    - reports/task-t-097-issue-54-mobile-coverage-status-follow-up-20260802.md
+  requested_authorized_actions:
+    - read_repository
+    - write_report
+    - comment_pr
+transport:
+  method: repository_file
+  packet_path: reports/task-t-097-issue-54-mobile-coverage-status-handoff-20260802.yaml
+  packet_url: null
+  transport_note: Final HEAD and matching CI must be refreshed after this persistence commit.

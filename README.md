@@ -398,6 +398,18 @@ int[] mismatchedItemIds = result.AsGeneratedView()!.Groups
     .ToArray();
 ```
 
+## Code Coverage
+
+PR用の `PR .NET Tests` workflowはUnit TestsとE2E TestsのCobertura coverageを収集し、GitHub Actions Summaryへline／branch coverageを表示します。スマートフォン向けの単一HTMLはGitHub Pagesの[最新コードカバレッジ](https://ssaattww.github.io/SSC/)へ公開し、同じHTMLを専用 `gh-pages` branchの`index.html`へ保存します。PR branchは自動更新しません。
+
+通っていない関数を探す場合は、GitHub PagesのHTML reportでcoverageの低いclassを開き、method一覧を確認します。より詳細なsource行表示が必要な場合はworkflow artifactの `coverage/report/index.html` も利用できます。
+
+- `0%`: method内のcoverable lineが一度も実行されていない
+- `0%`より大きく`100%`未満: methodは実行されたが、未実行行または未実行分岐がある
+- source表示: 未実行行とhit countを行単位で確認できる
+
+ローカル実行手順とartifact構成は `doc/design/detail/13-CodeCoverageVisualization.md` を参照してください。coverage率だけではassertの妥当性や仕様適合性は保証されません。
+
 ## Documentation
 
 - Design guide: `doc/design/`
