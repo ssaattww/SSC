@@ -1,0 +1,244 @@
+schema_version: 3
+producer:
+  skill: chat-implementation-worker
+  mode: review follow-up
+  generated_at: 2026-08-02T22:53:00+09:00
+repository: ssaattww/SSC
+issue_or_pr: "Issue #54 / PR #55"
+task_id: T-097
+branch: feature/issue-54-code-coverage
+base_ref: main
+target:
+  current_head: 184409d1ec6f0d336d7d176545b22a51a00f9f9e
+  reviewed_head: null
+  commit_range: main...feature/issue-54-code-coverage
+authoritative_requirements:
+  - source: user_instruction
+    reference: current chat
+    summary: Smartphone coverage report must show which exact source lines are covered.
+  - source: repository_instruction
+    reference: SSC project instructions
+    summary: Use TDD, preserve diagnostic artifacts, use only current-HEAD matching CI, persist detailed report and concise PR comment, and do not merge.
+development_policy:
+  method: TDD
+  testing_order: Red before implementation, then full regression and Pages publication
+  governing_source: repository instructions and current user request
+validation_plan:
+  commands:
+    - PR .NET Tests workflow
+  required_failure_diagnostics:
+    - TRX
+    - standard output
+    - standard error
+    - raw and merged Cobertura
+    - ReportGenerator logs
+    - checked-out source
+    - generated mobile HTML
+blocked: []
+authorized_actions:
+  - read_repository
+  - edit_tests
+  - edit_code
+  - edit_documentation
+  - write_report
+  - write_handoff
+  - commit
+  - push
+  - update_pr
+  - comment_pr
+write_boundary:
+  allowed:
+    - path_or_operation: PR #55 files related to Issue #54 line-level coverage visualization
+      reason: user-requested usability correction
+    - path_or_operation: reports and handoff for T-097
+      reason: repository completion requirements
+  forbidden:
+    - path_or_operation: merge
+      reason: merge is reserved for the user
+scope:
+  - Render source files inside the single mobile HTML report.
+  - Mark every source line as covered, uncovered, or not coverable.
+  - Show hit counts, source text, per-file counts, search, and line-state filtering.
+  - Link methods to their corresponding source rows in the same page.
+non_goals:
+  - Change SSC production APIs.
+  - Add coverage thresholds.
+  - Replace Cobertura or ReportGenerator.
+  - Merge PR #55.
+files:
+  changed:
+    - path: tests/SSC.Unit.Tests/MobileCoverageReportGeneratorUnitTests.cs
+      purpose: TDD contract for line-level source rendering
+    - path: scripts/generate-mobile-coverage-report.py
+      purpose: parse line hits and render source rows with state and hit counts
+    - path: reports/task-t-097-issue-54-source-line-coverage-follow-up-20260802.md
+      purpose: detailed implementation report
+    - path: reports/task-t-097-issue-54-source-line-coverage-handoff-20260802.yaml
+      purpose: continuation packet
+  inspected:
+    - path: .github/workflows/pr-xunit-tests.yml
+      purpose: confirm diagnostic artifact and Pages publication wiring
+    - path: gh-pages/index.html
+      purpose: verify published single HTML
+    - path: gh-pages/source-head.txt
+      purpose: verify publication source HEAD
+  intentionally_untouched:
+    - path_or_area: src/SSC production code
+      reason: visualization change requires no production API or behavior change
+    - path_or_area: merge state
+      reason: user-owned action
+commands:
+  - command: PR .NET Tests run 30750577204
+    purpose: Red validation
+    exit_code: 1
+    result: failed
+    head_sha: 0eab3f8769d209278d27c021d1294904327cf48e
+    evidence: artifact 8834311159; new test failed because --source-root was not implemented
+  - command: PR .NET Tests run 30750770391
+    purpose: Green and regression validation
+    exit_code: 0
+    result: passed
+    head_sha: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+    evidence: Unit 103 passed, E2E 88 passed, Pages deployment succeeded
+  - command: inspect coverage/mobile/code-coverage.html from artifact 8834369194
+    purpose: validate generated line-level HTML
+    exit_code: 0
+    result: passed
+    head_sha: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+    evidence: 19 files, 1748 covered rows, 244 uncovered rows, 2767 not-coverable rows
+tests:
+  - name: MobileCoverageReportGeneratorUnitTests.GenerateReport_ShowsCoverageStateForEverySourceLine
+    phase: red
+    result: failed
+    head_sha: 0eab3f8769d209278d27c021d1294904327cf48e
+    evidence: run 30750577204
+  - name: SSC.Unit.Tests
+    phase: post_implementation
+    result: passed
+    head_sha: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+    evidence: 103 passed in run 30750770391
+  - name: SSC.E2E.Tests
+    phase: regression
+    result: passed
+    head_sha: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+    evidence: 88 passed in run 30750770391
+ci:
+  required: true
+  workflow: PR .NET Tests
+  run_id: 30750770391
+  head_sha: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+  conclusion: success
+  artifacts:
+    - id: 8834369194
+      name: ssc-pr-test-results-30750770391-1
+      purpose: tests, diagnostics, source, raw/merged coverage, and mobile HTML
+    - id: 8834368847
+      name: github-pages
+      purpose: Pages deployment payload
+implementation:
+  outcome: completed
+  final_head: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+  commits:
+    - sha: 0eab3f8769d209278d27c021d1294904327cf48e
+      purpose: add failing source-line coverage display test
+    - sha: 013a2d1487dd7b9db89bfcfbb32f8ad4978cd377
+      purpose: render source line coverage in the mobile report
+    - sha: 184409d1ec6f0d336d7d176545b22a51a00f9f9e
+      purpose: persist detailed follow-up report
+  addressed_findings:
+    - id: USER-LINE-COVERAGE-VISIBILITY
+      reviewed_head: 824f2e4b5cca196d8036827b1904218b603f4c2b
+      disposition: addressed
+      evidence: published HTML now shows each source line with execution state and hit count
+  failure_diagnostics:
+    - type: artifact
+      location: workflow artifact 8834311159
+      summary: Red failure evidence, TRX, stdout, stderr, source, and coverage data
+  blocked_items: []
+  summary:
+    - Exact source lines are now visible in the mobile report.
+    - Covered, uncovered, and non-coverable lines are visually distinct and filterable.
+review:
+  mode: not_applicable
+  reviewed_head: unknown
+  reviewer:
+    identity: unknown
+    role: not_applicable
+    continuity:
+      previous_reviewer_identity: null
+      changed: false
+      reason: null
+    independence:
+      implemented_change: true
+      implemented_review_fix: true
+      served_as_normal_reviewer: false
+      inherited_conversation: true
+      evidence: []
+  verdict: not_applicable
+  required_coverage: []
+  validation_assessment: []
+  reserved_report_paths: []
+  report_attestation:
+    allowed: not_applicable
+    reviewed_implementation_head: null
+    allowed_paths: []
+    required_first_parent: null
+    maximum_commits_after_reviewed_head: null
+    forbidden_path_classes: []
+    no_later_commits_required: not_applicable
+    validation_status: not_applicable
+    validation_evidence: []
+  summary:
+    - Independent review remains required.
+report:
+  report_type: implementation_report
+  outcome: created
+  persistence_mode: repository_file
+  paths:
+    - reports/task-t-097-issue-54-source-line-coverage-follow-up-20260802.md
+  reviewed_head: null
+  attestation_head: null
+  pr_comments: []
+  summary:
+    - Detailed TDD and publication evidence persisted.
+findings: []
+held: []
+unexplored: []
+unknown:
+  - field_or_fact: final PR HEAD and matching CI after handoff persistence
+    reason: the handoff commit changes the PR HEAD and must be refreshed after persistence
+not_applicable:
+  - field_or_area: independent review verdict
+    reason: implementation worker cannot independently review its own change
+remaining_risks:
+  - The single HTML is approximately 3.4 MB because it embeds source text for 19 files.
+  - Covered line hits do not prove assertion quality or branch completeness.
+source_payloads:
+  - source_skill: implementation-worker
+    output_contract_version: unknown
+    content_type: text/markdown
+    payload: See the detailed follow-up report for full evidence.
+extensions: []
+next_action:
+  type: review
+  target_skill: chat-review-worker
+  mode: initial_review
+  summary: Independently review PR #55 at its final current HEAD, including source-line HTML and matching Pages publication.
+  instructions:
+    - Refresh PR current HEAD after this handoff commit.
+    - Accept only a workflow run whose head_sha matches that current HEAD.
+    - Inspect the generated mobile HTML for covered, uncovered, and not-coverable source rows.
+    - Do not merge.
+  required_attachments_or_references:
+    - PR #55
+    - Issue #54
+    - reports/task-t-097-issue-54-source-line-coverage-follow-up-20260802.md
+  requested_authorized_actions:
+    - read_repository
+    - write_report
+    - comment_pr
+transport:
+  method: repository_file
+  packet_path: reports/task-t-097-issue-54-source-line-coverage-handoff-20260802.yaml
+  packet_url: null
+  transport_note: Final current HEAD and matching CI must be refreshed after this persistence commit.
