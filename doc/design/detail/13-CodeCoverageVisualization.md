@@ -21,7 +21,8 @@ dotnet test <test-project> \
 - `coverage/raw/*.cobertura.xml`: test projectごとのraw coverage
 - `coverage/report/index.html`: class、method、source行を確認するHTML report
 - `coverage/report/Cobertura.xml`: 統合済みcoverage
-- `coverage/mobile/code-coverage.html`: スマートフォン向け単一HTML
+- `coverage/mobile/code-coverage.html`: スマートフォン向けindex page
+- `coverage/mobile/files/*.html`: source fileごとの行別coverage page
 - `coverage/report/*Github*.md`: Actions Summaryへ転記するMarkdown
 - `coverage/report/*Summary*.txt`: text summary
 - `coverage/logs/reportgenerator-install.stdout.log`
@@ -36,9 +37,9 @@ dotnet test <test-project> \
 
 ### スマートフォン
 
-PR本文またはActions Summaryの「Mobile coverage report」をタップします。GitHub Pagesの固定URLから単一HTMLを開くため、artifact ZIPのダウンロードや展開は不要です。公開URLは `https://ssaattww.github.io/SSC/` です。
+PR本文またはActions Summaryの「Mobile coverage report」をタップします。GitHub Pagesの固定URLからindex pageを開き、source fileごとの行別pageへ遷移するため、artifact ZIPのダウンロードや展開は不要です。公開URLは `https://ssaattww.github.io/SSC/` です。
 
-単一HTMLでは次を確認できます。
+index pageとsource file別pageでは次を確認できます。
 
 - line、branch、method coverage
 - class別coverage
@@ -56,9 +57,9 @@ PR本文またはActions Summaryの「Mobile coverage report」をタップし�
 
 ## HTMLの保存・公開とCI停止条件
 
-テストとcoverage生成が成功すると、専用jobが同じ単一HTMLを次の2箇所へ反映します。
+テストとcoverage生成が成功すると、専用jobがindex pageとsource file別page一式を次の2箇所へ反映します。
 
-- `gh-pages` branch直下の`index.html`: リポジトリ内の永続的なレポート保存場所
+- `gh-pages` branch直下の`index.html`と`files/*.html`: リポジトリ内の永続的なレポート保存場所
 - GitHub Pages: スマートフォン向けの閲覧画面
 
 PR番号をpathやbranch名へ含めず、常に最新の成功レポートを固定URLで公開します。`gh-pages` branchには`source-head.txt`と`source-pr.txt`も保存し、どのPR HEADから生成したかを追跡できるようにします。
@@ -119,12 +120,12 @@ artifacts/local-coverage/tools/reportgenerator \
   "-title:SSC code coverage"
 ```
 
-生成後、`artifacts/local-coverage/report/index.html` を開きます。スマートフォン向け単一HTMLは次で生成できます。
+生成後、`artifacts/local-coverage/report/index.html` を開きます。スマートフォン向けindex pageとsource file別pageは次で生成できます。
 
 ```bash
 python3 scripts/generate-mobile-coverage-report.py \
   --input artifacts/local-coverage/report/Cobertura.xml \
-  --output reports/code-coverage.html \
+  --output artifacts/local-coverage/mobile/index.html \
   --repository ssaattww/SSC \
   --ref "$(git rev-parse HEAD)"
 ```
