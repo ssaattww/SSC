@@ -72,6 +72,77 @@ public sealed class MobileCoverageReportGeneratorUnitTests
         }
     }
 
+    /// <summary>
+    /// ソースコードの各行が実行済み、未実行、対象外のどれかを明示することを確認します。
+    /// </summary>
+    [Fact]
+    public void GenerateReport_ShowsCoverageStateForEverySourceLine()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var temporaryDirectory = Path.Combine(
+            Path.GetTempPath(),
+            $"ssc-mobile-line-coverage-{Guid.NewGuid():N}");
+        var sourceRoot = Path.Combine(temporaryDirectory, "source");
+        var sourcePath = Path.Combine(sourceRoot, "src", "SSC", "CoverageSample.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(sourcePath)!);
+
+        try
+        {
+            var inputPath = Path.Combine(temporaryDirectory, "coverage.xml");
+            var outputPath = Path.Combine(temporaryDirectory, "index.html");
+            File.WriteAllText(inputPath, SourceLineCobertura);
+            File.WriteAllText(
+                sourcePath,
+                "namespace SSC;\npublic static class CoverageSample\n{\n    public static int Value => 1;\n}\n");
+
+            var startInfo = new ProcessStartInfo("python3")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            startInfo.ArgumentList.Add(Path.Combine(
+                repositoryRoot,
+                "scripts",
+                "generate-mobile-coverage-report.py"));
+            startInfo.ArgumentList.Add("--input");
+            startInfo.ArgumentList.Add(inputPath);
+            startInfo.ArgumentList.Add("--output");
+            startInfo.ArgumentList.Add(outputPath);
+            startInfo.ArgumentList.Add("--repository");
+            startInfo.ArgumentList.Add("ssaattww/SSC");
+            startInfo.ArgumentList.Add("--ref");
+            startInfo.ArgumentList.Add("0123456789abcdef");
+            startInfo.ArgumentList.Add("--source-root");
+            startInfo.ArgumentList.Add(sourceRoot);
+
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("Could not start Python coverage report generator.");
+            var standardOutput = process.StandardOutput.ReadToEnd();
+            var standardError = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            Assert.True(
+                process.ExitCode == 0,
+                $"Generator failed with exit code {process.ExitCode}. stdout: {standardOutput} stderr: {standardError}");
+
+            var report = File.ReadAllText(outputPath);
+            Assert.Contains("<th>行</th><th>行状態</th><th>Hits</th><th>Source</th>", report);
+            Assert.Contains("data-line-status=\"covered\"", report);
+            Assert.Contains("data-line-status=\"uncovered\"", report);
+            Assert.Contains("data-line-status=\"not-coverable\"", report);
+            Assert.Contains("実行済み", report);
+            Assert.Contains("未実行", report);
+            Assert.Contains("対象外", report);
+            Assert.Contains("public static class CoverageSample", report);
+            Assert.Contains("public static int Value =&gt; 1;", report);
+        }
+        finally
+        {
+            Directory.Delete(temporaryDirectory, recursive: true);
+        }
+    }
+
     private static string FindRepositoryRoot()
     {
         for (DirectoryInfo? directory = new(AppContext.BaseDirectory);
@@ -107,6 +178,29 @@ public sealed class MobileCoverageReportGeneratorUnitTests
                       <lines><line number="30" hits="0" /></lines>
                     </method>
                   </methods>
+                </class>
+              </classes>
+            </package>
+          </packages>
+        </coverage>
+        """;
+
+    private const string SourceLineCobertura = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <coverage line-rate="0.5" branch-rate="1" lines-covered="1" lines-valid="2" branches-covered="0" branches-valid="0">
+          <packages>
+            <package name="SSC" line-rate="0.5" branch-rate="1">
+              <classes>
+                <class name="SSC.CoverageSample" filename="src/SSC/CoverageSample.cs" line-rate="0.5" branch-rate="1">
+                  <methods>
+                    <method name="get_Value" signature="()" line-rate="0.5" branch-rate="1">
+                      <lines><line number="3" hits="1" /><line number="4" hits="0" /></lines>
+                    </method>
+                  </methods>
+                  <lines>
+                    <line number="3" hits="2" />
+                    <line number="4" hits="0" />
+                  </lines>
                 </class>
               </classes>
             </package>
