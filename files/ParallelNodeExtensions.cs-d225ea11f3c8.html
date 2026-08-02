@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>src/SSC/ParallelNodeExtensions.cs - SSC code coverage</title>
+  <style>
+    :root { color-scheme:light dark; --bg:#f6f8fa; --panel:#fff; --text:#1f2328; --muted:#59636e; --border:#d0d7de; --good:#1a7f37; --warn:#9a6700; --bad:#cf222e; --link:#0969da; --good-soft:#dafbe1; --bad-soft:#ffebe9; --neutral-soft:#f6f8fa; }
+    @media (prefers-color-scheme:dark) { :root { --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#8d96a0; --border:#30363d; --good:#3fb950; --warn:#d29922; --bad:#f85149; --link:#58a6ff; --good-soft:#12261a; --bad-soft:#2d1418; --neutral-soft:#21262d; } }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { max-width:1100px; margin:auto; padding:16px; }
+    h1 { font-size:1.55rem; margin:0 0 4px; }
+    h2 { font-size:1.3rem; margin:28px 0 8px; }
+    .meta,.note { color:var(--muted); font-size:.88rem; overflow-wrap:anywhere; }
+    .cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0; }
+    .card,.legend { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; }
+    .card strong { display:block; font-size:1.2rem; }
+    .card span,.legend-row span:last-child { color:var(--muted); font-size:.85rem; }
+    .legend { display:grid; gap:6px; margin:12px 0; }
+    .legend-row { display:flex; align-items:flex-start; gap:8px; }
+    .controls { display:grid; grid-template-columns:1fr 170px; gap:8px; margin:14px 0; }
+    input,select { width:100%; font:inherit; color:inherit; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px; }
+    .class-block,.source-file { background:var(--panel); border:1px solid var(--border); border-radius:10px; margin:10px 0; overflow:hidden; scroll-margin-top:10px; }
+    summary { cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px; }
+    .class-name { font-weight:600; overflow-wrap:anywhere; }
+    .class-summary { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .class-meta,.source-tools { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:0 12px 10px; color:var(--muted); font-size:.85rem; }
+    .source-counts { color:var(--muted); font-size:.82rem; text-align:right; }
+    .source-unavailable { padding:0 12px 12px; }
+    a { color:var(--link); }
+    .external-link { margin-left:6px; font-size:.78rem; }
+    .state-badge,.rate-badge,.line-state { display:inline-block; text-align:center; border-radius:999px; padding:2px 8px; font-weight:600; color:#fff; white-space:nowrap; }
+    .state-badge { min-width:92px; } .rate-badge { min-width:62px; } .line-state { min-width:72px; font-size:.78rem; }
+    .covered { background:var(--good); } .partial { background:var(--warn); } .uncovered { background:var(--bad); } .not-coverable { background:var(--muted); }
+    .table-wrap { overflow-x:auto; border-top:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th,td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+    th { color:var(--muted); font-size:.8rem; }
+    .source-row.covered-line { background:var(--good-soft); }
+    .source-row.uncovered-line { background:var(--bad-soft); }
+    .source-row.not-coverable-line { background:var(--neutral-soft); color:var(--muted); }
+    .source-row:target { outline:3px solid var(--link); outline-offset:-3px; }
+    .line-number,.hit-count { white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .source-code { min-width:520px; padding:0; }
+    .source-code code { display:block; padding:9px 10px; white-space:pre; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .hidden { display:none; }
+    @media (min-width:720px) { .cards { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+    @media (max-width:520px) { main { padding:12px; } .controls { grid-template-columns:1fr; } summary { align-items:flex-start; } .class-summary { align-items:flex-end; flex-direction:column; } .state-badge { min-width:84px; } .source-counts { max-width:52%; } }
+
+    .source-table-wrap { max-height:76vh; overflow:auto; -webkit-overflow-scrolling:touch; }
+    .source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.05; -webkit-text-size-adjust:none; text-size-adjust:none; }
+    .source-table th,.source-table td { padding:0 3px; vertical-align:middle; }
+    .source-table thead th { position:sticky; top:0; z-index:1; background:var(--panel); }
+    .source-table .line-state { min-width:40px; padding:0 2px; font-size:7px; line-height:1; }
+    .source-table .line-number,.source-table .hit-count { width:1%; }
+    .source-code { min-width:320px; padding:0; }
+    .source-code code { display:block; padding:0 3px; white-space:pre; font-size:10px; line-height:1.05; font-weight:400; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; -webkit-text-size-adjust:none; text-size-adjust:none; }
+
+  
+    .file-page-nav { display:flex; justify-content:space-between; gap:8px; margin:0 0 10px; }
+    .file-page-path { overflow-wrap:anywhere; }
+  </style>
+</head>
+<body>
+<main>
+  <nav class="file-page-nav"><a href="../index.html">一覧へ戻る</a><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs">GitHubでファイルを開く</a></nav>
+  <h1 class="file-page-path">src/SSC/ParallelNodeExtensions.cs</h1>
+  <p class="meta">実行済み 8 · 未実行 3 · 対象外 28<br>Coverage source: <a href="https://github.com/ssaattww/SSC/commit/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff"><code>a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff</code></a></p>
+  
+        <div class="legend" aria-label="行coverage状態の凡例">
+          <div class="legend-row"><span class="line-state covered">実行済み</span><span>Coberturaのhit数が1以上の行です。</span></div>
+          <div class="legend-row"><span class="line-state uncovered">未実行</span><span>カバレッジ対象ですがhit数が0の行です。</span></div>
+          <div class="legend-row"><span class="line-state not-coverable">対象外</span><span>Coberturaに実行対象として記録されていない行です。</span></div>
+        </div>
+        <div class="controls">
+          <label>ソース検索<input id="source-search" type="search" placeholder="source text"></label>
+          <label>行状態<select id="line-status"><option value="all">すべての行</option><option value="covered">実行済み</option><option value="uncovered">未実行</option><option value="not-coverable">対象外</option></select></label>
+        </div>
+        <div class="table-wrap source-table-wrap">
+          <table class="source-table">
+            <thead><tr><th>行</th><th>行状態</th><th>Hits</th><th>Source</th></tr></thead>
+            <tbody>
+            <tr id="source-d225ea11f3c8-L1" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs using system.collections.generic;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L1">1</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>using System.Collections.Generic;</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L2" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs using system.linq.expressions;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L2">2</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>using System.Linq.Expressions;</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L3" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L3">3</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L4" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs namespace ssc;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L4">4</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>namespace SSC;</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L5" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L5">5</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L6" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs public static class parallelnodeextensions">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L6">6</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public static class ParallelNodeExtensions</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L7" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L7">7</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L8" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     public static ireadonlylist&lt;parallelnode&lt;telement&gt;&gt; children&lt;tparent, telement&gt;(">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L8">8</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    public static IReadOnlyList&lt;ParallelNode&lt;TElement&gt;&gt; Children&lt;TParent, TElement&gt;(</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L9" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs         this parallelnode&lt;tparent&gt; node,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L9">9</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>        this ParallelNode&lt;TParent&gt; node,</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L10" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs         expression&lt;func&lt;tparent, ienumerable&lt;telement&gt;&gt;&gt; memberselector)">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L10">10</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>        Expression&lt;Func&lt;TParent, IEnumerable&lt;TElement&gt;&gt;&gt; memberSelector)</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L11" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L11">11</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    {</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L12" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         argumentnullexception.throwifnull(node);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L12">12</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">13</td>
+              <td class="source-code"><code>        ArgumentNullException.ThrowIfNull(node);</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L13" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         argumentnullexception.throwifnull(memberselector);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L13">13</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">13</td>
+              <td class="source-code"><code>        ArgumentNullException.ThrowIfNull(memberSelector);</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L14" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L14">14</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L15" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         return node.getchildren&lt;telement&gt;(getdirectmembername(memberselector));">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L15">15</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">13</td>
+              <td class="source-code"><code>        return node.GetChildren&lt;TElement&gt;(GetDirectMemberName(memberSelector));</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L16" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L16">16</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    }</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L17" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L17">17</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L18" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     public static ireadonlylist&lt;parallelnode&lt;telement&gt;&gt; children&lt;tparent, tkey, telement&gt;(">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L18">18</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    public static IReadOnlyList&lt;ParallelNode&lt;TElement&gt;&gt; Children&lt;TParent, TKey, TElement&gt;(</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L19" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs         this parallelnode&lt;tparent&gt; node,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L19">19</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>        this ParallelNode&lt;TParent&gt; node,</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L20" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs         expression&lt;func&lt;tparent, ireadonlydictionary&lt;tkey, telement&gt;&gt;&gt; memberselector)">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L20">20</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>        Expression&lt;Func&lt;TParent, IReadOnlyDictionary&lt;TKey, TElement&gt;&gt;&gt; memberSelector)</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L21" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L21">21</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    {</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L22" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         argumentnullexception.throwifnull(node);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L22">22</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">4</td>
+              <td class="source-code"><code>        ArgumentNullException.ThrowIfNull(node);</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L23" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         argumentnullexception.throwifnull(memberselector);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L23">23</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">4</td>
+              <td class="source-code"><code>        ArgumentNullException.ThrowIfNull(memberSelector);</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L24" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L24">24</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L25" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         return node.getchildren&lt;telement&gt;(getdirectmembername(memberselector));">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L25">25</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">4</td>
+              <td class="source-code"><code>        return node.GetChildren&lt;TElement&gt;(GetDirectMemberName(memberSelector));</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L26" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L26">26</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    }</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L27" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L27">27</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L28" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     private static string getdirectmembername&lt;tparent, tmember&gt;(expression&lt;func&lt;tparent, tmember&gt;&gt; memberselector)">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L28">28</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    private static string GetDirectMemberName&lt;TParent, TMember&gt;(Expression&lt;Func&lt;TParent, TMember&gt;&gt; memberSelector)</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L29" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L29">29</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    {</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L30" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs         if (memberselector.body is memberexpression member)">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L30">30</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">17</td>
+              <td class="source-code"><code>        if (memberSelector.Body is MemberExpression member)</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L31" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs         {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L31">31</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>        {</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L32" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/parallelnodeextensions.cs             return member.member.name;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L32">32</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">17</td>
+              <td class="source-code"><code>            return member.Member.Name;</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L33" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs         }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L33">33</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>        }</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L34" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L34">34</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L35" class="source-row uncovered-line" data-line-status="uncovered" data-source-search="src/ssc/parallelnodeextensions.cs         throw new argumentexception(">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L35">35</a></td>
+              <td><span class="line-state uncovered">未実行</span></td>
+              <td class="hit-count">0</td>
+              <td class="source-code"><code>        throw new ArgumentException(</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L36" class="source-row uncovered-line" data-line-status="uncovered" data-source-search="src/ssc/parallelnodeextensions.cs             &quot;memberselector must be a direct member access expression (e.g. x =&gt; x.items).&quot;,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L36">36</a></td>
+              <td><span class="line-state uncovered">未実行</span></td>
+              <td class="hit-count">0</td>
+              <td class="source-code"><code>            &quot;memberSelector must be a direct member access expression (e.g. x =&gt; x.Items).&quot;,</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L37" class="source-row uncovered-line" data-line-status="uncovered" data-source-search="src/ssc/parallelnodeextensions.cs             nameof(memberselector));">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L37">37</a></td>
+              <td><span class="line-state uncovered">未実行</span></td>
+              <td class="hit-count">0</td>
+              <td class="source-code"><code>            nameof(memberSelector));</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L38" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs     }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L38">38</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    }</code></td>
+            </tr>
+            
+            <tr id="source-d225ea11f3c8-L39" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/parallelnodeextensions.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/ParallelNodeExtensions.cs#L39">39</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        
+</main>
+<script>
+  const sourceSearch = document.getElementById('source-search');
+  const lineStatus = document.getElementById('line-status');
+  function applyLineFilter() {
+    if (!sourceSearch || !lineStatus) return;
+    const query = sourceSearch.value.trim().toLowerCase();
+    const wanted = lineStatus.value;
+    document.querySelectorAll('.source-row').forEach(row => {
+      const show = (!query || row.dataset.sourceSearch.includes(query)) && (wanted === 'all' || row.dataset.lineStatus === wanted);
+      row.classList.toggle('hidden', !show);
+    });
+  }
+  if (sourceSearch && lineStatus) {
+    sourceSearch.addEventListener('input', applyLineFilter);
+    lineStatus.addEventListener('change', applyLineFilter);
+  }
+</script>
+</body>
+</html>

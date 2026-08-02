@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>src/SSC/Contracts.cs - SSC code coverage</title>
+  <style>
+    :root { color-scheme:light dark; --bg:#f6f8fa; --panel:#fff; --text:#1f2328; --muted:#59636e; --border:#d0d7de; --good:#1a7f37; --warn:#9a6700; --bad:#cf222e; --link:#0969da; --good-soft:#dafbe1; --bad-soft:#ffebe9; --neutral-soft:#f6f8fa; }
+    @media (prefers-color-scheme:dark) { :root { --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#8d96a0; --border:#30363d; --good:#3fb950; --warn:#d29922; --bad:#f85149; --link:#58a6ff; --good-soft:#12261a; --bad-soft:#2d1418; --neutral-soft:#21262d; } }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { max-width:1100px; margin:auto; padding:16px; }
+    h1 { font-size:1.55rem; margin:0 0 4px; }
+    h2 { font-size:1.3rem; margin:28px 0 8px; }
+    .meta,.note { color:var(--muted); font-size:.88rem; overflow-wrap:anywhere; }
+    .cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0; }
+    .card,.legend { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; }
+    .card strong { display:block; font-size:1.2rem; }
+    .card span,.legend-row span:last-child { color:var(--muted); font-size:.85rem; }
+    .legend { display:grid; gap:6px; margin:12px 0; }
+    .legend-row { display:flex; align-items:flex-start; gap:8px; }
+    .controls { display:grid; grid-template-columns:1fr 170px; gap:8px; margin:14px 0; }
+    input,select { width:100%; font:inherit; color:inherit; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px; }
+    .class-block,.source-file { background:var(--panel); border:1px solid var(--border); border-radius:10px; margin:10px 0; overflow:hidden; scroll-margin-top:10px; }
+    summary { cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px; }
+    .class-name { font-weight:600; overflow-wrap:anywhere; }
+    .class-summary { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .class-meta,.source-tools { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:0 12px 10px; color:var(--muted); font-size:.85rem; }
+    .source-counts { color:var(--muted); font-size:.82rem; text-align:right; }
+    .source-unavailable { padding:0 12px 12px; }
+    a { color:var(--link); }
+    .external-link { margin-left:6px; font-size:.78rem; }
+    .state-badge,.rate-badge,.line-state { display:inline-block; text-align:center; border-radius:999px; padding:2px 8px; font-weight:600; color:#fff; white-space:nowrap; }
+    .state-badge { min-width:92px; } .rate-badge { min-width:62px; } .line-state { min-width:72px; font-size:.78rem; }
+    .covered { background:var(--good); } .partial { background:var(--warn); } .uncovered { background:var(--bad); } .not-coverable { background:var(--muted); }
+    .table-wrap { overflow-x:auto; border-top:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th,td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+    th { color:var(--muted); font-size:.8rem; }
+    .source-row.covered-line { background:var(--good-soft); }
+    .source-row.uncovered-line { background:var(--bad-soft); }
+    .source-row.not-coverable-line { background:var(--neutral-soft); color:var(--muted); }
+    .source-row:target { outline:3px solid var(--link); outline-offset:-3px; }
+    .line-number,.hit-count { white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .source-code { min-width:520px; padding:0; }
+    .source-code code { display:block; padding:9px 10px; white-space:pre; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .hidden { display:none; }
+    @media (min-width:720px) { .cards { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+    @media (max-width:520px) { main { padding:12px; } .controls { grid-template-columns:1fr; } summary { align-items:flex-start; } .class-summary { align-items:flex-end; flex-direction:column; } .state-badge { min-width:84px; } .source-counts { max-width:52%; } }
+
+    .source-table-wrap { max-height:76vh; overflow:auto; -webkit-overflow-scrolling:touch; }
+    .source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.05; -webkit-text-size-adjust:none; text-size-adjust:none; }
+    .source-table th,.source-table td { padding:0 3px; vertical-align:middle; }
+    .source-table thead th { position:sticky; top:0; z-index:1; background:var(--panel); }
+    .source-table .line-state { min-width:40px; padding:0 2px; font-size:7px; line-height:1; }
+    .source-table .line-number,.source-table .hit-count { width:1%; }
+    .source-code { min-width:320px; padding:0; }
+    .source-code code { display:block; padding:0 3px; white-space:pre; font-size:10px; line-height:1.05; font-weight:400; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; -webkit-text-size-adjust:none; text-size-adjust:none; }
+
+  
+    .file-page-nav { display:flex; justify-content:space-between; gap:8px; margin:0 0 10px; }
+    .file-page-path { overflow-wrap:anywhere; }
+  </style>
+</head>
+<body>
+<main>
+  <nav class="file-page-nav"><a href="../index.html">一覧へ戻る</a><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs">GitHubでファイルを開く</a></nav>
+  <h1 class="file-page-path">src/SSC/Contracts.cs</h1>
+  <p class="meta">実行済み 19 · 未実行 0 · 対象外 97<br>Coverage source: <a href="https://github.com/ssaattww/SSC/commit/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff"><code>a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff</code></a></p>
+  
+        <div class="legend" aria-label="行coverage状態の凡例">
+          <div class="legend-row"><span class="line-state covered">実行済み</span><span>Coberturaのhit数が1以上の行です。</span></div>
+          <div class="legend-row"><span class="line-state uncovered">未実行</span><span>カバレッジ対象ですがhit数が0の行です。</span></div>
+          <div class="legend-row"><span class="line-state not-coverable">対象外</span><span>Coberturaに実行対象として記録されていない行です。</span></div>
+        </div>
+        <div class="controls">
+          <label>ソース検索<input id="source-search" type="search" placeholder="source text"></label>
+          <label>行状態<select id="line-status"><option value="all">すべての行</option><option value="covered">実行済み</option><option value="uncovered">未実行</option><option value="not-coverable">対象外</option></select></label>
+        </div>
+        <div class="table-wrap source-table-wrap">
+          <table class="source-table">
+            <thead><tr><th>行</th><th>行状態</th><th>Hits</th><th>Source</th></tr></thead>
+            <tbody>
+            <tr id="source-63d9163b8a21-L1" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs namespace ssc;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L1">1</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>namespace SSC;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L2" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L2">2</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L3" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public enum valuestate">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L3">3</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public enum ValueState</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L4" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L4">4</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L5" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     missing,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L5">5</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    Missing,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L6" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     matched,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L6">6</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    Matched,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L7" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     mismatched,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L7">7</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    Mismatched,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L8" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L8">8</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L9" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L9">9</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L10" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public enum compareissuelevel">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L10">10</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public enum CompareIssueLevel</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L11" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L11">11</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L12" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     error,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L12">12</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    Error,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L13" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     warning,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L13">13</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    Warning,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L14" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L14">14</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L15" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L15">15</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L16" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public enum compareissuecode">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L16">16</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public enum CompareIssueCode</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L17" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L17">17</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L18" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     inputmodellistempty,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L18">18</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    InputModelListEmpty,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L19" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     inputmodelnullelement,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L19">19</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    InputModelNullElement,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L20" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     unsupportedcontainertype,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L20">20</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    UnsupportedContainerType,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L21" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     comparekeynotfoundonsequenceelement,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L21">21</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    CompareKeyNotFoundOnSequenceElement,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L22" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     comparekeyvalueisnull,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L22">22</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    CompareKeyValueIsNull,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L23" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     duplicatecomparekeydetected,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L23">23</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    DuplicateCompareKeyDetected,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L24" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     modelindexoutofrange,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L24">24</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    ModelIndexOutOfRange,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L25" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     reflectionmetadatabuildfailed,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L25">25</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    ReflectionMetadataBuildFailed,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L26" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     keynotfound,">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L26">26</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    KeyNotFound,</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L27" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L27">27</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L28" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L28">28</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L29" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public sealed class compareissue">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L29">29</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public sealed class CompareIssue</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L30" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L30">30</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L31" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public compareissuelevel level { get; init; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L31">31</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">22</td>
+              <td class="source-code"><code>    public CompareIssueLevel Level { get; init; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L32" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L32">32</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L33" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public compareissuecode code { get; init; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L33">33</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">19</td>
+              <td class="source-code"><code>    public CompareIssueCode Code { get; init; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L34" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L34">34</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L35" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public string path { get; init; } = string.empty;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L35">35</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">30</td>
+              <td class="source-code"><code>    public string Path { get; init; } = string.Empty;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L36" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L36">36</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L37" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public int? modelindex { get; init; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L37">37</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">17</td>
+              <td class="source-code"><code>    public int? ModelIndex { get; init; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L38" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L38">38</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L39" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public string? keytext { get; init; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L39">39</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">17</td>
+              <td class="source-code"><code>    public string? KeyText { get; init; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L40" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L40">40</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L41" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public string message { get; init; } = string.empty;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L41">41</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">26</td>
+              <td class="source-code"><code>    public string Message { get; init; } = string.Empty;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L42" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L42">42</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L43" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L43">43</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L44" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public sealed class compareresult&lt;t&gt;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L44">44</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public sealed class CompareResult&lt;T&gt;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L45" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L45">45</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L46" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public parallel&lt;t&gt;? root { get; init; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L46">46</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">305</td>
+              <td class="source-code"><code>    public Parallel&lt;T&gt;? Root { get; init; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L47" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L47">47</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L48" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public ireadonlylist&lt;compareissue&gt; issues { get; init; } = array.empty&lt;compareissue&gt;();">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L48">48</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">241</td>
+              <td class="source-code"><code>    public IReadOnlyList&lt;CompareIssue&gt; Issues { get; init; } = Array.Empty&lt;CompareIssue&gt;();</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L49" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L49">49</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L50" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public bool haserror { get; init; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L50">50</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">118</td>
+              <td class="source-code"><code>    public bool HasError { get; init; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L51" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L51">51</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L52" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     internal compareconfiguration configuration { get; init; } = new();">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L52">52</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">238</td>
+              <td class="source-code"><code>    internal CompareConfiguration Configuration { get; init; } = new();</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L53" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L53">53</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L54" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L54">54</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L55" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public interface parallel&lt;t&gt;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L55">55</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public interface Parallel&lt;T&gt;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L56" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L56">56</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L57" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     t? this[int modelindex] { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L57">57</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    T? this[int modelIndex] { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L58" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L58">58</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L59" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     int count { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L59">59</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    int Count { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L60" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L60">60</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L61" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool allpresent { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L61">61</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool AllPresent { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L62" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L62">62</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L63" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool anypresent { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L63">63</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool AnyPresent { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L64" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L64">64</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L65" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     valuestate getstate(int modelindex);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L65">65</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    ValueState GetState(int modelIndex);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L66" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L66">66</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L67" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L67">67</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L68" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public interface iparallelnode">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L68">68</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public interface IParallelNode</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L69" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L69">69</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L70" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     int count { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L70">70</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    int Count { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L71" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L71">71</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L72" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool allpresent { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L72">72</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool AllPresent { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L73" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L73">73</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L74" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool anypresent { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L74">74</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool AnyPresent { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L75" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L75">75</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L76" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     string? keytext { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L76">76</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    string? KeyText { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L77" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L77">77</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L78" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     object? getvalue(int modelindex);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L78">78</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    object? GetValue(int modelIndex);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L79" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L79">79</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L80" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     valuestate getstate(int modelindex);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L80">80</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    ValueState GetState(int modelIndex);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L81" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L81">81</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L82" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool hasdifferences();">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L82">82</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool HasDifferences();</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L83" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L83">83</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L84" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     ireadonlylist&lt;parallelchildset&gt; getdirectchildren();">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L84">84</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    IReadOnlyList&lt;ParallelChildSet&gt; GetDirectChildren();</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L85" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L85">85</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L86" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L86">86</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L87" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs public readonly struct parallelchildset">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L87">87</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>public readonly struct ParallelChildSet</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L88" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L88">88</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L89" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     public parallelchildset(string name, ireadonlylist&lt;iparallelnode&gt; nodes, bool hasdifferences)">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L89">89</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    public ParallelChildSet(string name, IReadOnlyList&lt;IParallelNode&gt; nodes, bool hasDifferences)</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L90" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L90">90</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    {</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L91" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs         argumentexception.throwifnullorempty(name);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L91">91</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">197</td>
+              <td class="source-code"><code>        ArgumentException.ThrowIfNullOrEmpty(name);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L92" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs         argumentnullexception.throwifnull(nodes);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L92">92</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">197</td>
+              <td class="source-code"><code>        ArgumentNullException.ThrowIfNull(nodes);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L93" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs         name = name;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L93">93</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">197</td>
+              <td class="source-code"><code>        Name = name;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L94" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs         nodes = nodes;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L94">94</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">197</td>
+              <td class="source-code"><code>        Nodes = nodes;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L95" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs         hasdifferences = hasdifferences;">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L95">95</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">197</td>
+              <td class="source-code"><code>        HasDifferences = hasDifferences;</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L96" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L96">96</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">197</td>
+              <td class="source-code"><code>    }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L97" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L97">97</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L98" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public string name { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L98">98</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">273</td>
+              <td class="source-code"><code>    public string Name { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L99" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L99">99</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L100" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public ireadonlylist&lt;iparallelnode&gt; nodes { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L100">100</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">382</td>
+              <td class="source-code"><code>    public IReadOnlyList&lt;IParallelNode&gt; Nodes { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L101" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L101">101</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L102" class="source-row covered-line" data-line-status="covered" data-source-search="src/ssc/contracts.cs     public bool hasdifferences { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L102">102</a></td>
+              <td><span class="line-state covered">実行済み</span></td>
+              <td class="hit-count">190</td>
+              <td class="source-code"><code>    public bool HasDifferences { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L103" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L103">103</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L104" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L104">104</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L105" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs internal interface iparallelnodeinternal">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L105">105</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>internal interface IParallelNodeInternal</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L106" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs {">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L106">106</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>{</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L107" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     type modeltype { get; }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L107">107</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    Type ModelType { get; }</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L108" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L108">108</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L109" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool trygetchildren(string membername, out ireadonlylist&lt;iparallelnode&gt; nodes);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L109">109</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool TryGetChildren(string memberName, out IReadOnlyList&lt;IParallelNode&gt; nodes);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L110" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L110">110</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L111" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool trygetmembernode(string membername, out iparallelnode node);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L111">111</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool TryGetMemberNode(string memberName, out IParallelNode node);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L112" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L112">112</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L113" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     bool trygetcontainerpresencestates(string membername, out ireadonlylist&lt;nodepresencestate&gt; states);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L113">113</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    bool TryGetContainerPresenceStates(string memberName, out IReadOnlyList&lt;NodePresenceState&gt; states);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L114" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs ">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L114">114</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code></code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L115" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs     nodepresencestate getpresencestate(int modelindex);">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L115">115</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>    NodePresenceState GetPresenceState(int modelIndex);</code></td>
+            </tr>
+            
+            <tr id="source-63d9163b8a21-L116" class="source-row not-coverable-line" data-line-status="not-coverable" data-source-search="src/ssc/contracts.cs }">
+              <td class="line-number"><a href="https://github.com/ssaattww/SSC/blob/a9aeba58a4ce5cba81e9c5894ffe17e9490e1dff/src/SSC/Contracts.cs#L116">116</a></td>
+              <td><span class="line-state not-coverable">対象外</span></td>
+              <td class="hit-count">—</td>
+              <td class="source-code"><code>}</code></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        
+</main>
+<script>
+  const sourceSearch = document.getElementById('source-search');
+  const lineStatus = document.getElementById('line-status');
+  function applyLineFilter() {
+    if (!sourceSearch || !lineStatus) return;
+    const query = sourceSearch.value.trim().toLowerCase();
+    const wanted = lineStatus.value;
+    document.querySelectorAll('.source-row').forEach(row => {
+      const show = (!query || row.dataset.sourceSearch.includes(query)) && (wanted === 'all' || row.dataset.lineStatus === wanted);
+      row.classList.toggle('hidden', !show);
+    });
+  }
+  if (sourceSearch && lineStatus) {
+    sourceSearch.addEventListener('input', applyLineFilter);
+    lineStatus.addEventListener('change', applyLineFilter);
+  }
+</script>
+</body>
+</html>
