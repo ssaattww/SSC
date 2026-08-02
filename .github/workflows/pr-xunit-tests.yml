@@ -264,8 +264,10 @@ jobs:
             --ref "$report_tag" \
             --title "SSC code coverage"
 
-          if [[ ! -s "$mobile_report" ]]; then
-            echo "Mobile coverage report was not generated." >&2
+          mobile_files_dir="$coverage_mobile_dir/files"
+          mobile_file_page_count="$(find "$mobile_files_dir" -maxdepth 1 -type f -name '*.html' 2>/dev/null | wc -l)"
+          if [[ ! -s "$mobile_report" || ! -d "$mobile_files_dir" || "$mobile_file_page_count" -eq 0 ]]; then
+            echo "Mobile coverage index or per-file pages were not generated." >&2
             exit 1
           fi
 
@@ -289,8 +291,8 @@ jobs:
           pages_dir="$GITHUB_WORKSPACE/artifacts/pages"
           rm -rf "$pages_dir"
           mkdir -p "$pages_dir"
-          cp "$GITHUB_WORKSPACE/artifacts/test-results/coverage/mobile/code-coverage.html" \
-            "$pages_dir/index.html"
+          cp -R "$GITHUB_WORKSPACE/artifacts/test-results/coverage/mobile/." "$pages_dir/"
+          mv "$pages_dir/code-coverage.html" "$pages_dir/index.html"
           touch "$pages_dir/.nojekyll"
 
       - name: Upload GitHub Pages artifact
@@ -387,7 +389,8 @@ jobs:
             echo
             echo "## Coverage"
             echo "- Summary is written to the GitHub Actions job summary."
-            echo "- Mobile single-file report: \`coverage/mobile/code-coverage.html\`"
+            echo "- Mobile report index: \`coverage/mobile/code-coverage.html\`"
+            echo "- Per-file line coverage pages: \`coverage/mobile/files/*.html\`"
             echo "- Detailed HTML report: \`coverage/report/index.html\`"
             echo "- Merged Cobertura: \`coverage/report/Cobertura.xml\`"
             echo "- Raw project reports: \`coverage/raw/*.cobertura.xml\`"
@@ -461,11 +464,14 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPORT_BRANCH: gh-pages
         run: |
-          source_report="$RUNNER_TEMP/coverage-artifact/coverage/mobile/code-coverage.html"
+          source_report_dir="$RUNNER_TEMP/coverage-artifact/coverage/mobile"
+          source_report="$source_report_dir/code-coverage.html"
+          source_files_dir="$source_report_dir/files"
           target_report="index.html"
+          target_files_dir="files"
 
-          if [[ ! -s "$source_report" ]]; then
-            echo "Downloaded artifact does not contain the mobile coverage report." >&2
+          if [[ ! -s "$source_report" || ! -d "$source_files_dir" ]]; then
+            echo "Downloaded artifact does not contain the mobile coverage index and per-file pages." >&2
             exit 1
           fi
 
@@ -485,7 +491,9 @@ jobs:
             git clean -fdx
           fi
 
+          rm -rf "$target_files_dir"
           cp "$source_report" "$target_report"
+          cp -R "$source_files_dir" "$target_files_dir"
           touch .nojekyll
           printf '%s\n' "$EXPECTED_HEAD_SHA" > source-head.txt
           printf '%s\n' "PR #$PR_NUMBER" > source-pr.txt
