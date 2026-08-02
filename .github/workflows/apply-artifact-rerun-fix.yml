@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   apply:
+    # One-time PR-local migration; the workflow deletes itself after applying the fix.
     if: ${{ github.head_ref == 'feature/issue-54-code-coverage' }}
     runs-on: ubuntu-latest
     steps:
