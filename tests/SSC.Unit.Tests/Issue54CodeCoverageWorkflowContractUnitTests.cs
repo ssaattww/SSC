@@ -50,7 +50,7 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
     }
 
     /// <summary>
-    /// スマートフォン向け単一HTMLを専用branchへ保存し、GitHub Pagesへ公開することを確認します。
+    /// スマートフォン向けindexとファイル別HTMLを専用branchへ保存し、GitHub Pagesへ公開することを確認します。
     /// </summary>
     [Fact]
     public void PullRequestWorkflow_PublishesMobileReportWithoutChangingPullRequestHead()
@@ -81,6 +81,9 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
         Assert.DoesNotContain("git push", testJob);
         Assert.Contains("generate-mobile-coverage-report.py", coverageStep);
         Assert.Contains("coverage/mobile/code-coverage.html", workflow);
+        Assert.Contains("coverage/mobile/files", workflow);
+        Assert.Contains("cp -R \"$GITHUB_WORKSPACE/artifacts/test-results/coverage/mobile/.\"", testJob);
+        Assert.Contains("mv \"$pages_dir/code-coverage.html\" \"$pages_dir/index.html\"", testJob);
         Assert.Contains("actions/upload-pages-artifact@v4", testJob);
         Assert.Contains("path: artifacts/pages", testJob);
         Assert.Contains("needs: dotnet-tests", publishJob);
@@ -95,6 +98,9 @@ public sealed class Issue54CodeCoverageWorkflowContractUnitTests
         Assert.Contains("actions/download-artifact@v4", publishJob);
         Assert.Contains("REPORT_BRANCH: gh-pages", publishJob);
         Assert.Contains("target_report=\"index.html\"", publishJob);
+        Assert.Contains("source_files_dir=\"$source_report_dir/files\"", publishJob);
+        Assert.Contains("target_files_dir=\"files\"", publishJob);
+        Assert.Contains("cp -R \"$source_files_dir\" \"$target_files_dir\"", publishJob);
         Assert.Contains("EXPECTED_HEAD_SHA", publishJob);
         Assert.Contains("stale report will not be published", publishJob);
         Assert.Contains("git switch --orphan \"$REPORT_BRANCH\"", publishJob);
