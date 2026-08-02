@@ -73,7 +73,7 @@ public sealed class MobileCoverageReportGeneratorUnitTests
     }
 
     /// <summary>
-    /// ソースコードの各行が実行済み、未実行、対象外のどれかを明示することを確認します。
+    /// ソースコードの各行がcoverage状態を明示し、スマートフォンで約40行を確認できる密度で表示されることを確認します。
     /// </summary>
     [Fact]
     public void GenerateReport_ShowsCoverageStateForEverySourceLine()
@@ -136,6 +136,10 @@ public sealed class MobileCoverageReportGeneratorUnitTests
             Assert.Contains("対象外", report);
             Assert.Contains("public static class CoverageSample", report);
             Assert.Contains("public static int Value =&gt; 1;", report);
+            Assert.Contains(".source-table-wrap { max-height:76vh;", report);
+            Assert.Contains(".source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.15;", report);
+            Assert.Contains(".source-table th,.source-table td { padding:1px 4px;", report);
+            Assert.Contains(".source-code code { display:block; padding:1px 4px;", report);
         }
         finally
         {
