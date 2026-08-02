@@ -137,9 +137,9 @@ public sealed class MobileCoverageReportGeneratorUnitTests
             Assert.Contains("public static class CoverageSample", report);
             Assert.Contains("public static int Value =&gt; 1;", report);
             Assert.Contains(".source-table-wrap { max-height:76vh;", report);
-            Assert.Contains(".source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.15;", report);
-            Assert.Contains(".source-table th,.source-table td { padding:1px 4px;", report);
-            Assert.Contains(".source-code code { display:block; padding:1px 4px;", report);
+            Assert.Contains(".source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.05;", report);
+            Assert.Contains(".source-table th,.source-table td { padding:0 3px;", report);
+            Assert.Contains(".source-code code { display:block; padding:0 3px;", report);
         }
         finally
         {
