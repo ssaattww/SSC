@@ -61,7 +61,12 @@ public sealed class MobileCoverageIosTextScalingUnitTests
                 process.ExitCode == 0,
                 $"Generator failed with exit code {process.ExitCode}. stdout: {standardOutput} stderr: {standardError}");
 
-            var report = File.ReadAllText(outputPath);
+            var index = File.ReadAllText(outputPath);
+            Assert.Contains("files/", index);
+            var sourcePages = Directory.GetFiles(
+                Path.Combine(temporaryDirectory, "files"),
+                "*.html");
+            var report = File.ReadAllText(Assert.Single(sourcePages));
             Assert.Contains("-webkit-text-size-adjust:none; text-size-adjust:none;", report);
             Assert.Contains(".source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.05;", report);
             Assert.Contains(".source-table th,.source-table td { padding:0 3px;", report);
