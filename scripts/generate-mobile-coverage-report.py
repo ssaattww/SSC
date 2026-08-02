@@ -14,6 +14,13 @@ from typing import Iterable
 from urllib.parse import quote
 
 
+STATUS_LABELS = {
+    "covered": "行カバー済み",
+    "partial": "一部カバー",
+    "uncovered": "未実行",
+}
+
+
 @dataclass(frozen=True)
 class MethodCoverage:
     name: str
@@ -83,6 +90,10 @@ def status_for(rate: float) -> str:
     return "partial"
 
 
+def status_label(status: str) -> str:
+    return STATUS_LABELS[status]
+
+
 def percent(rate: float) -> str:
     return f"{rate * 100:.1f}%"
 
@@ -142,11 +153,9 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
     branches_valid = int(root.attrib.get("branches-valid", "0"))
 
     all_methods = [method for item in classes for method in item.methods]
-    covered_methods = sum(method.line_rate > 0 for method in all_methods)
     fully_covered_methods = sum(method.line_rate >= 1 for method in all_methods)
-    method_rate = covered_methods / len(all_methods) if all_methods else 0.0
-    uncovered_methods = sum(method.line_rate <= 0 for method in all_methods)
     partial_methods = sum(0 < method.line_rate < 1 for method in all_methods)
+    uncovered_methods = sum(method.line_rate <= 0 for method in all_methods)
 
     class_sections: list[str] = []
     for class_item in classes:
@@ -159,8 +168,9 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
             method_rows.append(
                 f"""
                 <tr data-status="{method_status}" data-search="{escape((class_item.name + ' ' + method.name + ' ' + class_item.filename).lower())}">
+                  <td><span class="state-badge {method_status}">{escape(status_label(method_status))}</span></td>
                   <td><a href="{escape(link)}">{escape(method.name)}{escape(method.signature)}</a></td>
-                  <td><span class="badge {method_status}">{percent(method.line_rate)}</span></td>
+                  <td><span class="rate-badge {method_status}">{percent(method.line_rate)}</span></td>
                   <td>{percent(method.branch_rate)}</td>
                   <td>{escape(compact_line_ranges(method.uncovered_lines))}</td>
                 </tr>
@@ -173,7 +183,10 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
             <details class="class-block" data-status="{class_status}" data-search="{escape((class_item.name + ' ' + class_item.filename).lower())}">
               <summary>
                 <span class="class-name">{escape(class_item.name)}</span>
-                <span class="badge {class_status}">{percent(class_item.line_rate)}</span>
+                <span class="class-summary">
+                  <span class="state-badge {class_status}">{escape(status_label(class_status))}</span>
+                  <span class="rate-badge {class_status}">{percent(class_item.line_rate)}</span>
+                </span>
               </summary>
               <div class="class-meta">
                 <a href="{escape(class_link)}">{escape(class_item.filename)}</a>
@@ -181,7 +194,7 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
               </div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th>Method</th><th>Line</th><th>Branch</th><th>Uncovered lines</th></tr></thead>
+                  <thead><tr><th>状態</th><th>Method</th><th>Line</th><th>Branch</th><th>Uncovered lines</th></tr></thead>
                   <tbody>{''.join(method_rows)}</tbody>
                 </table>
               </div>
@@ -206,25 +219,38 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
     .meta {{ color:var(--muted); font-size:.88rem; overflow-wrap:anywhere; }}
     .cards {{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0; }}
     .card {{ background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; }}
-    .card strong {{ display:block; font-size:1.4rem; }}
+    .card strong {{ display:block; font-size:1.2rem; }}
     .card span {{ color:var(--muted); font-size:.85rem; }}
-    .controls {{ display:grid; grid-template-columns:1fr 150px; gap:8px; margin:14px 0; }}
+    .legend {{ display:grid; gap:6px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; margin:12px 0; }}
+    .legend-row {{ display:flex; align-items:flex-start; gap:8px; }}
+    .legend-row span:last-child {{ color:var(--muted); font-size:.88rem; }}
+    .controls {{ display:grid; grid-template-columns:1fr 170px; gap:8px; margin:14px 0; }}
     input,select {{ width:100%; font:inherit; color:inherit; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px; }}
     .class-block {{ background:var(--panel); border:1px solid var(--border); border-radius:10px; margin:10px 0; overflow:hidden; }}
     summary {{ cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px; }}
     .class-name {{ font-weight:600; overflow-wrap:anywhere; }}
+    .class-summary {{ display:flex; align-items:center; gap:6px; flex-shrink:0; }}
     .class-meta {{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; padding:0 12px 10px; color:var(--muted); font-size:.85rem; }}
     a {{ color:var(--link); }}
-    .badge {{ display:inline-block; min-width:62px; text-align:center; border-radius:999px; padding:2px 8px; font-weight:600; color:#fff; }}
-    .badge.covered {{ background:var(--good); }} .badge.partial {{ background:var(--warn); }} .badge.uncovered {{ background:var(--bad); }}
+    .state-badge,.rate-badge {{ display:inline-block; text-align:center; border-radius:999px; padding:2px 8px; font-weight:600; color:#fff; white-space:nowrap; }}
+    .state-badge {{ min-width:92px; }}
+    .rate-badge {{ min-width:62px; }}
+    .covered {{ background:var(--good); }} .partial {{ background:var(--warn); }} .uncovered {{ background:var(--bad); }}
     .table-wrap {{ overflow-x:auto; border-top:1px solid var(--border); }}
     table {{ width:100%; border-collapse:collapse; font-size:.9rem; }}
     th,td {{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; }}
     th {{ color:var(--muted); font-size:.8rem; }}
     .hidden {{ display:none; }}
     .note {{ color:var(--muted); font-size:.88rem; }}
-    @media (min-width:720px) {{ .cards {{ grid-template-columns:repeat(4,minmax(0,1fr)); }} }}
-    @media (max-width:520px) {{ main {{ padding:12px; }} .controls {{ grid-template-columns:1fr; }} th:nth-child(3),td:nth-child(3) {{ display:none; }} }}
+    @media (min-width:720px) {{ .cards {{ grid-template-columns:repeat(5,minmax(0,1fr)); }} }}
+    @media (max-width:520px) {{
+      main {{ padding:12px; }}
+      .controls {{ grid-template-columns:1fr; }}
+      summary {{ align-items:flex-start; }}
+      .class-summary {{ align-items:flex-end; flex-direction:column; }}
+      th:nth-child(4),td:nth-child(4) {{ display:none; }}
+      .state-badge {{ min-width:84px; }}
+    }}
   </style>
 </head>
 <body>
@@ -232,15 +258,21 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
   <h1>{escape(args.title)}</h1>
   <div class="meta">Coverage source: <a href="https://github.com/{escape(args.repository)}/commit/{escape(args.ref)}"><code>{escape(args.ref)}</code></a><br>Generated: {escape(generated)}</div>
   <div class="cards">
-    <div class="card"><strong>{percent(line_rate)}</strong><span>Line · {lines_covered}/{lines_valid}</span></div>
-    <div class="card"><strong>{percent(branch_rate)}</strong><span>Branch · {branches_covered}/{branches_valid}</span></div>
-    <div class="card"><strong>{percent(method_rate)}</strong><span>Method · {covered_methods}/{len(all_methods)}</span></div>
-    <div class="card"><strong>{uncovered_methods}</strong><span>0% methods · partial {partial_methods} · full {fully_covered_methods}</span></div>
+    <div class="card"><strong>{percent(line_rate)}</strong><span>全体 Line · {lines_covered}/{lines_valid}</span></div>
+    <div class="card"><strong>{percent(branch_rate)}</strong><span>全体 Branch · {branches_covered}/{branches_valid}</span></div>
+    <div class="card"><strong>完全カバー {fully_covered_methods}</strong><span>行カバー率100%のmethod</span></div>
+    <div class="card"><strong>部分カバー {partial_methods}</strong><span>行カバー率1〜99.9%</span></div>
+    <div class="card"><strong>未カバー {uncovered_methods}</strong><span>行カバー率0%のmethod</span></div>
   </div>
-  <p class="note">0%は未実行、1〜99.9%は一部の行または分岐が未実行です。メソッド名をタップすると対象ソースへ移動します。</p>
+  <div class="legend" aria-label="coverage状態の凡例">
+    <div class="legend-row"><span class="state-badge covered">行カバー済み</span><span>そのmethodのcoverable lineがすべて実行済みです。Branch列は別に確認してください。</span></div>
+    <div class="legend-row"><span class="state-badge partial">一部カバー</span><span>methodは実行されていますが、未実行行が残っています。</span></div>
+    <div class="legend-row"><span class="state-badge uncovered">未実行</span><span>そのmethodのcoverable lineは一度も実行されていません。</span></div>
+  </div>
+  <p class="note">状態はmethodのLine coverageで判定します。緑でもBranchが100%未満なら未通過分岐があります。method名をタップすると対象ソースへ移動します。</p>
   <div class="controls">
     <label>検索<input id="search" type="search" placeholder="class / method / file"></label>
-    <label>状態<select id="status"><option value="all">すべて</option><option value="uncovered">0%</option><option value="partial">部分</option><option value="covered">100%</option></select></label>
+    <label>状態<select id="status"><option value="all">すべての状態</option><option value="covered">行カバー済み</option><option value="partial">一部カバー</option><option value="uncovered">未実行</option></select></label>
   </div>
   <section id="classes">{''.join(class_sections)}</section>
 </main>
@@ -263,7 +295,7 @@ def render_report(args: argparse.Namespace, root: ET.Element, classes: tuple[Cla
       const classStatusMatch = wanted === 'all' || block.dataset.status === wanted;
       const show = visibleRows > 0 || (classSearchMatch && classStatusMatch);
       block.classList.toggle('hidden', !show);
-      if (query && show) block.open = true;
+      if ((query || wanted !== 'all') && show) block.open = true;
     }});
   }}
   search.addEventListener('input', applyFilter);
