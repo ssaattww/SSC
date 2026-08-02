@@ -1,0 +1,126 @@
+name: Apply artifact rerun fix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ github.head_ref == 'feature/issue-54-code-coverage' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Apply run-scoped artifact fix
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          workflow_path = Path('.github/workflows/pr-xunit-tests.yml')
+          workflow = workflow_path.read_text()
+          old_name = 'ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}'
+          new_name = 'ssc-pr-test-results-${{ github.run_id }}'
+          count = workflow.count(old_name)
+          if count != 3:
+              raise SystemExit(f'expected 3 attempt-scoped artifact references, found {count}')
+          workflow = workflow.replace(old_name, new_name)
+          upload_tail = '''          if-no-files-found: error
+          retention-days: 7
+'''
+          replacement_tail = '''          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+'''
+          if upload_tail not in workflow:
+              raise SystemExit('artifact upload tail was not found')
+          workflow = workflow.replace(upload_tail, replacement_tail, 1)
+          workflow_path.write_text(workflow)
+
+          test_path = Path('tests/SSC.Unit.Tests/Issue54ArtifactRerunContractUnitTests.cs')
+          test_path.write_text(r'''namespace SSC.Unit.Tests;
+
+/// <summary>
+/// Issue #54 のcoverage artifactがworkflow再実行を跨いで再利用できることを検証します。
+/// </summary>
+public sealed class Issue54ArtifactRerunContractUnitTests
+{
+    [Fact]
+    public void PullRequestWorkflow_UsesRunScopedArtifactNameForReruns()
+    {
+        var workflowPath = Path.Combine(
+            FindRepositoryRoot(),
+            ".github",
+            "workflows",
+            "pr-xunit-tests.yml");
+        var workflow = File.ReadAllText(workflowPath);
+
+        Assert.Contains(
+            "name: ssc-pr-test-results-${{ github.run_id }}",
+            workflow);
+        Assert.DoesNotContain(
+            "ssc-pr-test-results-${{ github.run_id }}-${{ github.run_attempt }}",
+            workflow);
+        Assert.Contains("overwrite: true", workflow);
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        for (DirectoryInfo? directory = new(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "SSC.sln"))
+                && Directory.Exists(Path.Combine(directory.FullName, ".github")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException(
+            "Could not locate the SSC repository root from the test output directory.");
+    }
+}
+''')
+
+          design_path = Path('doc/design/detail/13-CodeCoverageVisualization.md')
+          design = design_path.read_text()
+          note = '''
+
+### workflow再実行時のartifact参照
+
+診断artifact名はworkflow run単位の`ssc-pr-test-results-${{ github.run_id }}`で固定します。`run_attempt`を名前へ含めると、Pages公開jobだけを再実行した際に、成功済みのテストattemptが保存したartifactを参照できません。upload時は`overwrite: true`を指定し、workflow全体を再実行した場合は同じrun名のartifactを最新内容へ置き換えます。
+'''
+          if '### workflow再実行時のartifact参照' not in design:
+              design_path.write_text(design.rstrip() + note + '\n')
+
+          report_path = Path('reports/task-t-097-issue-54-code-coverage-implementation-20260802.md')
+          report = report_path.read_text()
+          report_note = '''
+
+## Pages有効化後の再実行で判明した修正
+
+Pages環境制限の解除後、公開jobだけを再実行すると、artifact名に`github.run_attempt`を含めていたため、成功済みテストjobが保存したattempt 1のartifactではなく、存在しない再実行attemptのartifactを要求して失敗した。診断artifact名を`github.run_id`単位で固定し、uploadへ`overwrite: true`を追加した。これにより、公開jobだけの再実行は既存artifactを再利用でき、workflow全体の再実行時は同名artifactを最新内容へ置換できる。
+'''
+          if '## Pages有効化後の再実行で判明した修正' not in report:
+              report_path.write_text(report.rstrip() + report_note + '\n')
+
+          Path('.github/workflows/apply-artifact-rerun-fix.yml').unlink()
+          PY
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Fix coverage artifact reuse across reruns"
+          git push origin "HEAD:${{ github.head_ref }}"
