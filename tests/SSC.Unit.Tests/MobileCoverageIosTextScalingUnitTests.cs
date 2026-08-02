@@ -63,7 +63,7 @@ public sealed class MobileCoverageIosTextScalingUnitTests
 
             var report = File.ReadAllText(outputPath);
             Assert.Contains("-webkit-text-size-adjust:none; text-size-adjust:none;", report);
-            Assert.Contains(".source-table { width:100%; border-collapse:collapse; font-size:9px; line-height:1.05;", report);
+            Assert.Contains(".source-table { width:100%; border-collapse:collapse; font-size:10px; line-height:1.05;", report);
             Assert.Contains(".source-table th,.source-table td { padding:0 3px;", report);
             Assert.Contains(".source-table .line-state { min-width:40px; padding:0 2px; font-size:7px; line-height:1;", report);
             Assert.Contains(".source-code { min-width:320px;", report);
