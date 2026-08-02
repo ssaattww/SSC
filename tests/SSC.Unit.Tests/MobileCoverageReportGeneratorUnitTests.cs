@@ -126,7 +126,15 @@ public sealed class MobileCoverageReportGeneratorUnitTests
                 process.ExitCode == 0,
                 $"Generator failed with exit code {process.ExitCode}. stdout: {standardOutput} stderr: {standardError}");
 
-            var report = File.ReadAllText(outputPath);
+            var index = File.ReadAllText(outputPath);
+            Assert.Contains("files/", index);
+            Assert.Contains("CoverageSample.cs", index);
+            Assert.DoesNotContain("public static class CoverageSample", index);
+
+            var sourcePages = Directory.GetFiles(
+                Path.Combine(temporaryDirectory, "files"),
+                "*.html");
+            var report = File.ReadAllText(Assert.Single(sourcePages));
             Assert.Contains("<th>行</th><th>行状態</th><th>Hits</th><th>Source</th>", report);
             Assert.Contains("data-line-status=\"covered\"", report);
             Assert.Contains("data-line-status=\"uncovered\"", report);
